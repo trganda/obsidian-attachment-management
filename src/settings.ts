@@ -15,7 +15,7 @@ export interface AttachmentManagementPluginSettings {
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   attachmentRoot: "",
   saveAttE: "obsFolder",
-  attachmentPath: '${path}/${notename}',
+  attachmentPath: '${notepath}/${notename}',
   imageFormat: 'IMG-${date}',
   dateFormat: 'YYYYMMDDHHmmssSSS',
   autoRenameFolder: true,
@@ -68,7 +68,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Root path')
-      .setDesc('Path of new attachment: ${path} and ${notename}, where ${path} is the relative path of current `md/cavans` file to this vault, and ${notename} is the filename (without extension) of current `md/cavans`.')
+      .setDesc('Path of new attachment: ${notepath} and ${notename}, where ${notepath} is the relative path of current `md/cavans` file to this vault, and ${notename} is the filename (without extension) of current `md/cavans`.')
       .setClass("root_folder_set")
       .addText(text => text
         .setPlaceholder(DEFAULT_SETTINGS.attachmentRoot)
@@ -81,7 +81,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName('Attachment path')
-      .setDesc('Path of new attachment: ${path} and ${notename}, where ${path} is the relative path of current `md/cavans` file to this vault, and ${notename} is the filename (without extension) of current `md/cavans`.')
+      .setDesc('Path of new attachment: ${notepath} and ${notename}, where ${notepath} is the relative path of current `md/cavans` file to this vault, and ${notename} is the filename (without extension) of current `md/cavans`.')
       .addText(text => text
         .setPlaceholder(DEFAULT_SETTINGS.attachmentPath)
         .setValue(this.plugin.settings.attachmentPath)
