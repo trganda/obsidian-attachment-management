@@ -70,10 +70,8 @@ export class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Root path")
-			.setDesc(
-				"Path of new attachment: ${notepath} and ${notename}, where ${notepath} is the relative path of current `md/cavans` file to this vault, and ${notename} is the filename (without extension) of current `md/cavans`."
-			)
+			.setName("Root folder")
+			.setDesc("Root folder of new attachment")
 			.setClass("root_folder_set")
 			.addText((text) =>
 				text
@@ -81,7 +79,7 @@ export class SettingTab extends PluginSettingTab {
 					.setValue(this.plugin.settings.attachmentRoot)
 					.onChange(async (value) => {
 						console.log("Attachment root: " + value);
-						this.plugin.settings.attachmentPath = value;
+						this.plugin.settings.attachmentRoot = value;
 						await this.plugin.saveSettings();
 					})
 			);
@@ -89,7 +87,7 @@ export class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Attachment path")
 			.setDesc(
-				"Path of new attachment: ${notepath} and ${notename}, where ${notepath} is the relative path of current `md/cavans` file to this vault, and ${notename} is the filename (without extension) of current `md/cavans`."
+				"Path of new attachment in root folder, aviliable variables ${notepath} and ${notename}"
 			)
 			.addText((text) =>
 				text
@@ -104,7 +102,9 @@ export class SettingTab extends PluginSettingTab {
 
 		new Setting(containerEl)
 			.setName("Image format")
-			.setDesc("Define how to name the image file")
+			.setDesc(
+				"Define how to name the image file, aviliable variables ${date} and ${notename}"
+			)
 			.addText((text) =>
 				text
 					.setPlaceholder(DEFAULT_SETTINGS.imageFormat)

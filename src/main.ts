@@ -13,12 +13,12 @@ import {
 	SettingTab,
 } from "./settings";
 import * as path from "path";
-import { blobToArrayBuffer, copyFromDisk, trimAny } from "./utils";
+import { blobToArrayBuffer } from "./utils";
 
 export default class AttachmentManagementPlugin extends Plugin {
 	settings: AttachmentManagementPluginSettings;
 	adapter: FileSystemAdapter;
-	originalObsAttach: string;
+	originalObsAttachPath: string;
 
 	async onload() {
 		await this.loadSettings();
@@ -36,7 +36,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		ribbonIconEl.addClass("my-plugin-ribbon-class");
 
 		this.adapter = this.app.vault.adapter as FileSystemAdapter;
-		this.originalObsAttach = "";
+		this.backupObsAttachPath();
 		this.app.workspace.on(
 			"editor-paste",
 			(evt: ClipboardEvent, editor: Editor, info: MarkdownView) => {
@@ -98,9 +98,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 					await this.adapter.mkdir(attachPath);
 
 				const img = await blobToArrayBuffer(pasteImage);
-				const imgName = this.getPastedImageFileName();
+				const imgName = this.getPastedImageFileName(noteName);
 
-				this.backupConfigs();
 				this.updateAttachmentFolderConfig(attachPath);
 				//@ts-ignore
 				const imageFile = await this.app.saveAttachment(
@@ -108,7 +107,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 					extension,
 					img
 				);
-				this.restoreConfigs();
+				this.restoreObsAttachPath();
 
 				let markdownLink =
 					await this.app.fileManager.generateMarkdownLink(
@@ -139,7 +138,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		const obsmediadir = app.vault.getConfig("attachmentFolderPath");
 		switch (this.settings.saveAttE) {
 			case "inFolderBelow":
-				root = this.settings.attachmentRoot;
+				root = path.join(this.settings.attachmentRoot);
 				break;
 			case "nextToNote":
 				root = path.join(
@@ -161,24 +160,24 @@ export default class AttachmentManagementPlugin extends Plugin {
 		return normalizePath(root);
 	}
 
-	getPastedImageFileName() {
+	getPastedImageFileName(noteName: string) {
 		const datetime = window.moment().format(this.settings.dateFormat);
-		const imgName = this.settings.imageFormat.replace("${date}", datetime);
+		const imgName = this.settings.imageFormat.replace("${date}", datetime).replace("${notename}", noteName);
 		return imgName;
 	}
 
-	backupConfigs() {
+	backupObsAttachPath() {
 		//@ts-ignore
-		this.originalObsAttach = this.app.vault.getConfig(
+		this.originalObsAttachPath = this.app.vault.getConfig(
 			"attachmentFolderPath"
 		);
 	}
 
-	restoreConfigs() {
+	restoreObsAttachPath() {
 		//@ts-ignore
 		this.app.vault.setConfig(
 			"attachmentFolderPath",
-			this.originalObsAttach
+			this.originalObsAttachPath
 		);
 	}
 
