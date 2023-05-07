@@ -5,8 +5,6 @@ import {
 	MarkdownView,
 	Notice,
 	Plugin,
-	FileView,
-	TAbstractFile,
 	normalizePath,
 	TextFileView,
 	TFile,
@@ -70,6 +68,14 @@ export default class AttachmentManagementPlugin extends Plugin {
 				}
 			})
 		);
+
+
+		this.registerEvent(
+			this.app.vault.on("rename", (file) => {
+				debugLog("renamed:", file.name);
+				// TODO
+			})
+		)
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingTab(this.app, this));
