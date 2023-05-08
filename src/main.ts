@@ -8,6 +8,8 @@ import {
 	normalizePath,
 	TextFileView,
 	TFile,
+	TAbstractFile,
+	TFolder,
 } from "obsidian";
 import {
 	AttachmentManagementPluginSettings,
@@ -15,13 +17,7 @@ import {
 	SettingTab,
 } from "./settings";
 import * as path from "path";
-import {
-	blobToArrayBuffer,
-	debugLog,
-	isCanvasFile,
-	isMarkdownFile,
-	isPastedImage,
-} from "./utils";
+import { debugLog, isCanvasFile, isMarkdownFile, isPastedImage, stripPaths } from "./utils";
 
 export default class AttachmentManagementPlugin extends Plugin {
 	settings: AttachmentManagementPluginSettings;
@@ -48,7 +44,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 		// );
 
 		this.registerEvent(
-			this.app.vault.on("create", (file) => {
+			this.app.vault.on("create", (file: TAbstractFile) => {
+				// only processing create of file, ignore folder creation
 				if (!(file instanceof TFile)) {
 					return;
 				}
@@ -69,16 +66,116 @@ export default class AttachmentManagementPlugin extends Plugin {
 			})
 		);
 
-
 		this.registerEvent(
-			this.app.vault.on("rename", (file) => {
-				debugLog("renamed:", file.name);
-				// TODO
-			})
-		)
+			// while trigger rename event on rename a folder, for each file/folder in this renamed folder (include itself) will trigger this event
+			this.app.vault.on(
+				"rename",
+				async (file: TAbstractFile, oldPath: string) => {
+					debugLog("new path:", file.path);
+					debugLog("old path:", oldPath);
+
+					if (
+						!this.settings.autoRenameFolder ||
+						!this.settings.attachmentPath.includes("${notename}") ||
+						!this.settings.attachmentPath.includes("${notepath}")
+					) {
+						return;
+					}
+
+					if (file instanceof TFile) {
+						// if the renamed file was a attachment, skip
+						const flag = await this.isAttachment(file, oldPath);
+						if (flag) {
+							return;
+						}
+						const rf = file as TFile;
+						// oldnotename, oldnotepath
+						const oldNotePath = path.posix.dirname(oldPath);
+						const oldNoteName = path.posix.basename(
+							oldPath,
+							path.posix.extname(oldPath)
+						);
+
+						debugLog("oldNotePath:", oldNotePath);
+						debugLog("oldNoteName:", oldNoteName);
+
+						let oldAttachPath = this.getAttachmentPath(
+							oldNoteName,
+							oldNotePath
+						);
+						let newAttachPath = this.getAttachmentPath(
+							rf.basename,
+							rf.parent?.path as string
+						);
+
+						// if the attachment file does not exist, skip
+						if (!this.adapter.exists(oldAttachPath)) {
+							return;
+						}
+
+						debugLog("oldAttachPath:", oldAttachPath);
+						debugLog("newAttachPath:", newAttachPath);
+
+						// TODO: same folder merge
+					  const strip = stripPaths(oldAttachPath, newAttachPath);
+						if (strip === undefined) {
+							new Notice(`Error rename path ${oldAttachPath} to ${newAttachPath}`);
+							return;
+						}
+
+						debugLog("nsrc:", strip.nsrc);
+						debugLog("ndst:", strip.ndst);
+						this.adapter.rename(strip.nsrc, strip.ndst);
+					} else if (file instanceof TFolder) {
+						const rf = file as TFolder;
+						debugLog("folder:", rf.name);
+						return;
+					}
+				}
+			)
+		);
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingTab(this.app, this));
+	}
+
+	async isAttachment(file: TAbstractFile, oldPath: string): Promise<boolean> {
+		if (file instanceof TFile) {
+			// checking the old state of the file
+			const extension = path.posix.extname(oldPath);
+			if (extension === ".md" || extension === ".canvas") {
+				return false;
+			}
+		}
+		// else if (file instanceof TFolder) {
+		// 	//@ts-ignore
+		// 	const obsmediadir = app.vault.getConfig("attachmentFolderPath");
+		// 	switch (this.settings.saveAttE) {
+		// 		case "inFolderBelow":
+		// 			if (!oldPath.includes(this.settings.attachmentRoot)) {
+		// 				return false;
+		// 			}
+		// 			break;
+		// 		case "nextToNote":
+		// 			break;
+		// 		default:
+		// 			if (obsmediadir === "/") {
+		// 				// in vault root folder case, for this case, it will take a bunch time to rename
+		// 				// search the all vault folders
+		// 			} else if (obsmediadir === "./") {
+		// 				// in current folder case
+		// 				// search the oldPath
+		// 			} else if (obsmediadir.match(/\.\/.+/g) !== null) {
+		// 				// in subfolder case
+		// 				// search the oldPath
+		// 			} else {
+		// 				// in specified folder case
+		// 				return !oldPath.includes(obsmediadir);
+		// 			}
+		// 	}
+		// }
+
+		return true;
 	}
 
 	async processCreateImg(file: TFile) {
@@ -279,6 +376,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 		//@ts-ignore
 		const obsmediadir = app.vault.getConfig("attachmentFolderPath");
+		// debugLog("obsmediadir", obsmediadir);
 		switch (this.settings.saveAttE) {
 			case "inFolderBelow":
 				root = path.join(this.settings.attachmentRoot);
@@ -291,12 +389,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 				break;
 			default:
 				if (obsmediadir === "/") {
+					// in vault root folder case
 					root = obsmediadir;
 				} else if (obsmediadir === "./") {
+					// in current folder case
 					root = path.join(notePath);
 				} else if (obsmediadir.match(/\.\/.+/g) !== null) {
+					// in subfolder case
 					root = path.join(notePath, obsmediadir.replace("./", ""));
 				} else {
+					// in specified folder case
 					root = obsmediadir;
 				}
 		}
