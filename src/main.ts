@@ -34,15 +34,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.adapter = this.app.vault.adapter as FileSystemAdapter;
 		this.backupObsAttachPath();
 
-		// this.registerEvent(
-		// 	this.app.workspace.on(
-		// 		"editor-paste",
-		// 		(evt: ClipboardEvent, editor: Editor, info: MarkdownView) => {
-		// 			this.onPaste(evt, editor, info);
-		// 		}
-		// 	)
-		// );
-
 		this.registerEvent(
 			this.app.vault.on("create", (file: TAbstractFile) => {
 				// only processing create of file, ignore folder creation
@@ -277,68 +268,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 		view.setViewData(val, false);
 	}
-
-	// async onPaste(evt: ClipboardEvent, editor: Editor, view: MarkdownView) {
-	// 	console.log("onPaste");
-	// 	if (evt === undefined) {
-	// 		return;
-	// 	}
-
-	// 	let clipBoardData = evt.clipboardData;
-	// 	if (clipBoardData == null || clipBoardData.items == null) {
-	// 		return;
-	// 	}
-
-	// 	const noteName = view.file.basename;
-	// 	const notePath = path.dirname(view.file.path);
-
-	// 	const attachPath = this.getAttachmentPath(noteName, notePath);
-
-	// 	console.log(attachPath);
-
-	// 	let clipBoardItems = clipBoardData.items;
-	// 	if (!clipBoardData.getData("text/plain")) {
-	// 		for (let i in clipBoardItems) {
-	// 			if (!clipBoardItems.hasOwnProperty(i)) continue;
-	// 			let item = clipBoardItems[i];
-	// 			if (item.kind !== "file") continue;
-	// 			if (!(item.type === "image/png" || item.type === "image/jpeg"))
-	// 				continue;
-	// 			let pasteImage = item.getAsFile();
-	// 			if (!pasteImage) continue;
-
-	// 			let extension = "";
-	// 			item.type === "image/png"
-	// 				? (extension = "png")
-	// 				: item.type === "image/jpeg" && (extension = "jpeg");
-
-	// 			evt.preventDefault();
-
-	// 			if (!(await this.adapter.exists(attachPath)))
-	// 				await this.adapter.mkdir(attachPath);
-
-	// 			const img = await blobToArrayBuffer(pasteImage);
-	// 			const imgName = this.getPastedImageFileName(noteName);
-
-	// 			this.updateAttachmentFolderConfig(attachPath);
-	// 			//@ts-ignore
-	// 			const imageFile = await this.app.saveAttachment(
-	// 				imgName,
-	// 				extension,
-	// 				img
-	// 			);
-	// 			this.restoreObsAttachPath();
-
-	// 			let markdownLink =
-	// 				await this.app.fileManager.generateMarkdownLink(
-	// 					imageFile,
-	// 					view.file.path
-	// 				);
-	// 			markdownLink += "\n\n";
-	// 			editor.replaceSelection(markdownLink);
-	// 		}
-	// 	}
-	// }
 
 	getActiveFile(): TFile | undefined {
 		const view = this.app.workspace.getActiveViewOfType(TextFileView);
