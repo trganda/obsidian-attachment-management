@@ -141,6 +141,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 		debugLog("nsrc:", strip.nsrc);
 		debugLog("ndst:", strip.ndst);
+		// TODO: update link in `md` or `canvas` file
 		this.adapter.rename(strip.nsrc, strip.ndst);
 	}
 
@@ -229,13 +230,13 @@ export default class AttachmentManagementPlugin extends Plugin {
 	}
 
 	/**
-	 * Rename the file spcified by `@param file`
+	 * Rename the file spcified by `@param file`, and update the link of the file if specified updateLink
 	 * @param file - file to rename
 	 * @param attachPath - where to the renamed file will be move to
 	 * @param attachName - name of the renamed file
-	 * @param sourcePath - path of the file
+	 * @param sourcePath - path of the associated activefile file
 	 * @param extension - extension of associated activefile of file
-	 * @param replaceCurrentLine - whether to replace the link of renamed file
+	 * @param updateLink - whether to replace the link of renamed file
 	 * @returns - none
 	 */
 	async renameFile(
@@ -244,7 +245,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		attachName: string,
 		sourcePath: string,
 		extension: string,
-		replaceCurrentLine?: boolean
+		updateLink?: boolean
 	) {
 		// Make sure the path was craeted
 		if (!(await this.adapter.exists(attachPath))) {
@@ -268,7 +269,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			throw err;
 		}
 
-		if (!replaceCurrentLine) {
+		if (!updateLink) {
 			return;
 		}
 
@@ -276,7 +277,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		// we manually replace the current line by manipulating the editor
 		let newLinkText = await this.app.fileManager.generateMarkdownLink(
 			file,
-			dst
+			sourcePath
 		);
 		debugLog("replace text", oldLinkText, newLinkText);
 
