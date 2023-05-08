@@ -10,6 +10,7 @@ import {
 	TFile,
 	TAbstractFile,
 	TFolder,
+	Vault,
 } from "obsidian";
 import {
 	AttachmentManagementPluginSettings,
@@ -84,7 +85,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 					}
 
 					if (file instanceof TFile) {
-						await this.onRename(file, oldPath);
+						let renameType = false;
+						if (path.basename(oldPath, path.extname(oldPath)) === path.basename(file.path, path.extname(file.path))) {
+							// rename the folder
+							renameType = false;
+						} else {
+							// rename the file
+							renameType = true;
+						}
+						debugLog("renameType:", renameType);
+						await this.onRename(file, oldPath, renameType);
 					} else if (file instanceof TFolder) {
 						// ignore folder
 						const rf = file as TFolder;
@@ -99,7 +109,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
-	async onRename(file: TAbstractFile, oldPath: string) {
+	async onRename(file: TAbstractFile, oldPath: string, renameType: boolean) {
 		// if the renamed file was a attachment, skip
 		const flag = await this.isAttachment(file, oldPath);
 		if (flag) {
@@ -122,15 +132,19 @@ export default class AttachmentManagementPlugin extends Plugin {
 			rf.parent?.path as string
 		);
 
-		// if the attachment file does not exist, skip
-		if (!this.adapter.exists(oldAttachPath)) {
-			return;
-		}
-
 		debugLog("oldAttachPath:", oldAttachPath);
 		debugLog("newAttachPath:", newAttachPath);
 
+		// if the attachment file does not exist, skip
+		const exitsAttachPath = await this.adapter.exists(oldAttachPath)
+		if (!exitsAttachPath) {
+			return;
+		}
+
 		// TODO: same folder merge
+		// There was a possible problem, if the rename folder has multi sub-files,
+		// the file will alos trigger the rename event multi time. It's better to skip it or 
+		// sample the processing after first rename.
 		const strip = stripPaths(oldAttachPath, newAttachPath);
 		if (strip === undefined) {
 			new Notice(
@@ -139,10 +153,44 @@ export default class AttachmentManagementPlugin extends Plugin {
 			return;
 		}
 
-		debugLog("nsrc:", strip.nsrc);
-		debugLog("ndst:", strip.ndst);
+		const stripedOldAttachPath = strip.nsrc;
+		const stripedNewAttachPath = strip.ndst;
+
+		debugLog("nsrc:", stripedOldAttachPath);
+		debugLog("ndst:", stripedNewAttachPath);
+
 		// TODO: update link in `md` or `canvas` file
-		this.adapter.rename(strip.nsrc, strip.ndst);
+		// this.adapter.rename(strip.nsrc, strip.ndst);
+		const exitsDst = await this.adapter.exists(stripedNewAttachPath);
+		if (exitsDst) {
+			// merge the folder
+			if (renameType) {
+				// rename the file
+				// await this.adapter.rename(strip.nsrc, strip.ndst);
+				new Notice(`Stopped rename attach file, same file name exists: ${stripedOldAttachPath}`);
+			} else {
+				// rename the folder
+				// check if the source folder was empty, if so, ignore it
+				// this.app.fileManager.renameFile(stripedOldAttachPath, stripedNewAttachPath);
+				// this.adapter.copy(stripedOldAttachPath, stripedNewAttachPath);
+				// Vault.recurseChildren(stripedOldAttachPath, (file: TAbstractFile) => {
+
+				// })
+				new Notice(`Folder already exists: ${stripedNewAttachPath}`);
+			}
+		} else {
+			this.adapter.rename(stripedOldAttachPath, stripedNewAttachPath);
+		}
+	}
+
+	async emptyFolder(path: string): Promise<boolean> {
+		const files = await this.adapter.list(path);
+		debugLog("list files", files.files);
+		debugLog("list folders", files.folders);
+		if (files.files.length === 0) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
@@ -262,8 +310,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 		);
 		const oldPath = file.path;
 		try {
+			// this api will rename or move the file
 			await this.adapter.rename(file.path, dst);
-			// await this.adapter.remove(file.path);
 		} catch (err) {
 			new Notice(`Failed to move ${file.path} to ${dst}`);
 			throw err;
