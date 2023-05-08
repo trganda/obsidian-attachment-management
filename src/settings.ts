@@ -1,6 +1,13 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AttachmentManagementPlugin from "./main";
 
+export const SETTINGS_VARIABLES_DATES = "${date}";
+export const SETTINGS_VARIABLES_NOTEPATH = "${notepath}";
+export const SETTINGS_VARIABLES_NOTENAME = "${notename}";
+export const SETTINGS_ROOT_OBSFOLDER = "obsFolder";
+export const SETTINGS_ROOT_INFOLDER = "inFolderBelow";
+export const SETTINGS_ROOT_NEXTTONOTE = "nextToNote";
+
 export interface AttachmentManagementPluginSettings {
 	attachmentRoot: string;
 	saveAttE: string;
@@ -13,9 +20,9 @@ export interface AttachmentManagementPluginSettings {
 
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
 	attachmentRoot: "",
-	saveAttE: "obsFolder",
-	attachmentPath: "${notepath}/${notename}",
-	imageFormat: "IMG-${date}",
+	saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
+	attachmentPath: `${SETTINGS_VARIABLES_NOTEPATH}/${SETTINGS_VARIABLES_NOTENAME}`,
+	imageFormat: `IMG-${SETTINGS_VARIABLES_DATES}`,
 	dateFormat: "YYYYMMDDHHmmssSSS",
 	autoRenameFolder: true,
 	autoRenameFiles: false,
@@ -55,10 +62,10 @@ export class SettingTab extends PluginSettingTab {
 			.setDesc("Select root path for all new attachements")
 			.addDropdown((text) =>
 				text
-					.addOption("obsFolder", "Copy Obsidian settings")
-					.addOption("inFolderBelow", "In the folder specified below")
+					.addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
+					.addOption(`${SETTINGS_ROOT_INFOLDER}`, "In the folder specified below")
 					.addOption(
-						"nextToNote",
+						`${SETTINGS_ROOT_NEXTTONOTE}`,
 						"Next to note in folder specified below"
 					)
 					.setValue(this.plugin.settings.saveAttE)
@@ -87,7 +94,7 @@ export class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Attachment path")
 			.setDesc(
-				"Path of new attachment in root folder, aviliable variables ${notepath} and ${notename}"
+				`Path of new attachment in root folder, aviliable variables ${SETTINGS_VARIABLES_NOTEPATH} and ${SETTINGS_VARIABLES_NOTENAME}`
 			)
 			.addText((text) =>
 				text
@@ -103,7 +110,7 @@ export class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Image format")
 			.setDesc(
-				"Define how to name the image file, aviliable variables ${date} and ${notename}"
+				`Define how to name the image file, aviliable variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
 			)
 			.addText((text) =>
 				text
@@ -158,7 +165,7 @@ export class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Automatically rename attachment files")
 			.setDesc(
-				'When renaming md files, automatically rename attachment files if file name contains "${notename}".'
+				`When renaming md files, automatically rename attachment files if file name contains "${SETTINGS_VARIABLES_NOTENAME}".`
 			)
 			.addToggle((toggle) =>
 				toggle

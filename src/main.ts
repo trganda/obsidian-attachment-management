@@ -14,10 +14,21 @@ import {
 import {
 	AttachmentManagementPluginSettings,
 	DEFAULT_SETTINGS,
+	SETTINGS_ROOT_INFOLDER,
+	SETTINGS_ROOT_NEXTTONOTE,
+	SETTINGS_VARIABLES_DATES,
+	SETTINGS_VARIABLES_NOTENAME,
+	SETTINGS_VARIABLES_NOTEPATH,
 	SettingTab,
 } from "./settings";
 import * as path from "path";
-import { debugLog, isCanvasFile, isMarkdownFile, isPastedImage, stripPaths } from "./utils";
+import {
+	debugLog,
+	isCanvasFile,
+	isMarkdownFile,
+	isPastedImage,
+	stripPaths,
+} from "./utils";
 
 export default class AttachmentManagementPlugin extends Plugin {
 	settings: AttachmentManagementPluginSettings;
@@ -32,7 +43,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 			`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`
 		);
 		this.adapter = this.app.vault.adapter as FileSystemAdapter;
-		this.backupObsAttachPath();
 
 		this.registerEvent(
 			this.app.vault.on("create", (file: TAbstractFile) => {
@@ -108,9 +118,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 						debugLog("newAttachPath:", newAttachPath);
 
 						// TODO: same folder merge
-					  const strip = stripPaths(oldAttachPath, newAttachPath);
+						const strip = stripPaths(oldAttachPath, newAttachPath);
 						if (strip === undefined) {
-							new Notice(`Error rename path ${oldAttachPath} to ${newAttachPath}`);
+							new Notice(
+								`Error rename path ${oldAttachPath} to ${newAttachPath}`
+							);
 							return;
 						}
 
@@ -170,7 +182,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	}
 
 	async processCreateImg(file: TFile) {
-		debugLog(file.name);
+		debugLog("craeted file:", file.name);
 
 		const activeFile = this.getActiveFile();
 		if (activeFile === undefined) {
@@ -179,9 +191,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 		}
 		const ext = activeFile.extension;
 
-		debugLog(activeFile.basename);
-		debugLog(activeFile.parent?.path);
+		debugLog("active file name", activeFile.basename);
+		debugLog("active file path", activeFile.parent?.path);
 
+		// TODO: what if activeFile.parent was undefined
 		const attachPath = this.getAttachmentPath(
 			activeFile.basename,
 			activeFile.parent?.path as string
@@ -202,7 +215,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 		);
 	}
 
-	// Move and rename the file.
+	/**
+	 * Rename the file spcified by `@param file`
+	 * @param file - file to rename
+	 * @param attachPath - where to the renamed file will be move to
+	 * @param attachName - name of the renamed file
+	 * @param sourcePath - path of the file
+	 * @param extension - extension of associated activefile of file
+	 * @param replaceCurrentLine - whether to replace the link of renamed file
+	 * @returns
+	 */
 	async renameFile(
 		file: TFile,
 		attachPath: string,
@@ -294,24 +316,24 @@ export default class AttachmentManagementPlugin extends Plugin {
 		const attachPath = path.join(
 			root,
 			this.settings.attachmentPath
-				.replace("${notepath}", notePath)
-				.replace("${notename}", noteName)
+				.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath)
+				.replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
 		);
 		return normalizePath(attachPath);
 	}
 
 	getRootPath(notePath: string): string {
-		let root = "/";
+		let root = "";
 
 		//@ts-ignore
 		const obsmediadir = app.vault.getConfig("attachmentFolderPath");
 		// debugLog("obsmediadir", obsmediadir);
 		switch (this.settings.saveAttE) {
-			case "inFolderBelow":
-				root = path.join(this.settings.attachmentRoot);
+			case `${SETTINGS_ROOT_INFOLDER}`:
+				root = path.posix.join(this.settings.attachmentRoot);
 				break;
-			case "nextToNote":
-				root = path.join(
+			case `${SETTINGS_ROOT_NEXTTONOTE}`:
+				root = path.posix.join(
 					notePath,
 					this.settings.attachmentRoot.replace("./", "")
 				);
@@ -322,44 +344,28 @@ export default class AttachmentManagementPlugin extends Plugin {
 					root = obsmediadir;
 				} else if (obsmediadir === "./") {
 					// in current folder case
-					root = path.join(notePath);
+					root = path.posix.join(notePath);
 				} else if (obsmediadir.match(/\.\/.+/g) !== null) {
 					// in subfolder case
-					root = path.join(notePath, obsmediadir.replace("./", ""));
+					root = path.posix.join(
+						notePath,
+						obsmediadir.replace("./", "")
+					);
 				} else {
 					// in specified folder case
 					root = obsmediadir;
 				}
 		}
-		return normalizePath(root);
+
+		return root === "/" ? root : normalizePath(root);
 	}
 
 	getPastedImageFileName(noteName: string) {
 		const datetime = window.moment().format(this.settings.dateFormat);
 		const imgName = this.settings.imageFormat
-			.replace("${date}", datetime)
-			.replace("${notename}", noteName);
+			.replace(`${SETTINGS_VARIABLES_DATES}`, datetime)
+			.replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
 		return imgName;
-	}
-
-	backupObsAttachPath() {
-		//@ts-ignore
-		this.originalObsAttachPath = this.app.vault.getConfig(
-			"attachmentFolderPath"
-		);
-	}
-
-	restoreObsAttachPath() {
-		//@ts-ignore
-		this.app.vault.setConfig(
-			"attachmentFolderPath",
-			this.originalObsAttachPath
-		);
-	}
-
-	updateAttachmentFolderConfig(path: string) {
-		//@ts-ignore
-		this.app.vault.setConfig("attachmentFolderPath", path);
 	}
 
 	onunload() {}
