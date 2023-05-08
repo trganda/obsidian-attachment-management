@@ -167,7 +167,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			if (renameType) {
 				// rename the file
 				// await this.adapter.rename(strip.nsrc, strip.ndst);
-				new Notice(`Stopped rename attach file, same file name exists: ${stripedOldAttachPath}`);
+				new Notice(`Same file name exists: ${stripedOldAttachPath}`);
 			} else {
 				// rename the folder
 				// check if the source folder was empty, if so, ignore it
@@ -179,7 +179,26 @@ export default class AttachmentManagementPlugin extends Plugin {
 				new Notice(`Folder already exists: ${stripedNewAttachPath}`);
 			}
 		} else {
-			this.adapter.rename(stripedOldAttachPath, stripedNewAttachPath);
+			debugLog("relative:", path.posix.relative(oldAttachPath, stripedOldAttachPath));
+			debugLog("relative number:", path.posix.relative(oldAttachPath, stripedOldAttachPath).split("/").length);
+			// if (renameType) {
+				// rename the file
+				// TODO: read the coresponding file, found the oldAttachPath link, replace with the new link
+				// How to craete mk link coresponding to oldAttachPath?
+				//   1. create a temp file with oldAttachPath
+				//   2. call generateMarkdownLink()
+				//   3. delete the temp file
+			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
+				if (cfile.path === stripedOldAttachPath) {
+					this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
+					return;
+				}
+			})
+				// this.adapter.rename(stripedOldAttachPath, stripedNewAttachPath);
+				// this.app.fileManager.renameFile(temp, stripedNewAttachPath);
+			// }
+
+			// const relToOldAttach = path.posix.relative(oldAttachPath, stripedOldAttachPath)
 		}
 	}
 
