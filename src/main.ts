@@ -62,7 +62,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 				}
 				if (isPastedImage(file)) {
 					debugLog("pasted image created", file);
-					this.processCreateImg(file);
+					this.onCreateImg(file);
 				}
 			})
 		);
@@ -84,52 +84,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 					}
 
 					if (file instanceof TFile) {
-						// if the renamed file was a attachment, skip
-						const flag = await this.isAttachment(file, oldPath);
-						if (flag) {
-							return;
-						}
-						const rf = file as TFile;
-						// oldnotename, oldnotepath
-						const oldNotePath = path.posix.dirname(oldPath);
-						const oldNoteName = path.posix.basename(
-							oldPath,
-							path.posix.extname(oldPath)
-						);
-
-						debugLog("oldNotePath:", oldNotePath);
-						debugLog("oldNoteName:", oldNoteName);
-
-						let oldAttachPath = this.getAttachmentPath(
-							oldNoteName,
-							oldNotePath
-						);
-						let newAttachPath = this.getAttachmentPath(
-							rf.basename,
-							rf.parent?.path as string
-						);
-
-						// if the attachment file does not exist, skip
-						if (!this.adapter.exists(oldAttachPath)) {
-							return;
-						}
-
-						debugLog("oldAttachPath:", oldAttachPath);
-						debugLog("newAttachPath:", newAttachPath);
-
-						// TODO: same folder merge
-						const strip = stripPaths(oldAttachPath, newAttachPath);
-						if (strip === undefined) {
-							new Notice(
-								`Error rename path ${oldAttachPath} to ${newAttachPath}`
-							);
-							return;
-						}
-
-						debugLog("nsrc:", strip.nsrc);
-						debugLog("ndst:", strip.ndst);
-						this.adapter.rename(strip.nsrc, strip.ndst);
+						await this.onRename(file, oldPath);
 					} else if (file instanceof TFolder) {
+						// ignore folder
 						const rf = file as TFolder;
 						debugLog("folder:", rf.name);
 						return;
@@ -142,6 +99,57 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
+	async onRename(file: TAbstractFile, oldPath: string) {
+		// if the renamed file was a attachment, skip
+		const flag = await this.isAttachment(file, oldPath);
+		if (flag) {
+			return;
+		}
+		const rf = file as TFile;
+		// oldnotename, oldnotepath
+		const oldNotePath = path.posix.dirname(oldPath);
+		const oldNoteName = path.posix.basename(
+			oldPath,
+			path.posix.extname(oldPath)
+		);
+
+		debugLog("oldNotePath:", oldNotePath);
+		debugLog("oldNoteName:", oldNoteName);
+
+		let oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath);
+		let newAttachPath = this.getAttachmentPath(
+			rf.basename,
+			rf.parent?.path as string
+		);
+
+		// if the attachment file does not exist, skip
+		if (!this.adapter.exists(oldAttachPath)) {
+			return;
+		}
+
+		debugLog("oldAttachPath:", oldAttachPath);
+		debugLog("newAttachPath:", newAttachPath);
+
+		// TODO: same folder merge
+		const strip = stripPaths(oldAttachPath, newAttachPath);
+		if (strip === undefined) {
+			new Notice(
+				`Error rename path ${oldAttachPath} to ${newAttachPath}`
+			);
+			return;
+		}
+
+		debugLog("nsrc:", strip.nsrc);
+		debugLog("ndst:", strip.ndst);
+		this.adapter.rename(strip.nsrc, strip.ndst);
+	}
+
+	/**
+	 * Check if the file is an attachment
+	 * @param file - the file to check
+	 * @param oldPath - the old path of this file
+	 * @returns true if the file is an attachment, otherwise false
+	 */
 	async isAttachment(file: TAbstractFile, oldPath: string): Promise<boolean> {
 		if (file instanceof TFile) {
 			// checking the old state of the file
@@ -181,7 +189,12 @@ export default class AttachmentManagementPlugin extends Plugin {
 		return true;
 	}
 
-	async processCreateImg(file: TFile) {
+	/**
+	 * Processing the post-processing of created img file.
+	 * @param file - thie file to process
+	 * @returns - none
+	 */
+	async onCreateImg(file: TFile) {
 		debugLog("craeted file:", file.name);
 
 		const activeFile = this.getActiveFile();
@@ -223,7 +236,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	 * @param sourcePath - path of the file
 	 * @param extension - extension of associated activefile of file
 	 * @param replaceCurrentLine - whether to replace the link of renamed file
-	 * @returns
+	 * @returns - none
 	 */
 	async renameFile(
 		file: TFile,
@@ -291,26 +304,31 @@ export default class AttachmentManagementPlugin extends Plugin {
 		view.setViewData(val, false);
 	}
 
+	/**
+	 * Return the active text file, `md` or `canvas`
+	 * @returns - the active file or undefined if no active file
+	 */
 	getActiveFile(): TFile | undefined {
-		const view = this.app.workspace.getActiveViewOfType(TextFileView);
+		const view = this.getActiveView();
 		const file = view?.file;
 		debugLog("active file", file?.path);
 		return file;
 	}
 
-	getActiveEditor(): Editor | undefined {
-		const view = this.app.workspace.getActiveViewOfType(TextFileView);
-		const mdView = view as MarkdownView;
-		if (mdView) {
-			return mdView?.editor;
-		}
-		return undefined;
-	}
-
+	/**
+	 * Return the active view of text file
+	 * @returns - the active view of text file
+	 */
 	getActiveView() {
 		return this.app.workspace.getActiveViewOfType(TextFileView);
 	}
 
+	/**
+	 * Generate the attachment path with specified variables
+	 * @param noteName - basename (without extension) of note
+	 * @param notePath - path of note
+	 * @returns attachment path
+	 */
 	getAttachmentPath(noteName: string, notePath: string): string {
 		const root = this.getRootPath(notePath);
 		const attachPath = path.join(
@@ -322,6 +340,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 		return normalizePath(attachPath);
 	}
 
+	/**
+	 * Get root path to save attachment file
+	 * @param notePath - path of note
+	 * @returns root path to save attachment file
+	 */
 	getRootPath(notePath: string): string {
 		let root = "";
 
@@ -360,6 +383,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 		return root === "/" ? root : normalizePath(root);
 	}
 
+	/**
+	 * Generate the image file name with specified variable
+	 * @param noteName - basename (without extension) of note
+	 * @returns image file name
+	 */
 	getPastedImageFileName(noteName: string) {
 		const datetime = window.moment().format(this.settings.dateFormat);
 		const imgName = this.settings.imageFormat
