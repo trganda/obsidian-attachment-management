@@ -146,9 +146,9 @@ export class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Automatically rename attachment folder")
+			.setName("Automatically rename attachment")
 			.setDesc(
-				"Automatically rename attachment folder while rename corresponding `md/cavans` file"
+				"Automatically rename attachment folder/filename while rename the folder/filename of corresponding md/cavans file"
 			)
 			.addToggle((toggle) =>
 				toggle
@@ -162,19 +162,19 @@ export class SettingTab extends PluginSettingTab {
 					})
 			);
 
-		new Setting(containerEl)
-			.setName("Automatically rename attachment files")
-			.setDesc(
-				`When renaming md files, automatically rename attachment files if file name contains "${SETTINGS_VARIABLES_NOTENAME}".`
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.autoRenameFiles)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.autoRenameFiles = value;
-						await this.plugin.saveSettings();
-					})
-			);
+		// new Setting(containerEl)
+		// 	.setName("Automatically rename attachment files")
+		// 	.setDesc(
+		// 		`When renaming md files, automatically rename attachment files if file name contains "${SETTINGS_VARIABLES_NOTENAME}".`
+		// 	)
+		// 	.addToggle((toggle) =>
+		// 		toggle
+		// 			.setValue(this.plugin.settings.autoRenameFiles)
+		// 			.onChange(async (value: boolean) => {
+		// 				this.plugin.settings.autoRenameFiles = value;
+		// 				await this.plugin.saveSettings();
+		// 			})
+		// 	);
 
 		this.displSw(containerEl);
 	}

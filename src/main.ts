@@ -46,6 +46,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.adapter = this.app.vault.adapter as FileSystemAdapter;
 
 		this.registerEvent(
+			// not working while drop file to text view
 			this.app.vault.on("create", (file: TAbstractFile) => {
 				// only processing create of file, ignore folder creation
 				if (!(file instanceof TFile)) {
@@ -62,7 +63,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 					return;
 				}
 				if (isPastedImage(file)) {
-					debugLog("pasted image created", file);
+					debugLog("Image created", file.path);
 					this.onCreateImg(file);
 				}
 			})
@@ -73,8 +74,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 			this.app.vault.on(
 				"rename",
 				async (file: TAbstractFile, oldPath: string) => {
-					debugLog("new path:", file.path);
-					debugLog("old path:", oldPath);
+					debugLog("New path:", file.path);
+					debugLog("Old path:", oldPath);
 
 					if (
 						!this.settings.autoRenameFolder ||
@@ -87,13 +88,15 @@ export default class AttachmentManagementPlugin extends Plugin {
 					if (file instanceof TFile) {
 						let renameType = false;
 						if (path.basename(oldPath, path.extname(oldPath)) === path.basename(file.path, path.extname(file.path))) {
-							// rename the folder
+							// rename event of folder
 							renameType = false;
+							debugLog("renameType: Folder");
 						} else {
-							// rename the file
+							// rename event of file
 							renameType = true;
+							debugLog("renameType: File");
 						}
-						debugLog("renameType:", renameType);
+						
 						await this.onRename(file, oldPath, renameType);
 					} else if (file instanceof TFolder) {
 						// ignore folder
@@ -123,8 +126,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 			path.posix.extname(oldPath)
 		);
 
-		debugLog("oldNotePath:", oldNotePath);
-		debugLog("oldNoteName:", oldNoteName);
+		debugLog("Old Note Path:", oldNotePath);
+		debugLog("Old Note Name:", oldNoteName);
 
 		let oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath);
 		let newAttachPath = this.getAttachmentPath(
@@ -132,8 +135,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 			rf.parent?.path as string
 		);
 
-		debugLog("oldAttachPath:", oldAttachPath);
-		debugLog("newAttachPath:", newAttachPath);
+		debugLog("Old attachment path:", oldAttachPath);
+		debugLog("New attachment path:", newAttachPath);
 
 		// if the attachment file does not exist, skip
 		const exitsAttachPath = await this.adapter.exists(oldAttachPath)
@@ -141,10 +144,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 			return;
 		}
 
-		// TODO: same folder merge
-		// There was a possible problem, if the rename folder has multi sub-files,
-		// the file will alos trigger the rename event multi time. It's better to skip it or 
-		// sample the processing after first rename.
 		const strip = stripPaths(oldAttachPath, newAttachPath);
 		if (strip === undefined) {
 			new Notice(
@@ -159,24 +158,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 		debugLog("nsrc:", stripedOldAttachPath);
 		debugLog("ndst:", stripedNewAttachPath);
 
-		// TODO: update link in `md` or `canvas` file
-		// this.adapter.rename(strip.nsrc, strip.ndst);
 		const exitsDst = await this.adapter.exists(stripedNewAttachPath);
 		if (exitsDst) {
-			// merge the folder
+			// if the file exists in the vault
 			if (renameType) {
-				// rename the file
-				// await this.adapter.rename(strip.nsrc, strip.ndst);
-				new Notice(`Same file name exists: ${stripedOldAttachPath}`);
+				new Notice(`Same file name exists: ${stripedNewAttachPath}`);
+				return;
 			} else {
-				// rename the folder
-				// check if the source folder was empty, if so, ignore it
-				// this.app.fileManager.renameFile(stripedOldAttachPath, stripedNewAttachPath);
-				// this.adapter.copy(stripedOldAttachPath, stripedNewAttachPath);
-				// Vault.recurseChildren(stripedOldAttachPath, (file: TAbstractFile) => {
-
-				// })
+				// for most case, this should not be happen, we just notice it.
 				new Notice(`Folder already exists: ${stripedNewAttachPath}`);
+				return;
 			}
 		} else {
 			debugLog("relative:", path.posix.relative(oldAttachPath, stripedOldAttachPath));
@@ -188,6 +179,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 				//   1. create a temp file with oldAttachPath
 				//   2. call generateMarkdownLink()
 				//   3. delete the temp file
+			// looks like the FileManager.renameFile could work right in `rename` event, since it will udpate the link automatically.
+			// TODO: this may take a few long time to complete
 			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
 				if (cfile.path === stripedOldAttachPath) {
 					this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
@@ -258,12 +251,12 @@ export default class AttachmentManagementPlugin extends Plugin {
 	}
 
 	/**
-	 * Processing the post-processing of created img file.
+	 * Post-processing of created img file.
 	 * @param file - thie file to process
 	 * @returns - none
 	 */
 	async onCreateImg(file: TFile) {
-		debugLog("craeted file:", file.name);
+		debugLog("Craeted file:", file.name);
 
 		const activeFile = this.getActiveFile();
 		if (activeFile === undefined) {
@@ -272,8 +265,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 		}
 		const ext = activeFile.extension;
 
-		debugLog("active file name", activeFile.basename);
-		debugLog("active file path", activeFile.parent?.path);
+		debugLog("Active file name", activeFile.basename);
+		debugLog("Active file path", activeFile.parent?.path);
 
 		// TODO: what if activeFile.parent was undefined
 		const attachPath = this.getAttachmentPath(
@@ -285,7 +278,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 			this.getPastedImageFileName(activeFile.basename) +
 			"." +
 			file.extension;
-		debugLog("New path and name of created file:", attachPath, attachName);
+		
+		debugLog("New path of created file:", attachPath, attachName);
+
+		// no using updatelink right now.
 		this.renameFile(
 			file,
 			attachPath,
@@ -320,7 +316,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 		}
 
 		debugLog("Souce path:", file.path);
+
 		const dst = normalizePath(path.join(attachPath, attachName));
+		
 		debugLog("Destination path:", dst);
 
 		const oldLinkText = this.app.fileManager.generateMarkdownLink(
@@ -328,11 +326,14 @@ export default class AttachmentManagementPlugin extends Plugin {
 			sourcePath
 		);
 		const oldPath = file.path;
+
 		try {
 			// this api will rename or move the file
-			await this.adapter.rename(file.path, dst);
+			await this.app.fileManager.renameFile(file, dst);
+			new Notice(`reanamed ${oldPath} to ${dst}`);
+			// await this.adapter.rename(file.path, dst);
 		} catch (err) {
-			new Notice(`Failed to move ${file.path} to ${dst}`);
+			new Notice(`failed to move ${file.path} to ${dst}`);
 			throw err;
 		}
 
@@ -370,6 +371,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		}
 
 		view.setViewData(val, false);
+		new Notice(`update 1 link in ${sourcePath}`);
 	}
 
 	/**

@@ -1,4 +1,4 @@
-import { Notice, TAbstractFile, TFile } from "obsidian";
+import { Notice, TAbstractFile, TFile, TFolder, normalizePath } from "obsidian";
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 
@@ -57,8 +57,8 @@ export function stripPaths(
 	src: string,
 	dst: string
 ): { nsrc: string; ndst: string } | undefined {
-	if (src === dst) { 
-		return {nsrc: src, ndst: dst};
+	if (src === dst) {
+		return { nsrc: src, ndst: dst };
 	}
 
 	const srcParts = src.split("/");
@@ -74,9 +74,54 @@ export function stripPaths(
 
 		// find the first different part
 		if (srcPart !== dstPart) {
-			return {nsrc: srcParts.slice(0, i+1).join("/"), ndst: dstParts.slice(0, i+1).join("/")};
+			return {
+				nsrc: srcParts.slice(0, i + 1).join("/"),
+				ndst: dstParts.slice(0, i + 1).join("/"),
+			};
 		}
 	}
 
 	return { nsrc: "", ndst: "" };
+}
+
+/**
+ * Calucate the depth from parent to children
+ * @param parent - parent path
+ * @param children - children path
+ * @returns depth number
+ */
+export function pathDepth(parent: string, children: string): number | null {
+	if (!children.startsWith(parent)) {
+		return null;
+	}
+
+	if (parent === children) {
+		return 0;
+	}
+
+	const suffixPath = children.slice(parent.length, children.length);
+
+	return suffixPath.split("/").length - 1;
+}
+
+export function getTAbstractFileByPathDepth(
+	file: TAbstractFile,
+	parent: string
+): TAbstractFile | null {
+	const depth = pathDepth(parent, file.path);
+
+	if (depth === null) {
+		return null;
+	}
+
+	if (depth === 0) {
+		return file;
+	}
+
+	let paraentFile: TAbstractFile | null = null;
+	for (let i = 0; i < depth; i++) {
+		paraentFile = file.parent;
+	}
+
+	return paraentFile;
 }
