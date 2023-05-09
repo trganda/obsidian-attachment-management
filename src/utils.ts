@@ -1,4 +1,4 @@
-import { Notice, TAbstractFile, TFile, TFolder, normalizePath } from "obsidian";
+import { Notice, TAbstractFile, TFile, TFolder, Vault, normalizePath } from "obsidian";
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 

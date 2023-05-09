@@ -95,6 +95,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 					}
 
 					if (file instanceof TFile) {
+						// if the renamed file was a attachment, skip
+						const flag = await this.isAttachment(file, oldPath);
+						if (flag) {
+							debugLog(
+								"Not was An Attachment, Skipped:",
+								file.path
+							);
+							return;
+						}
+
 						let renameType = false;
 						if (
 							path.basename(oldPath, path.extname(oldPath)) ===
@@ -109,18 +119,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 							debugLog("RenameType: File");
 						}
 
-						// if the renamed file was a attachment, skip
-						const flag = await this.isAttachment(file, oldPath);
-						if (flag) {
-							debugLog("Not was An Attachment, Skipped:", file.path);
-							return;
-						}
-
 						await this.onRename(file, oldPath, renameType);
 					} else if (file instanceof TFolder) {
 						// ignore folder
-						const rf = file as TFolder;
-						debugLog("folder:", rf.name);
+						debugLog("Ignore Rename Folder:", file.name);
 						return;
 					}
 				}
@@ -143,7 +145,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 						return;
 					}
 
-					this.onDrop(evt, activeFile);
+					this.onDrop(evt, activeFile, editor, info);
 				}
 			)
 		);
@@ -168,20 +170,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
-	async onDrop(ev: DragEvent, activeFile: TFile, dropType?: string) {
+	async onDrop(ev: DragEvent, activeFile: TFile, editor?: Editor, info?: MarkdownView) {
 		const df = ev.dataTransfer;
 		if (df === null) {
+			debugLog("Null dataTransfer");
 			return;
 		}
 		ev.preventDefault();
-		debugLog("Drop files", df.files);
-		debugLog("Drop items", df.items);
 
 		const fItems = df.files;
-		// const tItems = df.items;
-
 		// list all drop files
-		debugLog("fItems length:", fItems.length);
 		for (let key = 0; key < fItems.length; key++) {
 			let dropFile = fItems.item(key);
 			if (dropFile === null) {
@@ -198,33 +196,73 @@ export default class AttachmentManagementPlugin extends Plugin {
 					activeFile.basename,
 					activeFile.parent?.path as string
 				);
-				this.updateAttachmentFolderConfig(attachPath);
 				const name = this.getPastedImageFileName(activeFile.basename);
-				let extension = "";
-				dropFile.type === "image/png"
-					? (extension = "png")
-					: dropFile.type === "image/jpeg" && (extension = "jpeg");
+				const extension = dropFile.name.substring(dropFile.name.lastIndexOf("."));
 
-				const buf = await dropFile.arrayBuffer();
+				if (isCanvasFile(activeFile)) {
+					// Just move the exists file
+					let root = "";
+					const notePath = activeFile.parent?.path as string;
+					//@ts-ignore
+					const obsmediadir = app.vault.getConfig(
+						"attachmentFolderPath"
+					);
+					if (obsmediadir === "/") {
+						// in vault root folder case
+						root = "/";
+					} else if (obsmediadir === "./") {
+						// in current folder case
+						root = path.posix.join(notePath);
+					} else if (obsmediadir.match(/\.\/.+/g) !== null) {
+						// in subfolder case
+						root = path.posix.join(
+							notePath,
+							obsmediadir.replace("./", "")
+						);
+					} else {
+						// in specified folder case
+						root = obsmediadir;
+					}
+					debugLog("Root:", root);
+					const oldAttachPath = normalizePath(path.posix.join(root, dropFile.name));
+					debugLog("oldAttachPath:", oldAttachPath);
+					const oldAttach = this.app.vault.getAbstractFileByPath(oldAttachPath);
+					if (oldAttach === null) {
+						return;
+					}
+					const namePath = normalizePath(path.posix.join(attachPath, name + extension));
+					debugLog("namePath:", namePath);
+					this.app.fileManager.renameFile(oldAttach, namePath)
+				} else if (isMarkdownFile(activeFile)) {
+					this.updateAttachmentFolderConfig(attachPath);
+					const buf = await dropFile.arrayBuffer();
+					if (!(await this.adapter.exists(attachPath))) {
+						await this.adapter.mkdir(attachPath);
+					}
 
-				if (!(await this.adapter.exists(attachPath))) {
-					await this.adapter.mkdir(attachPath);
+					// @ts-ignore
+					const attachFile = await this.app.saveAttachment(
+						name,
+						extension,
+						buf
+					);
+
+					debugLog("Save attachment to:", attachFile.path);
+					this.restoreConfigs();
+					const mdLink =
+						await this.app.fileManager.generateMarkdownLink(
+							attachFile,
+							activeFile.path
+						);
+					debugLog("Markdown link:", mdLink);
+					if (editor === undefined) {
+						new Notice("No active editor, add drop file link to file failed")
+						return;
+					}
+					const curPos = editor.getCursor("from");
+					debugLog("curPos Line:", curPos.line)
+					editor.replaceSelection(mdLink);
 				}
-
-				// @ts-ignore
-				const attachFile = await this.app.saveAttachment(
-					name,
-					extension,
-					buf
-				);
-
-				debugLog("Save attachment to:", attachFile.path);
-				this.restoreConfigs();
-				const mdLink = await this.app.fileManager.generateMarkdownLink(
-					attachFile,
-					activeFile.path
-				);
-				debugLog("Markdown link:", mdLink);
 			}
 		}
 	}
@@ -247,8 +285,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 			rf.parent?.path as string
 		);
 
-		debugLog("Old attachment path:", oldAttachPath);
-		debugLog("New attachment path:", newAttachPath);
+		debugLog("Old Attachment Path:", oldAttachPath);
+		debugLog("New Attachment Path:", newAttachPath);
 
 		// if the attachment file does not exist, skip
 		const exitsAttachPath = await this.adapter.exists(oldAttachPath);
@@ -267,8 +305,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 		const stripedOldAttachPath = strip.nsrc;
 		const stripedNewAttachPath = strip.ndst;
 
-		debugLog("nsrc:", stripedOldAttachPath);
-		debugLog("ndst:", stripedNewAttachPath);
+		debugLog("Striped Source:", stripedOldAttachPath);
+		debugLog("Striped Destination:", stripedNewAttachPath);
 
 		const exitsDst = await this.adapter.exists(stripedNewAttachPath);
 		if (exitsDst) {
@@ -282,16 +320,16 @@ export default class AttachmentManagementPlugin extends Plugin {
 				return;
 			}
 		} else {
-			debugLog(
-				"relative:",
-				path.posix.relative(oldAttachPath, stripedOldAttachPath)
-			);
-			debugLog(
-				"relative number:",
-				path.posix
-					.relative(oldAttachPath, stripedOldAttachPath)
-					.split("/").length
-			);
+			// debugLog(
+			// 	"relative:",
+			// 	path.posix.relative(oldAttachPath, stripedOldAttachPath)
+			// );
+			// debugLog(
+			// 	"relative number:",
+			// 	path.posix
+			// 		.relative(oldAttachPath, stripedOldAttachPath)
+			// 		.split("/").length
+			// );
 			// TODO: this may take a few long time to complete
 			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
 				if (cfile.path === stripedOldAttachPath) {
@@ -356,10 +394,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 	 * @returns - none
 	 */
 	async processPastedImg(file: TFile) {
-
 		const activeFile = this.getActiveFile();
 		if (activeFile === undefined) {
-			new Notice("Error: No active file found.");
+			new Notice("Error: no active file found.");
 			return;
 		}
 		const ext = activeFile.extension;
@@ -413,11 +450,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 			await this.adapter.mkdir(attachPath);
 		}
 
-		debugLog("Souce Path:", file.path);
+		debugLog("Souce Path of Reanme:", file.path);
 
 		const dest = normalizePath(path.posix.join(attachPath, attachName));
 
-		debugLog("Destination Path:", dest);
+		debugLog("Destination Path of Reanme:", dest);
 
 		const oldLinkText = this.app.fileManager.generateMarkdownLink(
 			file,
@@ -429,10 +466,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 		try {
 			// this api will rename or move the file
 			await this.app.fileManager.renameFile(file, dest);
-			new Notice(`reanamed ${oldName} to ${attachName}`);
+			new Notice(`Renamed ${oldName} to ${attachName}`);
 			// await this.adapter.rename(file.path, dst);
 		} catch (err) {
-			new Notice(`failed to move ${file.path} to ${dest}`);
+			new Notice(`Failed to rename ${file.path} to ${dest}`);
 			throw err;
 		}
 
@@ -451,7 +488,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		const view = this.getActiveView();
 		if (view === null) {
 			new Notice(
-				`Failed to replace linking in ${sourcePath}: no active editor`
+				`Failed to update link in ${sourcePath}: no active view`
 			);
 			return;
 		}
@@ -470,7 +507,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		}
 
 		view.setViewData(val, false);
-		new Notice(`update 1 link in ${sourcePath}`);
+		new Notice(`Updated 1 link in ${sourcePath}`);
 	}
 
 	/**
