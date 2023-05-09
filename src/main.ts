@@ -170,7 +170,12 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
-	async onDrop(ev: DragEvent, activeFile: TFile, editor?: Editor, info?: MarkdownView) {
+	async onDrop(
+		ev: DragEvent,
+		activeFile: TFile,
+		editor?: Editor,
+		info?: MarkdownView
+	) {
 		const df = ev.dataTransfer;
 		if (df === null) {
 			debugLog("Null dataTransfer");
@@ -186,21 +191,19 @@ export default class AttachmentManagementPlugin extends Plugin {
 				debugLog("continue");
 				continue;
 			}
-			if (
-				dropFile.name !== "" &&
-				(dropFile.type === "image/png" ||
-					dropFile.type === "image/jpeg")
-			) {
+			if (dropFile.name !== "") {
 				debugLog("Drop File Name:", dropFile.name);
 				const attachPath = this.getAttachmentPath(
 					activeFile.basename,
 					activeFile.parent?.path as string
 				);
 				const name = this.getPastedImageFileName(activeFile.basename);
-				const extension = dropFile.name.substring(dropFile.name.lastIndexOf("."));
+				const extension = dropFile.name.substring(
+					dropFile.name.lastIndexOf(".")
+				);
 
 				if (isCanvasFile(activeFile)) {
-					// Just move the exists file
+					// TODO: fix canvas drop
 					let root = "";
 					const notePath = activeFile.parent?.path as string;
 					//@ts-ignore
@@ -224,15 +227,23 @@ export default class AttachmentManagementPlugin extends Plugin {
 						root = obsmediadir;
 					}
 					debugLog("Root:", root);
-					const oldAttachPath = normalizePath(path.posix.join(root, dropFile.name));
+					const oldAttachPath = normalizePath(
+						path.posix.join(root, dropFile.name)
+					);
 					debugLog("oldAttachPath:", oldAttachPath);
-					const oldAttach = this.app.vault.getAbstractFileByPath(oldAttachPath);
+					const oldAttach =
+						this.app.vault.getAbstractFileByPath(oldAttachPath);
+					if (!await this.adapter.exists(oldAttachPath)) {
+						debugLog(`${oldAttachPath} not Exists`);
+					}
 					if (oldAttach === null) {
 						return;
 					}
-					const namePath = normalizePath(path.posix.join(attachPath, name + extension));
+					const namePath = normalizePath(
+						path.posix.join(attachPath, name + extension)
+					);
 					debugLog("namePath:", namePath);
-					this.app.fileManager.renameFile(oldAttach, namePath)
+					this.app.fileManager.renameFile(oldAttach, namePath);
 				} else if (isMarkdownFile(activeFile)) {
 					this.updateAttachmentFolderConfig(attachPath);
 					const buf = await dropFile.arrayBuffer();
@@ -256,11 +267,13 @@ export default class AttachmentManagementPlugin extends Plugin {
 						);
 					debugLog("Markdown link:", mdLink);
 					if (editor === undefined) {
-						new Notice("No active editor, add drop file link to file failed")
+						new Notice(
+							"No active editor, add drop file link to file failed"
+						);
 						return;
 					}
 					const curPos = editor.getCursor("from");
-					debugLog("curPos Line:", curPos.line)
+					debugLog("curPos Line:", curPos.line);
 					editor.replaceSelection(mdLink);
 				}
 			}
@@ -320,16 +333,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 				return;
 			}
 		} else {
-			// debugLog(
-			// 	"relative:",
-			// 	path.posix.relative(oldAttachPath, stripedOldAttachPath)
-			// );
-			// debugLog(
-			// 	"relative number:",
-			// 	path.posix
-			// 		.relative(oldAttachPath, stripedOldAttachPath)
-			// 		.split("/").length
-			// );
 			// TODO: this may take a few long time to complete
 			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
 				if (cfile.path === stripedOldAttachPath) {
