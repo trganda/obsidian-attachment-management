@@ -25,6 +25,7 @@ import {
 import * as path from "path";
 import {
 	debugLog,
+	getTAbstractFileByPathDepth,
 	isCanvasFile,
 	isMarkdownFile,
 	isPastedImage,
@@ -172,26 +173,13 @@ export default class AttachmentManagementPlugin extends Plugin {
 		} else {
 			debugLog("relative:", path.posix.relative(oldAttachPath, stripedOldAttachPath));
 			debugLog("relative number:", path.posix.relative(oldAttachPath, stripedOldAttachPath).split("/").length);
-			// if (renameType) {
-				// rename the file
-				// TODO: read the coresponding file, found the oldAttachPath link, replace with the new link
-				// How to craete mk link coresponding to oldAttachPath?
-				//   1. create a temp file with oldAttachPath
-				//   2. call generateMarkdownLink()
-				//   3. delete the temp file
-			// looks like the FileManager.renameFile could work right in `rename` event, since it will udpate the link automatically.
 			// TODO: this may take a few long time to complete
 			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
 				if (cfile.path === stripedOldAttachPath) {
 					this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
 					return;
 				}
-			})
-				// this.adapter.rename(stripedOldAttachPath, stripedNewAttachPath);
-				// this.app.fileManager.renameFile(temp, stripedNewAttachPath);
-			// }
-
-			// const relToOldAttach = path.posix.relative(oldAttachPath, stripedOldAttachPath)
+			});
 		}
 	}
 
@@ -317,23 +305,24 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 		debugLog("Souce path:", file.path);
 
-		const dst = normalizePath(path.join(attachPath, attachName));
+		const dest = normalizePath(path.posix.join(attachPath, attachName));
 		
-		debugLog("Destination path:", dst);
+		debugLog("Destination path:", dest);
 
 		const oldLinkText = this.app.fileManager.generateMarkdownLink(
 			file,
 			sourcePath
 		);
 		const oldPath = file.path;
+		const oldName = file.name;
 
 		try {
 			// this api will rename or move the file
-			await this.app.fileManager.renameFile(file, dst);
-			new Notice(`reanamed ${oldPath} to ${dst}`);
+			await this.app.fileManager.renameFile(file, dest);
+			new Notice(`reanamed ${oldName} to ${attachName}`);
 			// await this.adapter.rename(file.path, dst);
 		} catch (err) {
-			new Notice(`failed to move ${file.path} to ${dst}`);
+			new Notice(`failed to move ${file.path} to ${dest}`);
 			throw err;
 		}
 
@@ -365,7 +354,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			case "canvas":
 				val = contnet.replace(
 					`/(file\s*\:\s*\")${oldPath}(\")/`,
-					`$1${dst}$2`
+					`$1${dest}$2`
 				);
 				break;
 		}

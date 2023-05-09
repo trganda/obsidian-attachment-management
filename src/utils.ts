@@ -92,6 +92,7 @@ export function stripPaths(
  */
 export function pathDepth(parent: string, children: string): number | null {
 	if (!children.startsWith(parent)) {
+		debugLog(`Error format parent: ${parent} children: ${children}`);
 		return null;
 	}
 
