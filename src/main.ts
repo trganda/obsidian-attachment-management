@@ -182,17 +182,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			});
 		}
 	}
-
-	async emptyFolder(path: string): Promise<boolean> {
-		const files = await this.adapter.list(path);
-		debugLog("list files", files.files);
-		debugLog("list folders", files.folders);
-		if (files.files.length === 0) {
-			return true;
-		}
-		return false;
-	}
-
+	
 	/**
 	 * Check if the file is an attachment
 	 * @param file - the file to check
