@@ -67,7 +67,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 				}
 				if (isPastedImage(file)) {
 					debugLog("Image created", file.path);
-					this.onCreateImg(file);
+					this.processPastedImg(file);
 				}
 			})
 		);
@@ -347,7 +347,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	 * @param file - thie file to process
 	 * @returns - none
 	 */
-	async onCreateImg(file: TFile) {
+	async processPastedImg(file: TFile) {
 		debugLog("Craeted file:", file.name);
 
 		const activeFile = this.getActiveFile();
