@@ -66,7 +66,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 					return;
 				}
 				if (isPastedImage(file)) {
-					debugLog("Image created", file.path);
+					debugLog(
+						"On Create Event - Created Image File:",
+						file.path
+					);
 					this.processPastedImg(file);
 				}
 			})
@@ -77,8 +80,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 			this.app.vault.on(
 				"rename",
 				async (file: TAbstractFile, oldPath: string) => {
-					debugLog("New path:", file.path);
-					debugLog("Old path:", oldPath);
+					debugLog(
+						"On Rename Event - New Path and Old Path:",
+						file.path,
+						oldPath
+					);
 
 					if (
 						!this.settings.autoRenameFolder ||
@@ -96,11 +102,18 @@ export default class AttachmentManagementPlugin extends Plugin {
 						) {
 							// rename event of folder
 							renameType = false;
-							debugLog("renameType: Folder");
+							debugLog("RenameType: Folder");
 						} else {
 							// rename event of file
 							renameType = true;
-							debugLog("renameType: File");
+							debugLog("RenameType: File");
+						}
+
+						// if the renamed file was a attachment, skip
+						const flag = await this.isAttachment(file, oldPath);
+						if (flag) {
+							debugLog("Not was An Attachment, Skipped:", file.path);
+							return;
 						}
 
 						await this.onRename(file, oldPath, renameType);
@@ -192,9 +205,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 					? (extension = "png")
 					: dropFile.type === "image/jpeg" && (extension = "jpeg");
 
-				const buf = await	dropFile.arrayBuffer();
+				const buf = await dropFile.arrayBuffer();
 
-				if (!await this.adapter.exists(attachPath)) {
+				if (!(await this.adapter.exists(attachPath))) {
 					await this.adapter.mkdir(attachPath);
 				}
 
@@ -217,11 +230,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 	}
 
 	async onRename(file: TAbstractFile, oldPath: string, renameType: boolean) {
-		// if the renamed file was a attachment, skip
-		const flag = await this.isAttachment(file, oldPath);
-		if (flag) {
-			return;
-		}
 		const rf = file as TFile;
 		// oldnotename, oldnotepath
 		const oldNotePath = path.posix.dirname(oldPath);
@@ -348,7 +356,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 	 * @returns - none
 	 */
 	async processPastedImg(file: TFile) {
-		debugLog("Craeted file:", file.name);
 
 		const activeFile = this.getActiveFile();
 		if (activeFile === undefined) {
@@ -357,8 +364,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		}
 		const ext = activeFile.extension;
 
-		debugLog("Active file name", activeFile.basename);
-		debugLog("Active file path", activeFile.parent?.path);
+		debugLog("Active File Path", activeFile.path);
 
 		// TODO: what if activeFile.parent was undefined
 		const attachPath = this.getAttachmentPath(
@@ -371,7 +377,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			"." +
 			file.extension;
 
-		debugLog("New path of created file:", attachPath, attachName);
+		debugLog("New Path of File:", path.posix.join(attachPath, attachName));
 
 		// no using updatelink right now.
 		this.renameFile(
@@ -407,11 +413,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 			await this.adapter.mkdir(attachPath);
 		}
 
-		debugLog("Souce path:", file.path);
+		debugLog("Souce Path:", file.path);
 
 		const dest = normalizePath(path.posix.join(attachPath, attachName));
 
-		debugLog("Destination path:", dest);
+		debugLog("Destination Path:", dest);
 
 		const oldLinkText = this.app.fileManager.generateMarkdownLink(
 			file,
@@ -474,7 +480,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 	getActiveFile(): TFile | undefined {
 		const view = this.getActiveView();
 		const file = view?.file;
-		debugLog("active file", file?.path);
 		return file;
 	}
 
