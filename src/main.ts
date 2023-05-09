@@ -11,6 +11,7 @@ import {
 	TAbstractFile,
 	TFolder,
 	Vault,
+	WorkspaceWindow,
 } from "obsidian";
 import {
 	AttachmentManagementPluginSettings,
@@ -45,6 +46,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`
 		);
 		this.adapter = this.app.vault.adapter as FileSystemAdapter;
+		this.backupConfigs();
 
 		this.registerEvent(
 			// not working while drop file to text view
@@ -88,7 +90,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 					if (file instanceof TFile) {
 						let renameType = false;
-						if (path.basename(oldPath, path.extname(oldPath)) === path.basename(file.path, path.extname(file.path))) {
+						if (
+							path.basename(oldPath, path.extname(oldPath)) ===
+							path.basename(file.path, path.extname(file.path))
+						) {
 							// rename event of folder
 							renameType = false;
 							debugLog("renameType: Folder");
@@ -97,7 +102,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 							renameType = true;
 							debugLog("renameType: File");
 						}
-						
+
 						await this.onRename(file, oldPath, renameType);
 					} else if (file instanceof TFolder) {
 						// ignore folder
@@ -109,8 +114,106 @@ export default class AttachmentManagementPlugin extends Plugin {
 			)
 		);
 
+		this.registerEvent(
+			this.app.workspace.on(
+				"editor-drop",
+				(evt: DragEvent, editor: Editor, info: MarkdownView) => {
+					if (evt === undefined) {
+						return;
+					}
+					// only processing markdown file
+					const activeFile = this.getActiveFile();
+					if (
+						activeFile === undefined ||
+						activeFile.extension !== "md"
+					) {
+						return;
+					}
+
+					this.onDrop(evt, activeFile);
+				}
+			)
+		);
+
+		// register drop event on Dom element of root split (for editor normaly) for support no markdown files (like canvas)
+		const w = this.app.workspace.rootSplit.win;
+		this.registerDomEvent(w, "drop", (evt: DragEvent) => {
+			if (evt === undefined) {
+				return;
+			}
+
+			// ignore markdown files in this event listener
+			const activeFile = this.getActiveFile();
+			if (activeFile === undefined || activeFile.extension == "md") {
+				return;
+			}
+
+			this.onDrop(evt, activeFile);
+		});
+
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingTab(this.app, this));
+	}
+
+	async onDrop(ev: DragEvent, activeFile: TFile, dropType?: string) {
+		const df = ev.dataTransfer;
+		if (df === null) {
+			return;
+		}
+		ev.preventDefault();
+		debugLog("Drop files", df.files);
+		debugLog("Drop items", df.items);
+
+		const fItems = df.files;
+		// const tItems = df.items;
+
+		// list all drop files
+		debugLog("fItems length:", fItems.length);
+		for (let key = 0; key < fItems.length; key++) {
+			let dropFile = fItems.item(key);
+			if (dropFile === null) {
+				debugLog("continue");
+				continue;
+			}
+			if (
+				dropFile.name !== "" &&
+				(dropFile.type === "image/png" ||
+					dropFile.type === "image/jpeg")
+			) {
+				debugLog("Drop File Name:", dropFile.name);
+				const attachPath = this.getAttachmentPath(
+					activeFile.basename,
+					activeFile.parent?.path as string
+				);
+				this.updateAttachmentFolderConfig(attachPath);
+				const name = this.getPastedImageFileName(activeFile.basename);
+				let extension = "";
+				dropFile.type === "image/png"
+					? (extension = "png")
+					: dropFile.type === "image/jpeg" && (extension = "jpeg");
+
+				const buf = await	dropFile.arrayBuffer();
+
+				if (!await this.adapter.exists(attachPath)) {
+					await this.adapter.mkdir(attachPath);
+				}
+
+				// @ts-ignore
+				const attachFile = await this.app.saveAttachment(
+					name,
+					extension,
+					buf
+				);
+
+				debugLog("Save attachment to:", attachFile.path);
+				this.restoreConfigs();
+				const mdLink = await this.app.fileManager.generateMarkdownLink(
+					attachFile,
+					activeFile.path
+				);
+				debugLog("Markdown link:", mdLink);
+			}
+		}
 	}
 
 	async onRename(file: TAbstractFile, oldPath: string, renameType: boolean) {
@@ -140,7 +243,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		debugLog("New attachment path:", newAttachPath);
 
 		// if the attachment file does not exist, skip
-		const exitsAttachPath = await this.adapter.exists(oldAttachPath)
+		const exitsAttachPath = await this.adapter.exists(oldAttachPath);
 		if (!exitsAttachPath) {
 			return;
 		}
@@ -171,18 +274,29 @@ export default class AttachmentManagementPlugin extends Plugin {
 				return;
 			}
 		} else {
-			debugLog("relative:", path.posix.relative(oldAttachPath, stripedOldAttachPath));
-			debugLog("relative number:", path.posix.relative(oldAttachPath, stripedOldAttachPath).split("/").length);
+			debugLog(
+				"relative:",
+				path.posix.relative(oldAttachPath, stripedOldAttachPath)
+			);
+			debugLog(
+				"relative number:",
+				path.posix
+					.relative(oldAttachPath, stripedOldAttachPath)
+					.split("/").length
+			);
 			// TODO: this may take a few long time to complete
 			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
 				if (cfile.path === stripedOldAttachPath) {
-					this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
+					this.app.fileManager.renameFile(
+						cfile,
+						stripedNewAttachPath
+					);
 					return;
 				}
 			});
 		}
 	}
-	
+
 	/**
 	 * Check if the file is an attachment
 	 * @param file - the file to check
@@ -256,7 +370,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			this.getPastedImageFileName(activeFile.basename) +
 			"." +
 			file.extension;
-		
+
 		debugLog("New path of created file:", attachPath, attachName);
 
 		// no using updatelink right now.
@@ -296,7 +410,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		debugLog("Souce path:", file.path);
 
 		const dest = normalizePath(path.posix.join(attachPath, attachName));
-		
+
 		debugLog("Destination path:", dest);
 
 		const oldLinkText = this.app.fileManager.generateMarkdownLink(
@@ -368,7 +482,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	 * Return the active view of text file
 	 * @returns - the active view of text file
 	 */
-	getActiveView() {
+	getActiveView(): TextFileView | null {
 		return this.app.workspace.getActiveViewOfType(TextFileView);
 	}
 
@@ -445,7 +559,28 @@ export default class AttachmentManagementPlugin extends Plugin {
 		return imgName;
 	}
 
-	onunload() {}
+	backupConfigs() {
+		//@ts-ignore
+		this.originalObsAttachPath = this.app.vault.getConfig(
+			"attachmentFolderPath"
+		);
+	}
+
+	restoreConfigs() {
+		//@ts-ignore
+		this.app.vault.setConfig(
+			"attachmentFolderPath",
+			this.originalObsAttachPath
+		);
+	}
+	updateAttachmentFolderConfig(path: string) {
+		//@ts-ignore
+		this.app.vault.setConfig("attachmentFolderPath", path);
+	}
+
+	onunload() {
+		this.restoreConfigs();
+	}
 
 	async loadSettings() {
 		this.settings = Object.assign(

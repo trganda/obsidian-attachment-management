@@ -1,0 +1,2 @@
+export const EDITOR_DROP_EVENT = "EDITOR_DROP_EVENT";
+export const DOM_DROP_EVENT = "DOM_DROP_EVENT";
