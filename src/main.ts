@@ -362,21 +362,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 			rf.basename,
 			rf.parent?.path as string
 		);
-		// generate old attachment name
-		let oldAttachName = this.getPastedImageFileName(oldNoteName);
-		let newAttachName = this.getPastedImageFileName(rf.basename);
-
-		// oldAttachPath = normalizePath(
-		// 	path.posix.join(oldAttachPath, oldAttachName)
-		// );
-		// newAttachPath = normalizePath(
-		// 	path.posix.join(newAttachPath, newAttachName)
-		// );
 
 		debugLog("Old Attachment Path:", oldAttachPath);
 		debugLog("New Attachment Path:", newAttachPath);
 
-		// if the attachment file does not exist, skip
+		// if the old attachment folder does not exist, skip
 		const exitsAttachPath = await this.adapter.exists(oldAttachPath);
 		if (!exitsAttachPath) {
 			debugLog("Attachment path does not exist:", oldAttachPath);
@@ -420,43 +410,22 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 		// rename attachment filename as needed
 		if (renameForamt && renameType == RENAME_EVENT_TYPE_FILE) {
-			
-			// only rename attachment file that linked in article
-			// let embeds = this.app.metadataCache.getCache(rf.path)?.embeds;
-			// if (!embeds) return;
-
-			// let files: string[] = [];
-
-			// for (let embed of embeds) {
-			// 	let link = path.posix.basename(embed.link);
-			// 	if (isImage(link)) {
-			// 		files.push(link);
-			// 	} else if (this.settings.handleAll) {
-			// 		if (
-			// 			testExcludeExtension(
-			// 				link.substring(link.lastIndexOf(".")),
-			// 				this.settings.excludeExtensionPattern
-			// 			)
-			// 		) {
-			// 			continue;
-			// 		} else {
-			// 			files.push(link);
-			// 		}
-			// 	}
-			// }
-
 			// suppose the attachment folder already renamed
-			// rename all attachment files in attachment path
+			// rename all attachment files that the filename content the notename in attachment path
 			let attachmentFiles: ListedFiles = await this.adapter.list(
 				newAttachPath
 			);
-			for (let file of attachmentFiles.files) {
-				debugLog("Listing File:", file);
-				let filePath = file;
+			for (let filePath of attachmentFiles.files) {
+				debugLog("Listing File:", filePath);
 				let fileName = path.posix.basename(filePath);
+				const fileExtension = fileName.substring(fileName.lastIndexOf("."));
+				if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileName)) {
+					continue;
+				} 
 				fileName = fileName.replace(oldNoteName, rf.basename);
+				
 				let newFilePath = normalizePath(path.posix.join(newAttachPath, fileName));
-				debugLog("File Path:", filePath)
+				debugLog("New File Path:", newFilePath)
 				let tfile = this.app.vault.getAbstractFileByPath(filePath);
 				if (tfile == null)
 						continue;
