@@ -175,7 +175,7 @@ export class SettingTab extends PluginSettingTab {
 		new Setting(containerEl)
 			.setName("Handle all attachments")
 			.setDesc(
-				"By default, only auto-rename the image file, if enable this option, all created file (no `md` or `canvas`) will be renamed automatically"
+				"By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically"
 			)
 			.addToggle((toggle) =>
 				toggle

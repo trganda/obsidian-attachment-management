@@ -1,4 +1,11 @@
-import { Notice, TAbstractFile, TFile, TFolder, Vault, normalizePath } from "obsidian";
+import {
+	Notice,
+	TAbstractFile,
+	TFile,
+	TFolder,
+	Vault,
+	normalizePath,
+} from "obsidian";
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 
@@ -40,6 +47,15 @@ export function isCanvasFile(file: TAbstractFile): boolean {
 export function isPastedImage(file: TAbstractFile): boolean {
 	if (file instanceof TFile) {
 		if (file.name.startsWith(PASTED_IMAGE_PREFIX)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+export function isImage(file: TAbstractFile): boolean {
+	if (file instanceof TFile) {
+		if (file.extension in ["jpeg", "png", "jpg", "svg"]) {
 			return true;
 		}
 	}
@@ -127,7 +143,10 @@ export function getTAbstractFileByPathDepth(
 	return paraentFile;
 }
 
-export function testExcludeExtension(extension:string, pattern: string): boolean {
-	if (!pattern || pattern === "") return false
-	return new RegExp(pattern).test(extension)
+export function testExcludeExtension(
+	extension: string,
+	pattern: string
+): boolean {
+	if (!pattern || pattern === "") return false;
+	return new RegExp(pattern).test(extension);
 }

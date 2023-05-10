@@ -22,6 +22,7 @@ import * as path from "path";
 import {
 	debugLog,
 	isCanvasFile,
+	isImage,
 	isMarkdownFile,
 	isPastedImage,
 	stripPaths,
@@ -68,7 +69,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 				if (isMarkdownFile(file) || isCanvasFile(file)) {
 					return;
 				}
-				if (isPastedImage(file)) {
+				if (isImage(file) || isPastedImage(file)) {
 					debugLog(
 						"On Create Event - Created Image File:",
 						file.path

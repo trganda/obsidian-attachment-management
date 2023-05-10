@@ -30,4 +30,8 @@ This plugin currently support:
 
 TODO
 
-If you want to enable auto rename of drop file in `md` or `canvas`, you should enable `Handle all attachments` option.
+### Known Issues
+
+- When drop a file in `canvas`, it's will delay to show the updated link/filename.
+
+![Screen Recording](./images/Screen%20Recording%202023-05-10.mp4)
