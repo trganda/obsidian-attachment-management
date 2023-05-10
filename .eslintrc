@@ -18,16 +18,18 @@
   },
   "rules": {
     "no-unused-vars": "off",
+    "no-prototype-builtins": "off",
     "@typescript-eslint/no-unused-vars": [
       "error",
       {
         "args": "none"
       }
     ],
-    "@typescript-eslint/no-var-requires": "on",
+    "no-useless-escape": "off",
+    "@typescript-eslint/no-var-requires": "error",
     "@typescript-eslint/ban-ts-comment": "off",
-    "no-prototype-builtins": "off",
-    "@typescript-eslint/no-empty-function": "off",
-    "prettier/prettier": "error"
+    "@typescript-eslint/no-require-imports": "error",
+    "@typescript-eslint/no-empty-function": "error",
+    "@typescript-eslint/no-misused-new": "error"
   }
 }
