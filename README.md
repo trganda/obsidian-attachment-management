@@ -34,4 +34,4 @@ TODO
 
 - When drop a file in `canvas`, it's will delay to show the updated link/filename.
 
-![Screen Recording](./images/Screen%20Recording%202023-05-10.mp4)
+![Screen Recording](./images/canvas_drop_delay.gif)
