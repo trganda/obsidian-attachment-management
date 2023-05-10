@@ -65,9 +65,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (
           !this.settings.autoRenameAttachment ||
-          !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
-          !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
-          !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)
+          (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
+            !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
+            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME))
         ) {
           debugLog("No Variable Use, Skip");
           return;
@@ -337,8 +337,9 @@ export default class AttachmentManagementPlugin extends Plugin {
       for (const filePath of attachmentFiles.files) {
         debugLog("Listing File:", filePath);
         let fileName = path.posix.basename(filePath);
-        const fileExtension = fileName.substring(fileName.lastIndexOf("."));
+        const fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
         if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileExtension)) {
+          debugLog("No Handle Extension:", fileExtension);
           continue;
         }
         fileName = fileName.replace(oldNoteName, rf.basename);
@@ -448,7 +449,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     let val = "";
     switch (extension) {
       case "md":
-        val = contnet.replace(`/${oldLinkText}/g`, newLinkText);
+        val = contnet.replace(oldLinkText, newLinkText);
         break;
       case "canvas":
         val = contnet.replace(`/(file\s*\:\s*\")${oldPath}(\")/g`, `$1${dest}$2`);

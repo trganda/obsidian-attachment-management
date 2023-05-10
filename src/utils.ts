@@ -47,7 +47,8 @@ export function isPastedImage(file: TAbstractFile): boolean {
 }
 
 export function isImage(extension: string): boolean {
-  if (extension.toLowerCase() in ["jpeg", "png", "jpg", "svg", "gif", "eps"]) {
+  const types = ["jpeg", "png", "jpg", "svg", "gif", "eps"];
+  if (types.indexOf(extension.toLowerCase())) {
     return true;
   }
 
