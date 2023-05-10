@@ -336,16 +336,14 @@ export default class AttachmentManagementPlugin extends Plugin {
 				return;
 			}
 		} else {
-			// TODO: this may take a few long time to complete
-			Vault.recurseChildren(this.app.vault.getRoot(), (cfile) => {
-				if (cfile.path === stripedOldAttachPath) {
-					this.app.fileManager.renameFile(
-						cfile,
-						stripedNewAttachPath
-					);
-					return;
-				}
-			});
+			const cfile = this.app.vault.getAbstractFileByPath(stripedOldAttachPath);
+			if (cfile === null) {
+				return;
+			}
+			this.app.fileManager.renameFile(
+				cfile,
+				stripedNewAttachPath
+			);
 		}
 	}
 
