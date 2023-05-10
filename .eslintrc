@@ -26,9 +26,9 @@
       }
     ],
     "no-useless-escape": "off",
-    "@typescript-eslint/no-var-requires": "error",
+    "@typescript-eslint/no-var-requires": "off",
     "@typescript-eslint/ban-ts-comment": "off",
-    "@typescript-eslint/no-require-imports": "error",
+    "@typescript-eslint/no-require-imports": "off",
     "@typescript-eslint/no-empty-function": "error",
     "@typescript-eslint/no-misused-new": "error"
   }

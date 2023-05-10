@@ -50,16 +50,16 @@ export class SettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  displSw(cont: any): void {
-    cont.findAll(".setting-item").forEach((el: any) => {
-      if (el.getAttr("class").includes("root_folder_set")) {
+  displSw(cont: HTMLElement): void {
+    cont.findAll(".setting-item").forEach((el: HTMLElement) => {
+      if (el.getAttr("class")?.includes("root_folder_set")) {
         if (this.plugin.settings.saveAttE === "obsFolder") {
           el.hide();
         } else {
           el.show();
         }
       }
-      if (el.getAttr("class").includes("exclude_extension_pattern")) {
+      if (el.getAttr("class")?.includes("exclude_extension_pattern")) {
         if (this.plugin.settings.handleAll === false) {
           el.hide();
         } else {
