@@ -198,7 +198,7 @@ export class SettingTab extends PluginSettingTab {
 			.addText((text) =>
 				text
 					.setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")
-					.setValue(this.plugin.settings.excludeExtensionPattern)
+					.setValue("")
 					.onChange(async (value) => {
 						this.plugin.settings.excludeExtensionPattern = value;
 						await this.plugin.saveSettings();

@@ -1,6 +1,6 @@
 {
-	"id": "obsidian-attachment-management-plugin",
-	"name": "Attachment Management Plugin",
+	"id": "obsidian-attachment-management",
+	"name": "Attachment Management",
 	"version": "0.1.0",
 	"minAppVersion": "0.15.0",
 	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
