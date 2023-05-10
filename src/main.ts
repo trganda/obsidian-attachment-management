@@ -49,7 +49,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 			`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`
 		);
 		this.adapter = this.app.vault.adapter as FileSystemAdapter;
-		this.backupConfigs();
+		// this.backupConfigs();
 
 		this.registerEvent(
 			// not working while drop file to text view
@@ -194,119 +194,119 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
-	async onDrop(
-		evt: DragEvent,
-		activeFile: TFile,
-		editor?: Editor,
-		info?: MarkdownView
-	) {
-		const df = evt.dataTransfer;
-		if (df === null) {
-			debugLog("Null dataTransfer");
-			return;
-		}
-		evt.preventDefault();
+	// async onDrop(
+	// 	evt: DragEvent,
+	// 	activeFile: TFile,
+	// 	editor?: Editor,
+	// 	info?: MarkdownView
+	// ) {
+	// 	const df = evt.dataTransfer;
+	// 	if (df === null) {
+	// 		debugLog("Null dataTransfer");
+	// 		return;
+	// 	}
+	// 	evt.preventDefault();
 
-		const fItems = df.files;
-		// list all drop files
-		for (let key = 0; key < fItems.length; key++) {
-			let dropFile = fItems.item(key);
-			if (dropFile === null) {
-				debugLog("continue");
-				continue;
-			}
-			if (dropFile.name !== "") {
-				debugLog("Drop File Name:", dropFile.name);
-				const attachPath = this.getAttachmentPath(
-					activeFile.basename,
-					activeFile.parent?.path as string
-				);
-				const name = this.getPastedImageFileName(activeFile.basename);
-				const extension = dropFile.name.substring(
-					dropFile.name.lastIndexOf(".")
-				);
+	// 	const fItems = df.files;
+	// 	// list all drop files
+	// 	for (let key = 0; key < fItems.length; key++) {
+	// 		let dropFile = fItems.item(key);
+	// 		if (dropFile === null) {
+	// 			debugLog("continue");
+	// 			continue;
+	// 		}
+	// 		if (dropFile.name !== "") {
+	// 			debugLog("Drop File Name:", dropFile.name);
+	// 			const attachPath = this.getAttachmentPath(
+	// 				activeFile.basename,
+	// 				activeFile.parent?.path as string
+	// 			);
+	// 			const name = this.getPastedImageFileName(activeFile.basename);
+	// 			const extension = dropFile.name.substring(
+	// 				dropFile.name.lastIndexOf(".")
+	// 			);
 
-				if (isCanvasFile(activeFile)) {
-					// TODO: fix canvas drop
-					let root = "";
-					const notePath = activeFile.parent?.path as string;
-					//@ts-ignore
-					const obsmediadir = app.vault.getConfig(
-						"attachmentFolderPath"
-					);
-					if (obsmediadir === "/") {
-						// in vault root folder case
-						root = "/";
-					} else if (obsmediadir === "./") {
-						// in current folder case
-						root = path.posix.join(notePath);
-					} else if (obsmediadir.match(/\.\/.+/g) !== null) {
-						// in subfolder case
-						root = path.posix.join(
-							notePath,
-							obsmediadir.replace("./", "")
-						);
-					} else {
-						// in specified folder case
-						root = obsmediadir;
-					}
-					debugLog("Root:", root);
-					const oldAttachPath = normalizePath(
-						path.posix.join(root, dropFile.name)
-					);
-					debugLog("oldAttachPath:", oldAttachPath);
-					const oldAttach =
-						this.app.vault.getAbstractFileByPath(oldAttachPath);
-					if (!(await this.adapter.exists(oldAttachPath))) {
-						debugLog(`${oldAttachPath} not Exists`);
-					}
-					if (oldAttach === null) {
-						return;
-					}
-					const namePath = normalizePath(
-						path.posix.join(attachPath, name + extension)
-					);
-					debugLog("namePath:", namePath);
-					if (!(await this.adapter.exists(attachPath))) {
-						await this.adapter.mkdir(attachPath);
-					}
-					await this.app.fileManager.renameFile(oldAttach, namePath);
-					df.clearData();
-				} else if (isMarkdownFile(activeFile)) {
-					this.updateAttachmentFolderConfig(attachPath);
-					const buf = await dropFile.arrayBuffer();
-					if (!(await this.adapter.exists(attachPath))) {
-						await this.adapter.mkdir(attachPath);
-					}
+	// 			if (isCanvasFile(activeFile)) {
+	// 				// TODO: fix canvas drop
+	// 				let root = "";
+	// 				const notePath = activeFile.parent?.path as string;
+	// 				//@ts-ignore
+	// 				const obsmediadir = app.vault.getConfig(
+	// 					"attachmentFolderPath"
+	// 				);
+	// 				if (obsmediadir === "/") {
+	// 					// in vault root folder case
+	// 					root = "/";
+	// 				} else if (obsmediadir === "./") {
+	// 					// in current folder case
+	// 					root = path.posix.join(notePath);
+	// 				} else if (obsmediadir.match(/\.\/.+/g) !== null) {
+	// 					// in subfolder case
+	// 					root = path.posix.join(
+	// 						notePath,
+	// 						obsmediadir.replace("./", "")
+	// 					);
+	// 				} else {
+	// 					// in specified folder case
+	// 					root = obsmediadir;
+	// 				}
+	// 				debugLog("Root:", root);
+	// 				const oldAttachPath = normalizePath(
+	// 					path.posix.join(root, dropFile.name)
+	// 				);
+	// 				debugLog("oldAttachPath:", oldAttachPath);
+	// 				const oldAttach =
+	// 					this.app.vault.getAbstractFileByPath(oldAttachPath);
+	// 				if (!(await this.adapter.exists(oldAttachPath))) {
+	// 					debugLog(`${oldAttachPath} not Exists`);
+	// 				}
+	// 				if (oldAttach === null) {
+	// 					return;
+	// 				}
+	// 				const namePath = normalizePath(
+	// 					path.posix.join(attachPath, name + extension)
+	// 				);
+	// 				debugLog("namePath:", namePath);
+	// 				if (!(await this.adapter.exists(attachPath))) {
+	// 					await this.adapter.mkdir(attachPath);
+	// 				}
+	// 				await this.app.fileManager.renameFile(oldAttach, namePath);
+	// 				df.clearData();
+	// 			} else if (isMarkdownFile(activeFile)) {
+	// 				this.updateAttachmentFolderConfig(attachPath);
+	// 				const buf = await dropFile.arrayBuffer();
+	// 				if (!(await this.adapter.exists(attachPath))) {
+	// 					await this.adapter.mkdir(attachPath);
+	// 				}
 
-					// @ts-ignore
-					const attachFile = await this.app.saveAttachment(
-						name,
-						extension,
-						buf
-					);
+	// 				// @ts-ignore
+	// 				const attachFile = await this.app.saveAttachment(
+	// 					name,
+	// 					extension,
+	// 					buf
+	// 				);
 
-					debugLog("Save attachment to:", attachFile.path);
-					this.restoreConfigs();
-					const mdLink =
-						await this.app.fileManager.generateMarkdownLink(
-							attachFile,
-							activeFile.path
-						);
-					debugLog("Markdown link:", mdLink);
-					if (editor === undefined) {
-						new Notice(
-							"No active editor, add drop file link to file failed"
-						);
-						return;
-					}
-					const curPos = editor.getCursor("from");
-					debugLog("curPos Line:", curPos.line);
-					editor.replaceSelection(mdLink);
-				}
-			}
-		}
-	}
+	// 				debugLog("Save attachment to:", attachFile.path);
+	// 				this.restoreConfigs();
+	// 				const mdLink =
+	// 					await this.app.fileManager.generateMarkdownLink(
+	// 						attachFile,
+	// 						activeFile.path
+	// 					);
+	// 				debugLog("Markdown link:", mdLink);
+	// 				if (editor === undefined) {
+	// 					new Notice(
+	// 						"No active editor, add drop file link to file failed"
+	// 					);
+	// 					return;
+	// 				}
+	// 				const curPos = editor.getCursor("from");
+	// 				debugLog("curPos Line:", curPos.line);
+	// 				editor.replaceSelection(mdLink);
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	async onRename(file: TAbstractFile, oldPath: string, renameType: boolean) {
 		const rf = file as TFile;
@@ -619,7 +619,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	}
 
 	onunload() {
-		this.restoreConfigs();
+		// this.restoreConfigs();
 	}
 
 	async loadSettings() {

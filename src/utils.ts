@@ -55,7 +55,7 @@ export function isPastedImage(file: TAbstractFile): boolean {
 
 export function isImage(file: TAbstractFile): boolean {
 	if (file instanceof TFile) {
-		if (file.extension in ["jpeg", "png", "jpg", "svg"]) {
+		if (file.extension.toLowerCase() in ["jpeg", "png", "jpg", "svg", "gif", "eps"]) {
 			return true;
 		}
 	}
