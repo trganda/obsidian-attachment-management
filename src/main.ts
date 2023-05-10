@@ -12,6 +12,7 @@ import {
 	TFolder,
 	Vault,
 	WorkspaceWindow,
+	ListedFiles,
 } from "obsidian";
 import {
 	AttachmentManagementPluginSettings,
@@ -109,6 +110,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 						) ||
 						!this.settings.attachmentPath.includes(
 							SETTINGS_VARIABLES_NOTEPATH
+						) ||
+						!this.settings.attachFormat.includes(
+							SETTINGS_VARIABLES_NOTENAME
 						)
 					) {
 						debugLog("No Variable Use, Skip");
@@ -146,7 +150,27 @@ export default class AttachmentManagementPlugin extends Plugin {
 							debugLog("RenameType:", RENAME_EVENT_TYPE_FILE);
 						}
 
-						await this.onRename(file, oldPath, renameType);
+						let renameForamt = false;
+						if (
+							this.settings.attachFormat.includes(
+								SETTINGS_VARIABLES_NOTENAME
+							)
+						) {
+							// need to rename the attachment file name
+							renameForamt = true;
+						}
+
+						// if (renameForamt && renameType !== RENAME_EVENT_TYPE_FILE) {
+						// 	new Notice("Looks like you are renaming a folder");
+						// 	return;
+						// }
+
+						await this.onRename(
+							file,
+							oldPath,
+							renameType,
+							renameForamt
+						);
 					} else if (file instanceof TFolder) {
 						// ignore folder
 						debugLog("Ignore Rename Folder:", file.name);
@@ -317,23 +341,37 @@ export default class AttachmentManagementPlugin extends Plugin {
 	// 	}
 	// }
 
-	async onRename(file: TAbstractFile, oldPath: string, renameType: string) {
+	async onRename(
+		file: TAbstractFile,
+		oldPath: string,
+		renameType: string,
+		renameForamt: boolean
+	) {
 		const rf = file as TFile;
-		// oldnotename, oldnotepath
+		// generate old note path and name
 		const oldNotePath = path.posix.dirname(oldPath);
-		const oldNoteName = path.posix.basename(
-			oldPath,
-			path.posix.extname(oldPath)
-		);
+		const oldNoteExtension = path.posix.extname(oldPath);
+		const oldNoteName = path.posix.basename(oldPath, oldNoteExtension);
 
 		debugLog("Old Note Path:", oldNotePath);
 		debugLog("Old Note Name:", oldNoteName);
 
+		// generate old attachment path
 		let oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath);
 		let newAttachPath = this.getAttachmentPath(
 			rf.basename,
 			rf.parent?.path as string
 		);
+		// generate old attachment name
+		let oldAttachName = this.getPastedImageFileName(oldNoteName);
+		let newAttachName = this.getPastedImageFileName(rf.basename);
+
+		// oldAttachPath = normalizePath(
+		// 	path.posix.join(oldAttachPath, oldAttachName)
+		// );
+		// newAttachPath = normalizePath(
+		// 	path.posix.join(newAttachPath, newAttachName)
+		// );
 
 		debugLog("Old Attachment Path:", oldAttachPath);
 		debugLog("New Attachment Path:", newAttachPath);
@@ -341,9 +379,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 		// if the attachment file does not exist, skip
 		const exitsAttachPath = await this.adapter.exists(oldAttachPath);
 		if (!exitsAttachPath) {
+			debugLog("Attachment path does not exist:", oldAttachPath);
 			return;
 		}
 
+		// rename attachment folder first
 		const strip = stripPaths(oldAttachPath, newAttachPath);
 		if (strip === undefined) {
 			new Notice(
@@ -375,7 +415,53 @@ export default class AttachmentManagementPlugin extends Plugin {
 			if (cfile === null) {
 				return;
 			}
-			this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
+			await this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
+		}
+
+		// rename attachment filename as needed
+		if (renameForamt && renameType == RENAME_EVENT_TYPE_FILE) {
+			
+			// only rename attachment file that linked in article
+			// let embeds = this.app.metadataCache.getCache(rf.path)?.embeds;
+			// if (!embeds) return;
+
+			// let files: string[] = [];
+
+			// for (let embed of embeds) {
+			// 	let link = path.posix.basename(embed.link);
+			// 	if (isImage(link)) {
+			// 		files.push(link);
+			// 	} else if (this.settings.handleAll) {
+			// 		if (
+			// 			testExcludeExtension(
+			// 				link.substring(link.lastIndexOf(".")),
+			// 				this.settings.excludeExtensionPattern
+			// 			)
+			// 		) {
+			// 			continue;
+			// 		} else {
+			// 			files.push(link);
+			// 		}
+			// 	}
+			// }
+
+			// suppose the attachment folder already renamed
+			// rename all attachment files in attachment path
+			let attachmentFiles: ListedFiles = await this.adapter.list(
+				newAttachPath
+			);
+			for (let file of attachmentFiles.files) {
+				debugLog("Listing File:", file);
+				let filePath = file;
+				let fileName = path.posix.basename(filePath);
+				fileName = fileName.replace(oldNoteName, rf.basename);
+				let newFilePath = normalizePath(path.posix.join(newAttachPath, fileName));
+				debugLog("File Path:", filePath)
+				let tfile = this.app.vault.getAbstractFileByPath(filePath);
+				if (tfile == null)
+						continue;
+				await this.app.fileManager.renameFile(tfile, newFilePath);
+			}
 		}
 	}
 
