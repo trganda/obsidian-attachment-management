@@ -34,6 +34,8 @@ import {
 	SETTINGS_ROOT_INFOLDER,
 	SETTINGS_ROOT_NEXTTONOTE,
 	SETTINGS_VARIABLES_DATES,
+	RENAME_EVENT_TYPE_FOLDER,
+	RENAME_EVENT_TYPE_FILE,
 } from "./constant";
 
 export default class AttachmentManagementPlugin extends Plugin {
@@ -54,7 +56,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.registerEvent(
 			// not working while drop file to text view
 			this.app.vault.on("create", (file: TAbstractFile) => {
-				debugLog("On Create Event - File:",	file.path);
+				debugLog("On Create Event - File:", file.path);
 				// only processing create of file, ignore folder creation
 				if (!(file instanceof TFile)) {
 					return;
@@ -70,10 +72,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 					return;
 				}
 				if (isImage(file) || isPastedImage(file)) {
-					debugLog(
-						"On Create Event - Created Image File:",
-						file.path
-					);
 					this.processPastedImg(file);
 				} else {
 					if (this.settings.handleAll) {
@@ -106,9 +104,14 @@ export default class AttachmentManagementPlugin extends Plugin {
 
 					if (
 						!this.settings.autoRenameAttachment ||
-						!this.settings.attachmentPath.includes("${notename}") ||
-						!this.settings.attachmentPath.includes("${notepath}")
+						!this.settings.attachmentPath.includes(
+							SETTINGS_VARIABLES_NOTENAME
+						) ||
+						!this.settings.attachmentPath.includes(
+							SETTINGS_VARIABLES_NOTEPATH
+						)
 					) {
+						debugLog("No Variable Use, Skip");
 						return;
 					}
 
@@ -123,18 +126,24 @@ export default class AttachmentManagementPlugin extends Plugin {
 							return;
 						}
 
-						let renameType = false;
+						let renameType = "";
 						if (
-							path.basename(oldPath, path.extname(oldPath)) ===
-							path.basename(file.path, path.extname(file.path))
+							path.posix.basename(
+								oldPath,
+								path.posix.extname(oldPath)
+							) ===
+							path.posix.basename(
+								file.path,
+								path.posix.extname(file.path)
+							)
 						) {
 							// rename event of folder
-							renameType = false;
-							debugLog("RenameType: Folder");
+							renameType = RENAME_EVENT_TYPE_FOLDER;
+							debugLog("RenameType:", RENAME_EVENT_TYPE_FOLDER);
 						} else {
 							// rename event of file
-							renameType = true;
-							debugLog("RenameType: File");
+							renameType = RENAME_EVENT_TYPE_FILE;
+							debugLog("RenameType:", RENAME_EVENT_TYPE_FILE);
 						}
 
 						await this.onRename(file, oldPath, renameType);
@@ -308,7 +317,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	// 	}
 	// }
 
-	async onRename(file: TAbstractFile, oldPath: string, renameType: boolean) {
+	async onRename(file: TAbstractFile, oldPath: string, renameType: string) {
 		const rf = file as TFile;
 		// oldnotename, oldnotepath
 		const oldNotePath = path.posix.dirname(oldPath);
@@ -352,10 +361,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 		const exitsDst = await this.adapter.exists(stripedNewAttachPath);
 		if (exitsDst) {
 			// if the file exists in the vault
-			if (renameType) {
+			if (renameType == RENAME_EVENT_TYPE_FILE) {
 				new Notice(`Same file name exists: ${stripedNewAttachPath}`);
 				return;
-			} else {
+			} else if (renameType == RENAME_EVENT_TYPE_FOLDER) {
 				// for most case, this should not be happen, we just notice it.
 				new Notice(`Folder already exists: ${stripedNewAttachPath}`);
 				return;
