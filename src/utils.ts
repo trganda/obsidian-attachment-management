@@ -126,3 +126,8 @@ export function getTAbstractFileByPathDepth(
 
 	return paraentFile;
 }
+
+export function testExcludeExtension(file: TFile, pattern: string): boolean {
+	if (!pattern || pattern === "") return false
+	return new RegExp(pattern).test(file.extension)
+}

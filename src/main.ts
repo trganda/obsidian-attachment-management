@@ -25,8 +25,15 @@ import {
 	isMarkdownFile,
 	isPastedImage,
 	stripPaths,
+	testExcludeExtension,
 } from "./utils";
-import { SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTENAME, SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE, SETTINGS_VARIABLES_DATES } from "./constant";
+import {
+	SETTINGS_VARIABLES_NOTEPATH,
+	SETTINGS_VARIABLES_NOTENAME,
+	SETTINGS_ROOT_INFOLDER,
+	SETTINGS_ROOT_NEXTTONOTE,
+	SETTINGS_VARIABLES_DATES,
+} from "./constant";
 
 export default class AttachmentManagementPlugin extends Plugin {
 	settings: AttachmentManagementPluginSettings;
@@ -66,6 +73,20 @@ export default class AttachmentManagementPlugin extends Plugin {
 						file.path
 					);
 					this.processPastedImg(file);
+				} else {
+					if (this.settings.handleAll) {
+						debugLog("handleAll for file", file);
+						if (
+							testExcludeExtension(
+								file,
+								this.settings.excludeExtensionPattern
+							)
+						) {
+							debugLog("Excluded File by Extension", file);
+							return;
+						}
+						this.processPastedImg(file);
+					}
 				}
 			})
 		);
@@ -82,7 +103,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 					);
 
 					if (
-						!this.settings.autoRenameFolder ||
+						!this.settings.autoRenameAttachment ||
 						!this.settings.attachmentPath.includes("${notename}") ||
 						!this.settings.attachmentPath.includes("${notepath}")
 					) {
@@ -124,28 +145,30 @@ export default class AttachmentManagementPlugin extends Plugin {
 			)
 		);
 
-		this.registerEvent(
-			// trigger before this.registerDomEvent(w, "drop", ...)
-			this.app.workspace.on(
-				"editor-drop",
-				(evt: DragEvent, editor: Editor, info: MarkdownView) => {
-					debugLog("Editor-Drop Event");
-					if (evt === undefined) {
-						return;
-					}
-					// only processing markdown file
-					const activeFile = this.getActiveFile();
-					if (
-						activeFile === undefined ||
-						activeFile.extension !== "md"
-					) {
-						return;
-					}
+		if (this.settings.autoRenameDrop) {
+			this.registerEvent(
+				// trigger before this.registerDomEvent(w, "drop", ...)
+				this.app.workspace.on(
+					"editor-drop",
+					(evt: DragEvent, editor: Editor, info: MarkdownView) => {
+						debugLog("Editor-Drop Event");
+						if (evt === undefined) {
+							return;
+						}
+						// only processing markdown file
+						const activeFile = this.getActiveFile();
+						if (
+							activeFile === undefined ||
+							activeFile.extension !== "md"
+						) {
+							return;
+						}
 
-					this.onDrop(evt, activeFile, editor, info);
-				}
-			)
-		);
+						this.onDrop(evt, activeFile, editor, info);
+					}
+				)
+			);
+		}
 
 		// TODO: support canvas drop rename
 		// register drop event on Dom element of root split (for editor normaly) for support no markdown files (like canvas)
@@ -232,7 +255,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 					debugLog("oldAttachPath:", oldAttachPath);
 					const oldAttach =
 						this.app.vault.getAbstractFileByPath(oldAttachPath);
-					if (!await this.adapter.exists(oldAttachPath)) {
+					if (!(await this.adapter.exists(oldAttachPath))) {
 						debugLog(`${oldAttachPath} not Exists`);
 					}
 					if (oldAttach === null) {
@@ -336,14 +359,12 @@ export default class AttachmentManagementPlugin extends Plugin {
 				return;
 			}
 		} else {
-			const cfile = this.app.vault.getAbstractFileByPath(stripedOldAttachPath);
+			const cfile =
+				this.app.vault.getAbstractFileByPath(stripedOldAttachPath);
 			if (cfile === null) {
 				return;
 			}
-			this.app.fileManager.renameFile(
-				cfile,
-				stripedNewAttachPath
-			);
+			this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
 		}
 	}
 
@@ -440,10 +461,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 		const oldName = file.name;
 
 		try {
-			// this api will rename or move the file
+			// this api will not update the link automatically on `create` event
 			await this.app.fileManager.renameFile(file, dest);
 			new Notice(`Renamed ${oldName} to ${attachName}`);
-			// await this.adapter.rename(file.path, dst);
 		} catch (err) {
 			new Notice(`Failed to rename ${file.path} to ${dest}`);
 			throw err;
