@@ -1,11 +1,4 @@
-import {
-	Notice,
-	TAbstractFile,
-	TFile,
-	TFolder,
-	Vault,
-	normalizePath,
-} from "obsidian";
+import { Notice, TAbstractFile, TFile, TFolder, Vault, normalizePath } from "obsidian";
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 
@@ -69,10 +62,7 @@ export function isImage(file: TAbstractFile | string): boolean {
 // result:
 //     "Resources/Untitled"
 //     "Resources/Untitled1"
-export function stripPaths(
-	src: string,
-	dst: string
-): { nsrc: string; ndst: string } | undefined {
+export function stripPaths(src: string, dst: string): { nsrc: string; ndst: string } | undefined {
 	if (src === dst) {
 		return { nsrc: src, ndst: dst };
 	}
@@ -121,10 +111,7 @@ export function pathDepth(parent: string, children: string): number | null {
 	return suffixPath.split("/").length - 1;
 }
 
-export function getTAbstractFileByPathDepth(
-	file: TAbstractFile,
-	parent: string
-): TAbstractFile | null {
+export function getTAbstractFileByPathDepth(file: TAbstractFile, parent: string): TAbstractFile | null {
 	const depth = pathDepth(parent, file.path);
 
 	if (depth === null) {
@@ -143,10 +130,7 @@ export function getTAbstractFileByPathDepth(
 	return paraentFile;
 }
 
-export function testExcludeExtension(
-	extension: string,
-	pattern: string
-): boolean {
+export function testExcludeExtension(extension: string, pattern: string): boolean {
 	if (!pattern || pattern === "") return false;
 	return new RegExp(pattern).test(extension);
 }

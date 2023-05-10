@@ -24,6 +24,7 @@
         "args": "none"
       }
     ],
+    "@typescript-eslint/no-var-requires": "on",
     "@typescript-eslint/ban-ts-comment": "off",
     "no-prototype-builtins": "off",
     "@typescript-eslint/no-empty-function": "off",
