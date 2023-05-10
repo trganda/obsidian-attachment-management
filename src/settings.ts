@@ -1,12 +1,6 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
 import AttachmentManagementPlugin from "./main";
-
-export const SETTINGS_VARIABLES_DATES = "${date}";
-export const SETTINGS_VARIABLES_NOTEPATH = "${notepath}";
-export const SETTINGS_VARIABLES_NOTENAME = "${notename}";
-export const SETTINGS_ROOT_OBSFOLDER = "obsFolder";
-export const SETTINGS_ROOT_INFOLDER = "inFolderBelow";
-export const SETTINGS_ROOT_NEXTTONOTE = "nextToNote";
+import { SETTINGS_ROOT_OBSFOLDER, SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_DATES, SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE } from "./constant";
 
 export interface AttachmentManagementPluginSettings {
 	attachmentRoot: string;

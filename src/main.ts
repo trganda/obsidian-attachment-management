@@ -16,22 +16,17 @@ import {
 import {
 	AttachmentManagementPluginSettings,
 	DEFAULT_SETTINGS,
-	SETTINGS_ROOT_INFOLDER,
-	SETTINGS_ROOT_NEXTTONOTE,
-	SETTINGS_VARIABLES_DATES,
-	SETTINGS_VARIABLES_NOTENAME,
-	SETTINGS_VARIABLES_NOTEPATH,
 	SettingTab,
 } from "./settings";
 import * as path from "path";
 import {
 	debugLog,
-	getTAbstractFileByPathDepth,
 	isCanvasFile,
 	isMarkdownFile,
 	isPastedImage,
 	stripPaths,
 } from "./utils";
+import { SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTENAME, SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE, SETTINGS_VARIABLES_DATES } from "./constant";
 
 export default class AttachmentManagementPlugin extends Plugin {
 	settings: AttachmentManagementPluginSettings;
