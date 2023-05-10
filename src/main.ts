@@ -53,6 +53,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 		this.registerEvent(
 			// not working while drop file to text view
 			this.app.vault.on("create", (file: TAbstractFile) => {
+				debugLog("On Create Event - File:",	file.path);
 				// only processing create of file, ignore folder creation
 				if (!(file instanceof TFile)) {
 					return;
@@ -78,7 +79,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 						debugLog("handleAll for file", file);
 						if (
 							testExcludeExtension(
-								file,
+								file.extension,
 								this.settings.excludeExtensionPattern
 							)
 						) {
@@ -145,30 +146,30 @@ export default class AttachmentManagementPlugin extends Plugin {
 			)
 		);
 
-		if (this.settings.autoRenameDrop) {
-			this.registerEvent(
-				// trigger before this.registerDomEvent(w, "drop", ...)
-				this.app.workspace.on(
-					"editor-drop",
-					(evt: DragEvent, editor: Editor, info: MarkdownView) => {
-						debugLog("Editor-Drop Event");
-						if (evt === undefined) {
-							return;
-						}
-						// only processing markdown file
-						const activeFile = this.getActiveFile();
-						if (
-							activeFile === undefined ||
-							activeFile.extension !== "md"
-						) {
-							return;
-						}
+		// if (this.settings.autoRenameDrop) {
+		// 	this.registerEvent(
+		// 		// trigger before this.registerDomEvent(w, "drop", ...)
+		// 		this.app.workspace.on(
+		// 			"editor-drop",
+		// 			(evt: DragEvent, editor: Editor, info: MarkdownView) => {
+		// 				debugLog("Editor-Drop Event");
+		// 				if (evt === undefined) {
+		// 					return;
+		// 				}
+		// 				// only processing markdown file
+		// 				const activeFile = this.getActiveFile();
+		// 				if (
+		// 					activeFile === undefined ||
+		// 					!isMarkdownFile(activeFile)
+		// 				) {
+		// 					return;
+		// 				}
 
-						this.onDrop(evt, activeFile, editor, info);
-					}
-				)
-			);
-		}
+		// 				this.onDrop(evt, activeFile, editor, info);
+		// 			}
+		// 		)
+		// 	);
+		// }
 
 		// TODO: support canvas drop rename
 		// register drop event on Dom element of root split (for editor normaly) for support no markdown files (like canvas)
@@ -591,7 +592,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 	 */
 	getPastedImageFileName(noteName: string) {
 		const datetime = window.moment().format(this.settings.dateFormat);
-		const imgName = this.settings.imageFormat
+		const imgName = this.settings.attachFormat
 			.replace(`${SETTINGS_VARIABLES_DATES}`, datetime)
 			.replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
 		return imgName;

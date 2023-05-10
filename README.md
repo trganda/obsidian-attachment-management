@@ -7,10 +7,9 @@ This plugin support to more flexibly to setting your attachment location with va
 This plugin currently support:
 
 - [x] Setting attachment location with `${notepath}`, `${notename}`, `${date}`
-- [x] Auto-rename the attachment when paste image to `md` or `canvas`
+- [x] Auto-rename the attachment when paste file to `md` or `canvas`
 - [x] Auto-rename the attachment file or folder while your rename the article (`md` or `canvas`) file.
-- [x] Auto-rename the attachment when drop image to `md`
-- [ ] Auto-rename the attachment when drop image to `canvas`
+- [x] Auto-rename the attachment when drop file to `md` or `canvas`
 
 ## Usage
 

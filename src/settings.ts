@@ -17,7 +17,7 @@ export interface AttachmentManagementPluginSettings {
 	// Attachment path
 	attachmentPath: string;
 	// How to renamed the image file
-	imageFormat: string;
+	attachFormat: string;
 	// Date format
 	dateFormat: string;
 	// Handle all file
@@ -34,7 +34,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
 	attachmentRoot: "",
 	saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
 	attachmentPath: `${SETTINGS_VARIABLES_NOTEPATH}/${SETTINGS_VARIABLES_NOTENAME}`,
-	imageFormat: `IMG-${SETTINGS_VARIABLES_DATES}`,
+	attachFormat: `IMG-${SETTINGS_VARIABLES_DATES}`,
 	dateFormat: "YYYYMMDDHHmmssSSS",
 	handleAll: false,
 	excludeExtensionPattern: "",
@@ -135,17 +135,17 @@ export class SettingTab extends PluginSettingTab {
 			);
 
 		new Setting(containerEl)
-			.setName("Image format")
+			.setName("Attachment format")
 			.setDesc(
-				`Define how to name the image file, aviliable variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
+				`Define how to name the attachment file, aviliable variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
 			)
 			.addText((text) =>
 				text
-					.setPlaceholder(DEFAULT_SETTINGS.imageFormat)
-					.setValue(this.plugin.settings.imageFormat)
+					.setPlaceholder(DEFAULT_SETTINGS.attachFormat)
+					.setValue(this.plugin.settings.attachFormat)
 					.onChange(async (value) => {
-						console.log("Pasted image format: " + value);
-						this.plugin.settings.imageFormat = value;
+						console.log("Attachment format: " + value);
+						this.plugin.settings.attachFormat = value;
 						await this.plugin.saveSettings();
 					})
 			);
@@ -222,19 +222,19 @@ export class SettingTab extends PluginSettingTab {
 					})
 			);
 
-		new Setting(containerEl)
-			.setName("Automatically rename drop files")
-			.setDesc(
-				`When drop to md files, automatically rename attachment files if used "${SETTINGS_VARIABLES_NOTENAME}" in file format.`
-			)
-			.addToggle((toggle) =>
-				toggle
-					.setValue(this.plugin.settings.autoRenameDrop)
-					.onChange(async (value: boolean) => {
-						this.plugin.settings.autoRenameDrop = value;
-						await this.plugin.saveSettings();
-					})
-			);
+		// new Setting(containerEl)
+		// 	.setName("Automatically rename drop files")
+		// 	.setDesc(
+		// 		`When drop to md files, automatically rename attachment files if used "${SETTINGS_VARIABLES_NOTENAME}" in file format.`
+		// 	)
+		// 	.addToggle((toggle) =>
+		// 		toggle
+		// 			.setValue(this.plugin.settings.autoRenameDrop)
+		// 			.onChange(async (value: boolean) => {
+		// 				this.plugin.settings.autoRenameDrop = value;
+		// 				await this.plugin.saveSettings();
+		// 			})
+		// 	);
 
 		this.displSw(containerEl);
 	}
