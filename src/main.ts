@@ -43,7 +43,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 				if (isMarkdownFile(file) || isCanvasFile(file)) {
 					return;
 				}
-				if (isImage(file) || isPastedImage(file)) {
+				if (isImage(file.extension) || isPastedImage(file)) {
 					this.processPastedImg(file);
 				} else {
 					if (this.settings.handleAll) {
@@ -338,7 +338,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 				debugLog("Listing File:", filePath);
 				let fileName = path.posix.basename(filePath);
 				const fileExtension = fileName.substring(fileName.lastIndexOf("."));
-				if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileName)) {
+				if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileExtension)) {
 					continue;
 				}
 				fileName = fileName.replace(oldNoteName, rf.basename);
