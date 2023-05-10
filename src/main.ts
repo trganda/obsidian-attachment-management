@@ -99,7 +99,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 						const flag = await this.isAttachment(file, oldPath);
 						if (flag) {
 							debugLog(
-								"Not was An Attachment, Skipped:",
+								"Not Rename on An Attachment, Skipped:",
 								file.path
 							);
 							return;
@@ -130,9 +130,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 		);
 
 		this.registerEvent(
+			// trigger before this.registerDomEvent(w, "drop", ...)
 			this.app.workspace.on(
 				"editor-drop",
 				(evt: DragEvent, editor: Editor, info: MarkdownView) => {
+					debugLog("Editor-Drop Event");
 					if (evt === undefined) {
 						return;
 					}
@@ -150,38 +152,40 @@ export default class AttachmentManagementPlugin extends Plugin {
 			)
 		);
 
+		// TODO: support canvas drop rename
 		// register drop event on Dom element of root split (for editor normaly) for support no markdown files (like canvas)
-		const w = this.app.workspace.rootSplit.win;
-		this.registerDomEvent(w, "drop", (evt: DragEvent) => {
-			if (evt === undefined) {
-				return;
-			}
+		// const w = this.app.workspace.rootSplit.win;
+		// this.registerDomEvent(w, "drop", (evt: DragEvent) => {
+		// 	debugLog("Drop Event");
+		// 	if (evt === undefined) {
+		// 		return;
+		// 	}
 
-			// ignore markdown files in this event listener
-			const activeFile = this.getActiveFile();
-			if (activeFile === undefined || activeFile.extension == "md") {
-				return;
-			}
+		// 	// ignore markdown files in this event listener
+		// 	const activeFile = this.getActiveFile();
+		// 	if (activeFile === undefined || activeFile.extension == "md") {
+		// 		return;
+		// 	}
 
-			this.onDrop(evt, activeFile);
-		});
+		// 	this.onDrop(evt, activeFile);
+		// });
 
 		// This adds a settings tab so the user can configure various aspects of the plugin
 		this.addSettingTab(new SettingTab(this.app, this));
 	}
 
 	async onDrop(
-		ev: DragEvent,
+		evt: DragEvent,
 		activeFile: TFile,
 		editor?: Editor,
 		info?: MarkdownView
 	) {
-		const df = ev.dataTransfer;
+		const df = evt.dataTransfer;
 		if (df === null) {
 			debugLog("Null dataTransfer");
 			return;
 		}
-		ev.preventDefault();
+		evt.preventDefault();
 
 		const fItems = df.files;
 		// list all drop files
@@ -243,7 +247,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 						path.posix.join(attachPath, name + extension)
 					);
 					debugLog("namePath:", namePath);
-					this.app.fileManager.renameFile(oldAttach, namePath);
+					if (!(await this.adapter.exists(attachPath))) {
+						await this.adapter.mkdir(attachPath);
+					}
+					await this.app.fileManager.renameFile(oldAttach, namePath);
+					df.clearData();
 				} else if (isMarkdownFile(activeFile)) {
 					this.updateAttachmentFolderConfig(attachPath);
 					const buf = await dropFile.arrayBuffer();
@@ -360,34 +368,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 				return false;
 			}
 		}
-		// else if (file instanceof TFolder) {
-		// 	//@ts-ignore
-		// 	const obsmediadir = app.vault.getConfig("attachmentFolderPath");
-		// 	switch (this.settings.saveAttE) {
-		// 		case "inFolderBelow":
-		// 			if (!oldPath.includes(this.settings.attachmentRoot)) {
-		// 				return false;
-		// 			}
-		// 			break;
-		// 		case "nextToNote":
-		// 			break;
-		// 		default:
-		// 			if (obsmediadir === "/") {
-		// 				// in vault root folder case, for this case, it will take a bunch time to rename
-		// 				// search the all vault folders
-		// 			} else if (obsmediadir === "./") {
-		// 				// in current folder case
-		// 				// search the oldPath
-		// 			} else if (obsmediadir.match(/\.\/.+/g) !== null) {
-		// 				// in subfolder case
-		// 				// search the oldPath
-		// 			} else {
-		// 				// in specified folder case
-		// 				return !oldPath.includes(obsmediadir);
-		// 			}
-		// 	}
-		// }
-
 		return true;
 	}
 
