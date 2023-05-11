@@ -1,7 +1,7 @@
 import { FileSystemAdapter, Notice, Plugin, normalizePath, TextFileView, TFile, TAbstractFile, TFolder, ListedFiles } from "obsidian";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS, SettingTab } from "./settings";
 import * as path from "path";
-import { debugLog, getAttachmentsInVault, isCanvasFile, isImage, isMarkdownFile, isPastedImage, stripPaths, testExcludeExtension } from "./utils";
+import { debugLog, getAttachmentsInVault, isCanvasFile, isImage, isMarkdownFile, isPastedImage, needToRename, stripPaths, testExcludeExtension } from "./utils";
 import {
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
@@ -78,7 +78,8 @@ export default class AttachmentManagementPlugin extends Plugin {
           !this.settings.autoRenameAttachment ||
           (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
             !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME))
+            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && 
+            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES) )
         ) {
           debugLog("No Variable Use, Skip");
           return;
@@ -88,7 +89,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           // if the renamed file was a attachment, skip
           const flag = await this.isAttachment(file, oldPath);
           if (flag) {
-            debugLog("Not Rename on An Attachment, Skipped:", file.path);
+            debugLog("Not Processing Rename on An Attachment, Skipped:", file.path);
             return;
           }
 
@@ -285,8 +286,20 @@ export default class AttachmentManagementPlugin extends Plugin {
   // }
 
   async rearrangeAttachment(type: "all" | "links") {
+    debugLog("On Rearrange Command");
+
+    if (
+      !this.settings.autoRenameAttachment ||
+      (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
+        !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
+        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && 
+        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES) )
+    ) {
+      debugLog("No Variable Use, Skip");
+      return;
+    }
+
     // only rearrange attachment that linked by markdown or canvas
-    debugLog(this.app.metadataCache.resolvedLinks);
     const attachemtns = await getAttachmentsInVault(this.app, type);
     debugLog("Attachemtns:", Object.keys(attachemtns).length);
     for (const obsFile of Object.keys(attachemtns)) {
@@ -307,6 +320,11 @@ export default class AttachmentManagementPlugin extends Plugin {
         const attachName = this.getPastedImageFileName(noteName);
         const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
 
+        // check if the link was already statify the attachment name config
+        if (!needToRename(this.settings, attachPath, attachName, noteName, link)) {
+          debugLog("No need to rename:", link);
+          continue;
+        }
         const linkFile = this.app.vault.getAbstractFileByPath(link);
         if (linkFile === null) {
           debugLog(`${link} not Exists, skipped`);
@@ -316,7 +334,15 @@ export default class AttachmentManagementPlugin extends Plugin {
         if (!(await this.adapter.exists(attachPath))) {
           this.adapter.mkdir(attachPath);
         }
-        this.app.fileManager.renameFile(linkFile, dest);
+
+        // TODO: check if the file already exists
+        if ((await this.adapter.exists(dest))) {
+          new Notice(`${dest} already exists, skipped`);
+          console.log(`${dest} already exists, skipped`);
+          continue;
+        }
+
+        await this.app.fileManager.renameFile(linkFile, dest);
       }
     }
   }

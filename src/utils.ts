@@ -1,5 +1,8 @@
 import { App, TAbstractFile, TFile } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
+import * as path from "path";
+import { AttachmentManagementPluginSettings } from "./settings";
+import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./constant";
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp)/i;
@@ -114,7 +117,7 @@ export async function getAttachmentsInVault(app: App, type: "all" | "links"): Pr
   //     }
   //     if (type === "all") {
   //       attachments.push(allFiles[i]);
-	// 			addToSet(attachmentsSet, allFiles[i].path);
+  // 			addToSet(attachmentsSet, allFiles[i].path);
   //     }
   //   }
   // }
@@ -196,15 +199,15 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
 
 const addToRecord = (record: Record<string, Set<string>>, key: string, value: Set<string>) => {
   if (!record[key]) {
-    record[key] = value
+    record[key] = value;
   }
   const valueSet = record[key];
   for (const val in value) {
     addToSet(valueSet, val);
   }
 
-  record[key] = valueSet
-}
+  record[key] = valueSet;
+};
 
 const addToSet = (setObj: Set<string>, value: string) => {
   if (!setObj.has(value)) {
@@ -215,3 +218,35 @@ const addToSet = (setObj: Set<string>, value: string) => {
 const pathIsAnImage = (path: string) => {
   return path.match(imageRegex);
 };
+
+export function needToRename(settings: AttachmentManagementPluginSettings, attachPath: string, attachName: string, noteName: string, link: string): boolean {
+  const linkPath = path.posix.dirname(link);
+  const linkName = path.posix.basename(link, path.posix.extname(link));
+
+  if (linkName.length !== attachName.length) {
+    return true;
+  }
+
+  if (attachPath !== linkPath) {
+    return true;
+  } else {
+    if (settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && !linkName.includes(noteName)) {
+      return true;
+    }
+    // suppose the ${notename} was in format
+    const noNoteNameAttachFormat = settings.attachFormat.split(SETTINGS_VARIABLES_NOTENAME);
+    if (settings.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
+      for (const formatPart in noNoteNameAttachFormat) {
+        // suppose the ${date} was in format, split each part and search in linkName
+        const splited = formatPart.split(SETTINGS_VARIABLES_DATES);
+        for (const part in splited) {
+          if (!linkName.includes(part)) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
+}
