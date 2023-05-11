@@ -1,11 +1,9 @@
 {
-	"id": "obsidian-attachment-management",
+	"id": "attachment-management",
 	"name": "Attachment Management",
-	"version": "0.1.0",
-	"minAppVersion": "0.15.0",
-	"description": "This is a sample plugin for Obsidian. This plugin demonstrates some of the capabilities of the Obsidian API.",
+	"version": "0.2.0",
+	"description": "Attachment management plugin to custom the attachment path and auto rename etc.",
 	"author": "Trganda",
 	"authorUrl": "https://github.com/trganda",
-	"fundingUrl": "https://github.com/trganda",
 	"isDesktopOnly": false
 }
