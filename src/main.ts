@@ -20,8 +20,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    const pkg = require("../package.json");
-    console.log(`Plugin loading: ${pkg.name} ${pkg.version} BUILD_ENV=${process.env.BUILD_ENV}`);
+    console.log(`Plugin loading: ${process.env.npm_package_name} ${process.env.npm_package_version} BUILD_ENV=${process.env.BUILD_ENV}`);
     this.adapter = this.app.vault.adapter as FileSystemAdapter;
     // this.backupConfigs();
 
