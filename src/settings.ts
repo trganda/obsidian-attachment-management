@@ -26,7 +26,7 @@ export interface AttachmentManagementPluginSettings {
   excludeExtensionPattern: string;
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
-  // Auto-rename droped file
+  // Auto-rename dumplicate file
   autoDuplicate: boolean;
 }
 
@@ -143,7 +143,7 @@ export class SettingTab extends PluginSettingTab {
         createFragment((frag) => {
           frag.appendText("Moment date format to use ");
           frag.createEl("a", {
-            href: 'https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/"',
+            href: 'https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format',
             text: "Moment format options",
           });
         })
@@ -174,8 +174,7 @@ export class SettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Exclude extension pattern")
       .setDesc(
-        `This option is only useful when "Handle all attachments" is enabled.
-			Write a Regex pattern to exclude certain extensions from being handled. Only the first line will be used.`
+        `This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`
       )
       .setClass("exclude_extension_pattern")
       .addText((text) =>
@@ -190,7 +189,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Automatically rename attachment")
-      .setDesc("Automatically rename attachment folder/filename while rename the folder/filename of corresponding md/cavans file")
+      .setDesc("Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/cavans file be placed.")
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
           console.log("Automatically rename attachment folder: " + value);
