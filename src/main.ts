@@ -301,13 +301,13 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // only rearrange attachment that linked by markdown or canvas
     const attachemtns = await getAttachmentsInVault(this.app, type);
-    debugLog("Attachemtns:", Object.keys(attachemtns).length);
+    debugLog("Attachemtns:", Object.keys(attachemtns).length, Object.keys(attachemtns));
     for (const obsFile of Object.keys(attachemtns)) {
       for (let link of attachemtns[obsFile]) {
         try {
           link = decodeURI(link);
         } catch (err) {
-          new Notice(`Invalid link: ${link}, err: ${err}`);
+          // new Notice(`Invalid link: ${link}, err: ${err}`);
           console.log(`Invalid link: ${link}, err: ${err}`);
           continue;
         }
@@ -375,6 +375,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     const strip = stripPaths(oldAttachPath, newAttachPath);
     if (strip === undefined) {
       new Notice(`Error rename path ${oldAttachPath} to ${newAttachPath}`);
+      console.log(`Error rename path ${oldAttachPath} to ${newAttachPath}`);
       return;
     }
 

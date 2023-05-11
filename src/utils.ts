@@ -7,7 +7,7 @@ import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./constan
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
-const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp"]);
+const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps"]);
 
 export const DEBUG = !(process.env.BUILD_ENV === "production");
 if (DEBUG) console.log("DEBUG is enabled");
@@ -26,20 +26,16 @@ export const blobToArrayBuffer = (blob: Blob) => {
   });
 };
 
-export function isMarkdownFile(file: TAbstractFile): boolean {
-  if (file instanceof TFile) {
-    if (file.extension === "md") {
-      return true;
-    }
+export function isMarkdownFile(file: TFile): boolean {
+  if (file.extension === "md") {
+    return true;
   }
   return false;
 }
 
-export function isCanvasFile(file: TAbstractFile): boolean {
-  if (file instanceof TFile) {
-    if (file.extension === "canvas") {
-      return true;
-    }
+export function isCanvasFile(file: TFile): boolean {
+  if (file.extension === "canvas") {
+    return true;
   }
   return false;
 }
@@ -54,9 +50,10 @@ export function isPastedImage(file: TAbstractFile): boolean {
 }
 
 export function isImage(extension: string): boolean {
-  const types = ["jpeg", "png", "jpg", "svg", "gif", "eps"];
-  if (types.indexOf(extension.toLowerCase())) {
-    return true;
+  for (const type of imageExtensions) {
+    if (type.indexOf(extension.toLowerCase()) !== -1) {
+      return true;
+    }
   }
 
   return false;
@@ -131,8 +128,8 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
   if (resolvedLinks) {
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
       let attachemtsSet: Set<string> = new Set();
-      for (const [filePath, nr] of Object.entries(resolvedLinks[mdFile])) {
-        if (!(filePath as String).endsWith(".md") || !(filePath as String).endsWith(".canvas")) {
+      for (const [filePath, nr] of Object.entries(links)) {
+        if (!filePath.endsWith(".md") && !filePath.endsWith(".canvas")) {
           addToSet(attachemtsSet, filePath);
         }
       }
@@ -172,9 +169,8 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
       for (let linkMatch of linkMatches) {
         addToSet(attachmentsSet, linkMatch.linkText);
       }
-    }
-    // Check Canvas for links
-    else if (obsFile.extension === "canvas") {
+    } else if (obsFile.extension === "canvas") {
+      // check canvas for links
       let fileRead = await app.vault.cachedRead(obsFile);
       let canvasData = JSON.parse(fileRead);
       // debugLog("canvasData", canvasData);
@@ -198,10 +194,10 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
 }
 
 const addToRecord = (record: Record<string, Set<string>>, key: string, value: Set<string>) => {
-  if (!record[key]) {
+  if (record[key] === undefined) {
     record[key] = value;
   }
-  const valueSet = record[key];
+  let valueSet = record[key];
   for (const val in value) {
     addToSet(valueSet, val);
   }
