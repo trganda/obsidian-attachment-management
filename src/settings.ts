@@ -27,7 +27,7 @@ export interface AttachmentManagementPluginSettings {
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
   // Auto-rename droped file
-  autoRenameDrop: boolean;
+  autoDuplicate: boolean;
 }
 
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
@@ -39,7 +39,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   handleAll: false,
   excludeExtensionPattern: "",
   autoRenameAttachment: true,
-  autoRenameDrop: false,
+  autoDuplicate: false,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -200,15 +200,15 @@ export class SettingTab extends PluginSettingTab {
       );
 
     // new Setting(containerEl)
-    // 	.setName("Automatically rename drop files")
+    // 	.setName("Automatically add duplicate number for same name folder or file")
     // 	.setDesc(
-    // 		`When drop to md files, automatically rename attachment files if used "${SETTINGS_VARIABLES_NOTENAME}" in file format.`
+    // 		`When automatical rename was enabled, add duplicate number for same name folder or file.`
     // 	)
     // 	.addToggle((toggle) =>
     // 		toggle
-    // 			.setValue(this.plugin.settings.autoRenameDrop)
+    // 			.setValue(this.plugin.settings.autoDuplicate)
     // 			.onChange(async (value: boolean) => {
-    // 				this.plugin.settings.autoRenameDrop = value;
+    // 				this.plugin.settings.autoDuplicate = value;
     // 				await this.plugin.saveSettings();
     // 			})
     // 	);
