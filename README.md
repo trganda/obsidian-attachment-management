@@ -7,17 +7,10 @@ This plugin support to more flexibly to setting your attachment location with va
 This plugin currently support:
 
 - [x] Setting the attachment location with `${notepath}`, `${notename}`, `${date}`
-- [x] Auto-rename the attachment when paste file to `md` or `canvas`
-- [x] Auto-rename the attachment file or folder while your rename the article (`md` or `canvas`) file
-- [x] Auto-rename the attachment when drop file to `md` or `canvas`
-- [x] Re-Arrange the attachment file that linked by `md` or `canvas` to corresponding path as you configed (experimental)
-
-## Adding your plugin to the community plugin list
-
-- Check https://github.com/obsidianmd/obsidian-releases/blob/master/plugin-review.md
-- Publish an initial version.
-- Make sure you have a `README.md` file in the root of your repo.
-- Make a pull request at https://github.com/obsidianmd/obsidian-releases to add your plugin.
+- [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
+- [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
+- [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
+- [x] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configed (experimental)
 
 ## How to install
 
@@ -25,7 +18,7 @@ This plugin currently support:
 - Clone this repo
   - `npm i` or `yarn` to install dependencies
   - `npm run build` to start compilation in watch mode.
-  - Copy the `main.js` and `manifest.json` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-managment`
+  - Copy the `main.js` and `manifest.json` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
 
 ## Settings
 
@@ -45,7 +38,7 @@ And your can use the variables below to config
 
 You must select a root folder to save the associated attachment of a `markdown` or `canvas` file.
 
-![](./images/SCR-20230511-rgge.png)
+![SCR-20230511-rgge](./images/SCR-20230511-rgge.png)
 
 It can be set use the config of obsidian in `Files & Links`, or reset in this option.
 
@@ -73,7 +66,7 @@ By default, only auto-rename the image file, if enable this option, all created 
 
 This option is only useful when "Handle all attachments" is enabled. Write a Regex pattern to exclude certain extensions from being handled.
 
-![](./images/SCR-20230511-roat.png)
+![SCR-20230511-roat](./images/SCR-20230511-roat.png)
 
 ### Automatically Rename Attachment
 
@@ -85,7 +78,7 @@ Install and enable the plugin, after configure you can paste or drop attachment 
 
 This plugin support a command `Rearrange Linked Attachments`, if you run this command, it will rename all attachment that has bee linked in `markdown` or `canvas` file as you configed.
 
-![](./images/SCR-20230511-rrtk.png)
+![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
 **Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to backup your files at first.
 
