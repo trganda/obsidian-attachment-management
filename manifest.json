@@ -3,7 +3,7 @@
 	"name": "Attachment Management",
 	"version": "0.2.0",
 	"description": "Attachment management plugin to custom the attachment path and auto rename etc.",
-	"author": "Trganda",
+	"author": "trganda",
 	"authorUrl": "https://github.com/trganda",
 	"isDesktopOnly": false
 }
