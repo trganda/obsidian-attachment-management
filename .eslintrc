@@ -18,14 +18,10 @@
   },
   "rules": {
     "no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": "error",
     "no-prototype-builtins": "off",
-    "@typescript-eslint/no-unused-vars": [
-      "error",
-      {
-        "args": "none"
-      }
-    ],
     "no-useless-escape": "off",
+    "import/no-duplicates": "error",
     "@typescript-eslint/no-var-requires": "error",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-require-imports": "error",

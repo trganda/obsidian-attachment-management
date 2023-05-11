@@ -1,4 +1,4 @@
-import { App, TAbstractFile, TFile } from "obsidian";
+import { App, DataAdapter, TAbstractFile, TFile } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
 import * as path from "path";
 import { AttachmentManagementPluginSettings } from "./settings";
@@ -26,15 +26,15 @@ export const blobToArrayBuffer = (blob: Blob) => {
   });
 };
 
-export function isMarkdownFile(file: TFile): boolean {
-  if (file.extension === "md") {
+export function isMarkdownFile(extension: string): boolean {
+  if (extension === "md" || extension === ".md") {
     return true;
   }
   return false;
 }
 
-export function isCanvasFile(file: TFile): boolean {
-  if (file.extension === "canvas") {
+export function isCanvasFile(extension: string): boolean {
+  if (extension === "canvas" || extension === ".canvas") {
     return true;
   }
   return false;
@@ -56,6 +56,17 @@ export function isImage(extension: string): boolean {
     }
   }
 
+  return false;
+}
+
+export async function isFile(adapter: DataAdapter, path: string): Promise<boolean> {
+  const stat = await adapter.stat(path);
+  if (stat === null) {
+    return false;
+  }
+  if (stat.type === "file") {
+    return true;
+  }
   return false;
 }
 
@@ -129,7 +140,11 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
       let attachmentsSet: Set<string> = new Set();
       for (const [filePath, nr] of Object.entries(links)) {
-        if (!filePath.endsWith(".md") && !filePath.endsWith(".canvas")) {
+        if (!(await isFile(app.vault.adapter, filePath))) {
+          continue;
+        }
+        const ext = path.posix.extname(filePath);
+        if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
           addToSet(attachmentsSet, filePath);
         }
       }
@@ -167,7 +182,11 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
       // Any Additional Link
       let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
       for (let linkMatch of linkMatches) {
-        if (!linkMatch.linkText.endsWith(".md") && !linkMatch.linkText.endsWith(".canvas")) {
+        if (!(await isFile(app.vault.adapter, linkMatch.linkText))) {
+          continue;
+        }
+        const ext = path.posix.extname(linkMatch.linkText);
+        if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
           addToSet(attachmentsSet, linkMatch.linkText);
         }
       }
@@ -180,13 +199,21 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
         for (const node of canvasData.nodes) {
           // node.type: 'text' | 'file'
           if (node.type === "file") {
-            if (!node.file.endsWith(".md") && !node.file.endsWith(".canvas")) {
+            if (!(await isFile(app.vault.adapter, node.file))) {
+              continue;
+            }
+            const ext = path.posix.extname(node.file);
+            if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
               addToSet(attachmentsSet, node.file);
             }
           } else if (node.type == "text") {
             let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
             for (let linkMatch of linkMatches) {
-              if (!linkMatch.linkText.endsWith(".md") && !linkMatch.linkText.endsWith(".canvas")) {
+              if (!(await isFile(app.vault.adapter, linkMatch.linkText))) {
+                continue;
+              }
+              const ext = path.posix.extname(linkMatch.linkText);
+              if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
                 addToSet(attachmentsSet, linkMatch.linkText);
               }
             }

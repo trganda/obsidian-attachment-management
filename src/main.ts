@@ -51,7 +51,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           return;
         }
         // ignore markdown and canvas file.
-        if (isMarkdownFile(file) || isCanvasFile(file)) {
+        if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
           return;
         }
         if (isImage(file.extension) || isPastedImage(file)) {
