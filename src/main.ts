@@ -1,7 +1,7 @@
 import { FileSystemAdapter, Notice, Plugin, normalizePath, TextFileView, TFile, TAbstractFile, TFolder, ListedFiles } from "obsidian";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS, SettingTab } from "./settings";
 import * as path from "path";
-import { debugLog, isCanvasFile, isImage, isMarkdownFile, isPastedImage, stripPaths, testExcludeExtension } from "./utils";
+import { debugLog, getAttachmentsInVault, isCanvasFile, isImage, isMarkdownFile, isPastedImage, stripPaths, testExcludeExtension } from "./utils";
 import {
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
@@ -23,6 +23,18 @@ export default class AttachmentManagementPlugin extends Plugin {
     console.log(`Plugin loading: ${process.env.npm_package_name} ${process.env.npm_package_version} BUILD_ENV=${process.env.BUILD_ENV}`);
     this.adapter = this.app.vault.adapter as FileSystemAdapter;
     // this.backupConfigs();
+
+    this.addCommand({
+      id: "obsidian-attachment-rearrange-links",
+      name: "Rearrange Linked Attachments",
+      callback: () => this.rearrangeAttachment("links"),
+    });
+
+    // this.addCommand({
+    //   id: "obsidian-attachment-rearrange-all",
+    //   name: "Rearrange All Attachments",
+    //   callback: () => this.rearrangeAttachment("all"),
+    // });
 
     this.registerEvent(
       // not working while drop file to text view
@@ -271,6 +283,43 @@ export default class AttachmentManagementPlugin extends Plugin {
   // 		}
   // 	}
   // }
+
+  async rearrangeAttachment(type: "all" | "links") {
+    // only rearrange attachment that linked by markdown or canvas
+    debugLog(this.app.metadataCache.resolvedLinks);
+    const attachemtns = await getAttachmentsInVault(this.app, type);
+    debugLog("Attachemtns:", Object.keys(attachemtns).length);
+    for (const obsFile of Object.keys(attachemtns)) {
+      for (let link of attachemtns[obsFile]) {
+        try {
+          link = decodeURI(link);
+        } catch (err) {
+          new Notice(`Invalid link: ${link}, err: ${err}`);
+          console.log(`Invalid link: ${link}, err: ${err}`);
+          continue;
+        }
+        debugLog(`Article: ${obsFile} Links: ${link}`);
+        const noteExt = path.posix.extname(obsFile);
+        const noteName = path.posix.basename(obsFile, noteExt);
+        const notePath = path.posix.dirname(obsFile);
+
+        const attachPath = this.getAttachmentPath(noteName, notePath);
+        const attachName = this.getPastedImageFileName(noteName);
+        const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
+
+        const linkFile = this.app.vault.getAbstractFileByPath(link);
+        if (linkFile === null) {
+          debugLog(`${link} not Exists, skipped`);
+          continue;
+        }
+
+        if (!(await this.adapter.exists(attachPath))) {
+          this.adapter.mkdir(attachPath);
+        }
+        this.app.fileManager.renameFile(linkFile, dest);
+      }
+    }
+  }
 
   async onRename(file: TAbstractFile, oldPath: string, renameType: string, renameForamt: boolean) {
     const rf = file as TFile;
