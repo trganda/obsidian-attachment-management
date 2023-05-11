@@ -75,7 +75,7 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
   const dstParts = dst.split("/");
 
   if (srcParts.length !== dstParts.length) {
-    return undefined;
+    return { nsrc: src, ndst: dst };
   }
 
   for (let i = 0; i < srcParts.length; i++) {
@@ -127,13 +127,13 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
   let resolvedLinks = app.metadataCache.resolvedLinks;
   if (resolvedLinks) {
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
-      let attachemtsSet: Set<string> = new Set();
+      let attachmentsSet: Set<string> = new Set();
       for (const [filePath, nr] of Object.entries(links)) {
         if (!filePath.endsWith(".md") && !filePath.endsWith(".canvas")) {
-          addToSet(attachemtsSet, filePath);
+          addToSet(attachmentsSet, filePath);
         }
       }
-      addToRecord(attachmentsRecord, mdFile, attachemtsSet);
+      addToRecord(attachmentsRecord, mdFile, attachmentsSet);
     }
   }
   // Loop Files and Check Frontmatter/Canvas
@@ -167,7 +167,9 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
       // Any Additional Link
       let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
       for (let linkMatch of linkMatches) {
-        addToSet(attachmentsSet, linkMatch.linkText);
+        if (!linkMatch.linkText.endsWith(".md") && !linkMatch.linkText.endsWith(".canvas")) {
+          addToSet(attachmentsSet, linkMatch.linkText);
+        }
       }
     } else if (obsFile.extension === "canvas") {
       // check canvas for links
@@ -178,11 +180,15 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
         for (const node of canvasData.nodes) {
           // node.type: 'text' | 'file'
           if (node.type === "file") {
-            addToSet(attachmentsSet, node.file);
+            if (!node.file.endsWith(".md") && !node.file.endsWith(".canvas")) {
+              addToSet(attachmentsSet, node.file);
+            }
           } else if (node.type == "text") {
             let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
             for (let linkMatch of linkMatches) {
-              addToSet(attachmentsSet, linkMatch.linkText);
+              if (!linkMatch.linkText.endsWith(".md") && !linkMatch.linkText.endsWith(".canvas")) {
+                addToSet(attachmentsSet, linkMatch.linkText);
+              }
             }
           }
         }
@@ -196,9 +202,11 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
 const addToRecord = (record: Record<string, Set<string>>, key: string, value: Set<string>) => {
   if (record[key] === undefined) {
     record[key] = value;
+    return;
   }
   let valueSet = record[key];
-  for (const val in value) {
+
+  for (const val of value) {
     addToSet(valueSet, val);
   }
 

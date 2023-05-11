@@ -301,7 +301,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // only rearrange attachment that linked by markdown or canvas
     const attachemtns = await getAttachmentsInVault(this.app, type);
-    debugLog("Attachemtns:", Object.keys(attachemtns).length, Object.keys(attachemtns));
+    debugLog("Attachemtns:", Object.keys(attachemtns).length, Object.entries(attachemtns));
     for (const obsFile of Object.keys(attachemtns)) {
       for (let link of attachemtns[obsFile]) {
         try {
