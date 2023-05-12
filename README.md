@@ -14,7 +14,7 @@ This plugin currently support:
 
 ## How to install
 
-- Install from Obsidan community plugins.
+- Install from Obsidan community plugins (under [open pull request](https://github.com/obsidianmd/obsidian-releases/pull/1947)).
 - Clone this repo
   - `npm i` or `yarn` to install dependencies
   - `npm run build` to start compilation in watch mode.
