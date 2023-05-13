@@ -10,6 +10,7 @@ import {
   SETTINGS_VARIABLES_DATES,
   RENAME_EVENT_TYPE_FOLDER,
   RENAME_EVENT_TYPE_FILE,
+  RenameEventType,
 } from "./constant";
 
 export default class AttachmentManagementPlugin extends Plugin {
@@ -55,7 +56,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           return;
         }
         if (isImage(file.extension) || isPastedImage(file)) {
-          this.processPastedImg(file);
+          this.processAttach(file);
         } else {
           if (this.settings.handleAll) {
             debugLog("handleAll for file", file);
@@ -63,7 +64,7 @@ export default class AttachmentManagementPlugin extends Plugin {
               debugLog("Excluded File by Extension", file);
               return;
             }
-            this.processPastedImg(file);
+            this.processAttach(file);
           }
         }
       })
@@ -87,13 +88,14 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (file instanceof TFile) {
           // if the renamed file was a attachment, skip
-          const flag = await this.isAttachment(file, oldPath);
+          // TODO: use handleAll setting also
+          const flag = await this.isAttachment(oldPath);
           if (flag) {
             debugLog("Not Processing Rename on An Attachment, Skipped:", file.path);
             return;
           }
 
-          let renameType = "";
+          let renameType: RenameEventType;
           if (path.posix.basename(oldPath, path.posix.extname(oldPath)) === path.posix.basename(file.path, path.posix.extname(file.path))) {
             // rename event of folder
             renameType = RENAME_EVENT_TYPE_FOLDER;
@@ -112,8 +114,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           await this.onRename(file, oldPath, renameType, renameForamt);
         } else if (file instanceof TFolder) {
-          // ignore folder
-          debugLog("Ignore Rename Folder:", file.name);
+          // ignore rename event of folder
+          debugLog("Ignore Rename Folder Event:", file.name, oldPath);
           return;
         }
       })
@@ -138,7 +140,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
 
     // only rearrange attachment that linked by markdown or canvas
-    const attachemtns = await getAttachmentsInVault(this.app, type);
+    const attachemtns = await getAttachmentsInVault(this.settings, this.app, type);
     debugLog("Attachemtns:", Object.keys(attachemtns).length, Object.entries(attachemtns));
     for (const obsFile of Object.keys(attachemtns)) {
       for (let link of attachemtns[obsFile]) {
@@ -185,7 +187,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
   }
 
-  async onRename(file: TAbstractFile, oldPath: string, renameType: string, renameForamt: boolean) {
+  async onRename(file: TAbstractFile, oldPath: string, renameType: RenameEventType, renameForamt: boolean) {
     const rf = file as TFile;
     // generate old note path and name
     const oldNotePath = path.posix.dirname(oldPath);
@@ -226,10 +228,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     const exitsDst = await this.adapter.exists(stripedNewAttachPath);
     if (exitsDst) {
       // if the file exists in the vault
-      if (renameType == RENAME_EVENT_TYPE_FILE) {
+      if (renameType === RENAME_EVENT_TYPE_FILE) {
         new Notice(`Same file name exists: ${stripedNewAttachPath}`);
         return;
-      } else if (renameType == RENAME_EVENT_TYPE_FOLDER) {
+      } else if (renameType === RENAME_EVENT_TYPE_FOLDER) {
         // for most case, this should not be happen, we just notice it.
         new Notice(`Folder already exists: ${stripedNewAttachPath}`);
         return;
@@ -268,27 +270,24 @@ export default class AttachmentManagementPlugin extends Plugin {
 
   /**
    * Check if the file is an attachment
-   * @param file - the file to check
-   * @param oldPath - the old path of this file
+   * @param filePath - the old path of this file
    * @returns true if the file is an attachment, otherwise false
    */
-  async isAttachment(file: TAbstractFile, oldPath: string): Promise<boolean> {
-    if (file instanceof TFile) {
-      // checking the old state of the file
-      const extension = path.posix.extname(oldPath);
-      if (extension === ".md" || extension === ".canvas") {
-        return false;
-      }
+  async isAttachment(filePath: string): Promise<boolean> {
+    // checking the old state of the file
+    const extension = path.posix.extname(filePath);
+    if (isMarkdownFile(extension) || isCanvasFile(extension)) {
+      return false;
     }
     return true;
   }
 
   /**
-   * Post-processing of created img file.
+   * Post-processing of created attachment file (for paste and drop event).
    * @param file - thie file to process
    * @returns - none
    */
-  async processPastedImg(file: TFile) {
+  async processAttach(file: TFile) {
     const activeFile = this.getActiveFile();
     if (activeFile === undefined) {
       new Notice("Error: no active file found.");

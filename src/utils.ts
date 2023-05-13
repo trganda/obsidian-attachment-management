@@ -85,6 +85,8 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
   const srcParts = src.split("/");
   const dstParts = dst.split("/");
 
+  // if src and dst have difference count of parts,
+  // we think the paths was not in a same parent folder and no need to strip the prefix
   if (srcParts.length !== dstParts.length) {
     return { nsrc: src, ndst: dst };
   }
@@ -110,11 +112,15 @@ export function testExcludeExtension(extension: string, pattern: string): boolea
   return new RegExp(pattern).test(extension);
 }
 
-export async function getAttachmentsInVault(app: App, type: "all" | "links"): Promise<Record<string, Set<string>>> {
+export async function getAttachmentsInVault(
+  settings: AttachmentManagementPluginSettings,
+  app: App,
+  type: "all" | "links"
+): Promise<Record<string, Set<string>>> {
   let attachmentsRecord: Record<string, Set<string>> = {};
 
   // if (type === "links") {
-  attachmentsRecord = await getAttachmentsInVaultByLinks(app);
+  attachmentsRecord = await getAttachmentsInVaultByLinks(settings, app);
   // } else {
   //   let allFiles = app.vault.getFiles();
   //   let attachments: TFile[] = [];
@@ -133,18 +139,14 @@ export async function getAttachmentsInVault(app: App, type: "all" | "links"): Pr
 }
 
 // refer https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
-export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<string, Set<string>>> {
+export async function getAttachmentsInVaultByLinks(settings: AttachmentManagementPluginSettings, app: App): Promise<Record<string, Set<string>>> {
   let attachmentsRecord: Record<string, Set<string>> = {};
   let resolvedLinks = app.metadataCache.resolvedLinks;
   if (resolvedLinks) {
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
       let attachmentsSet: Set<string> = new Set();
       for (const [filePath, nr] of Object.entries(links)) {
-        if (!(await isFile(app.vault.adapter, filePath))) {
-          continue;
-        }
-        const ext = path.posix.extname(filePath);
-        if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
+        if (isAttachment(settings, filePath)) {
           addToSet(attachmentsSet, filePath);
         }
       }
@@ -157,7 +159,7 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
     let obsFile = allFiles[i];
     let attachmentsSet: Set<string> = new Set();
     // Check Frontmatter for md files and additional links that might be missed in resolved links
-    if (obsFile.extension === "md") {
+    if (isMarkdownFile(obsFile.extension)) {
       // Frontmatter
       let fileCache = app.metadataCache.getFileCache(obsFile);
       if (fileCache === null) {
@@ -167,14 +169,12 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
         let frontmatter = fileCache.frontmatter;
         for (let k of Object.keys(frontmatter)) {
           if (typeof frontmatter[k] === "string") {
-            if (frontmatter[k].match(bannerRegex)) {
+            if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
               let fileName = frontmatter[k].match(bannerRegex)[1];
               let file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-              if (file) {
+              if (file && isAttachment(settings, file.path)) {
                 addToSet(attachmentsSet, file.path);
               }
-            } else if (pathIsAnImage(frontmatter[k])) {
-              addToSet(attachmentsSet, frontmatter[k]);
             }
           }
         }
@@ -182,15 +182,11 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
       // Any Additional Link
       let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
       for (let linkMatch of linkMatches) {
-        if (!(await isFile(app.vault.adapter, linkMatch.linkText))) {
-          continue;
-        }
-        const ext = path.posix.extname(linkMatch.linkText);
-        if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
+        if (isAttachment(settings, linkMatch.linkText)) {
           addToSet(attachmentsSet, linkMatch.linkText);
         }
       }
-    } else if (obsFile.extension === "canvas") {
+    } else if (isCanvasFile(obsFile.extension)) {
       // check canvas for links
       let fileRead = await app.vault.cachedRead(obsFile);
       let canvasData = JSON.parse(fileRead);
@@ -199,21 +195,13 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
         for (const node of canvasData.nodes) {
           // node.type: 'text' | 'file'
           if (node.type === "file") {
-            if (!(await isFile(app.vault.adapter, node.file))) {
-              continue;
-            }
-            const ext = path.posix.extname(node.file);
-            if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
+            if (isAttachment(settings, node.file)) {
               addToSet(attachmentsSet, node.file);
             }
           } else if (node.type == "text") {
             let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
             for (let linkMatch of linkMatches) {
-              if (!(await isFile(app.vault.adapter, linkMatch.linkText))) {
-                continue;
-              }
-              const ext = path.posix.extname(linkMatch.linkText);
-              if (!isMarkdownFile(ext) && !isCanvasFile(ext)) {
+              if (isAttachment(settings, linkMatch.linkText)) {
                 addToSet(attachmentsSet, linkMatch.linkText);
               }
             }
@@ -224,6 +212,23 @@ export async function getAttachmentsInVaultByLinks(app: App): Promise<Record<str
     addToRecord(attachmentsRecord, obsFile.path, attachmentsSet);
   }
   return attachmentsRecord;
+}
+
+function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string): boolean {
+  const file = this.app.vault.getAbstractFileByPath(filePath);
+  if (file === null || !(file instanceof TFile)) {
+    return false;
+  }
+
+  if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
+    return false;
+  }
+
+  if (isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern))) {
+    return true;
+  }
+
+  return false;
 }
 
 const addToRecord = (record: Record<string, Set<string>>, key: string, value: Set<string>) => {
