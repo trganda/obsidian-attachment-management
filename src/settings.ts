@@ -12,7 +12,7 @@ import {
 export interface AttachmentManagementPluginSettings {
   // Attachment root path
   attachmentRoot: string;
-  // How to save attachment, in fixd folder, current folder or subfolder in current folder
+  // How to save attachment, in fixed folder, current folder or subfolder in current folder
   saveAttE: string;
   // Attachment path
   attachmentPath: string;
@@ -26,7 +26,7 @@ export interface AttachmentManagementPluginSettings {
   excludeExtensionPattern: string;
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
-  // Auto-rename dumplicate file
+  // Auto-rename duplicate file
   autoDuplicate: boolean;
 }
 
@@ -79,8 +79,8 @@ export class SettingTab extends PluginSettingTab {
     });
 
     new Setting(containerEl)
-      .setName("Root path to save new attachements")
-      .setDesc("Select root path for all new attachements")
+      .setName("Root path to save new attachments")
+      .setDesc("Select root path for all new attachments")
       .addDropdown((text) =>
         text
           .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
@@ -111,7 +111,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Attachment path")
-      .setDesc(`Path of new attachment in root folder, aviliable variables ${SETTINGS_VARIABLES_NOTEPATH} and ${SETTINGS_VARIABLES_NOTENAME}`)
+      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH} and ${SETTINGS_VARIABLES_NOTENAME}`)
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachmentPath)
@@ -125,12 +125,12 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Attachment format")
-      .setDesc(`Define how to name the attachment file, aviliable variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`)
+      .setDesc(`Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`)
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachFormat)
           .setValue(this.plugin.settings.attachFormat)
-          .onChange(async (value) => {
+          .onChange(async (value: string) => {
             console.log("Attachment format: " + value);
             this.plugin.settings.attachFormat = value;
             await this.plugin.saveSettings();
@@ -189,7 +189,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Automatically rename attachment")
-      .setDesc("Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/cavans file be placed.")
+      .setDesc("Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed.")
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
           console.log("Automatically rename attachment folder: " + value);
@@ -201,7 +201,7 @@ export class SettingTab extends PluginSettingTab {
     // new Setting(containerEl)
     // 	.setName("Automatically add duplicate number for same name folder or file")
     // 	.setDesc(
-    // 		`When automatical rename was enabled, add duplicate number for same name folder or file.`
+    // 		`When automatically rename was enabled, add duplicate number for same name folder or file.`
     // 	)
     // 	.addToggle((toggle) =>
     // 		toggle

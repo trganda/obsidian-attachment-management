@@ -10,13 +10,13 @@ This plugin currently support:
 - [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
 - [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
-- [x] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configed (experimental)
-- [ ] Processing Deplicate attachment
+- [x] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)
+- [ ] Processing duplicate attachment
 - [ ] Override attachment configuration for specified notes or folder
 
 ## How to install
 
-- Install from Obsidan community plugins (under [open pull request](https://github.com/obsidianmd/obsidian-releases/pull/1947)).
+- Install from Obsidian community plugins (under [open pull request](https://github.com/obsidianmd/obsidian-releases/pull/1947)).
 - Clone this repo
   - `npm i` or `yarn` to install dependencies
   - `npm run build` to start compilation in watch mode.
@@ -27,7 +27,7 @@ This plugin currently support:
 The path of attachment was compose of three part
 
 ```
-{root path}/{attachment path}/{attachment name}.extenstion
+{root path}/{attachment path}/{attachment name}.extension
 ```
 
 And your can use the variables below to config
@@ -36,7 +36,7 @@ And your can use the variables below to config
 - `${notename}`: file name of the `markdown` or `canvas` file (not include file extension).
 - `${date}`: date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
 
-### Root Path to Save New Attachements
+### Root Path to Save New Attachments
 
 You must select a root folder to save the associated attachment of a `markdown` or `canvas` file.
 
@@ -50,13 +50,13 @@ It can be set use the config of obsidian in `Files & Links`, or reset in this op
 
 ### Attachment Path
 
-A sub-folder to place attachment under the `{root path}`, aviliable variables `${notename}` and `${notepath}`, default value `${notepath}/${notename}`.
+A sub-folder to place attachment under the `{root path}`, available variables `${notename}` and `${notepath}`, default value `${notepath}/${notename}`.
 
 ### Attachment Format
 
-Set how to rename the attachemnt, aviliable variables `${notename}` and `${date}`, default value `IMG-{date}`.
+Set how to rename the attachment, available variables `${notename}` and `${date}`, default value `IMG-{date}`.
 
-### Date Foramt
+### Date Format
 
 Use [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format) to set the `${date}`, default value `YYYYMMDDHHmmssSSS`.
 
@@ -72,13 +72,13 @@ This option is only useful when "Handle all attachments" is enabled. Write a Reg
 
 ### Automatically Rename Attachment
 
-Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/cavans file be placed.
+Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed.
 
 ## Usage
 
 Install and enable the plugin, after configure you can paste or drop attachment file as usually and it will be auto rename.
 
-This plugin support a command `Rearrange Linked Attachments`, if you run this command, it will rename all attachment that has bee linked in `markdown` or `canvas` file as you configed.
+This plugin support a command `Rearrange Linked Attachments`, if you run this command, it will rename all attachment that has bee linked in `markdown` or `canvas` file as you configured.
 
 ![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
