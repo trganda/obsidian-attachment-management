@@ -59,17 +59,6 @@ export function isImage(extension: string): boolean {
   return false;
 }
 
-export async function isFile(adapter: DataAdapter, path: string): Promise<boolean> {
-  const stat = await adapter.stat(path);
-  if (stat === null) {
-    return false;
-  }
-  if (stat.type === "file") {
-    return true;
-  }
-  return false;
-}
-
 // find the first prefix difference of two paths
 // e.g.:
 //     "Resources/Untitled/Untitled 313/Untitled"
@@ -146,7 +135,7 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
       let attachmentsSet: Set<string> = new Set();
       for (const [filePath, nr] of Object.entries(links)) {
-        if (isAttachment(settings, filePath)) {
+        if (await isAttachment(settings, filePath)) {
           addToSet(attachmentsSet, filePath);
         }
       }
@@ -172,7 +161,7 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
             if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
               let fileName = frontmatter[k].match(bannerRegex)[1];
               let file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-              if (file && isAttachment(settings, file.path)) {
+              if (file && await isAttachment(settings, file.path)) {
                 addToSet(attachmentsSet, file.path);
               }
             }
@@ -182,7 +171,7 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
       // Any Additional Link
       let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
       for (let linkMatch of linkMatches) {
-        if (isAttachment(settings, linkMatch.linkText)) {
+        if (await isAttachment(settings, linkMatch.linkText)) {
           addToSet(attachmentsSet, linkMatch.linkText);
         }
       }
@@ -195,13 +184,13 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
         for (const node of canvasData.nodes) {
           // node.type: 'text' | 'file'
           if (node.type === "file") {
-            if (isAttachment(settings, node.file)) {
+            if (await isAttachment(settings, node.file)) {
               addToSet(attachmentsSet, node.file);
             }
           } else if (node.type == "text") {
             let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
             for (let linkMatch of linkMatches) {
-              if (isAttachment(settings, linkMatch.linkText)) {
+              if (await isAttachment(settings, linkMatch.linkText)) {
                 addToSet(attachmentsSet, linkMatch.linkText);
               }
             }
@@ -214,7 +203,14 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
   return attachmentsRecord;
 }
 
-function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string): boolean {
+
+/**
+ * Check whether the file is an attachment
+ * @param settings plugins configuration
+ * @param filePath file path
+ * @returns true if the file is an attachment, false otherwise
+ */
+export async function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string): Promise<boolean> {
   const file = this.app.vault.getAbstractFileByPath(filePath);
   if (file === null || !(file instanceof TFile)) {
     return false;

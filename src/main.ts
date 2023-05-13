@@ -1,7 +1,18 @@
 import { FileSystemAdapter, Notice, Plugin, normalizePath, TextFileView, TFile, TAbstractFile, TFolder, ListedFiles } from "obsidian";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS, SettingTab } from "./settings";
 import * as path from "path";
-import { debugLog, getAttachmentsInVault, isCanvasFile, isImage, isMarkdownFile, isPastedImage, needToRename, stripPaths, testExcludeExtension } from "./utils";
+import {
+  debugLog,
+  getAttachmentsInVault,
+  isAttachment,
+  isCanvasFile,
+  isImage,
+  isMarkdownFile,
+  isPastedImage,
+  needToRename,
+  stripPaths,
+  testExcludeExtension,
+} from "./utils";
 import {
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
@@ -79,8 +90,8 @@ export default class AttachmentManagementPlugin extends Plugin {
           !this.settings.autoRenameAttachment ||
           (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
             !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && 
-            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES) )
+            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
+            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES))
         ) {
           debugLog("No Variable Use, Skip");
           return;
@@ -88,8 +99,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (file instanceof TFile) {
           // if the renamed file was a attachment, skip
-          // TODO: use handleAll setting also
-          const flag = await this.isAttachment(oldPath);
+          const flag = await isAttachment(this.settings, oldPath);
           if (flag) {
             debugLog("Not Processing Rename on An Attachment, Skipped:", file.path);
             return;
@@ -132,8 +142,8 @@ export default class AttachmentManagementPlugin extends Plugin {
       !this.settings.autoRenameAttachment ||
       (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
         !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && 
-        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES) )
+        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
+        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES))
     ) {
       debugLog("No Variable Use, Skip");
       return;
@@ -176,7 +186,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
 
         // TODO: check if the file already exists
-        if ((await this.adapter.exists(dest))) {
+        if (await this.adapter.exists(dest)) {
           new Notice(`${dest} already exists, skipped`);
           console.log(`${dest} already exists, skipped`);
           continue;
@@ -266,20 +276,6 @@ export default class AttachmentManagementPlugin extends Plugin {
         await this.app.fileManager.renameFile(tfile, newFilePath);
       }
     }
-  }
-
-  /**
-   * Check if the file is an attachment
-   * @param filePath - the old path of this file
-   * @returns true if the file is an attachment, otherwise false
-   */
-  async isAttachment(filePath: string): Promise<boolean> {
-    // checking the old state of the file
-    const extension = path.posix.extname(filePath);
-    if (isMarkdownFile(extension) || isCanvasFile(extension)) {
-      return false;
-    }
-    return true;
   }
 
   /**
