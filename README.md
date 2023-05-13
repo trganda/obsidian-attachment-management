@@ -12,6 +12,7 @@ This plugin currently support:
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
 - [x] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configed (experimental)
 - [ ] Processing Deplicate attachment
+- [ ] Override attachment configuration for specified notes or folder
 
 ## How to install
 
