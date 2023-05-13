@@ -5,7 +5,7 @@ import { AttachmentManagementPluginSettings } from "./settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./constant";
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
-const imageRegex = /.*(jpe?g|png|gif|svg|bmp)/i;
+const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps"]);
 
