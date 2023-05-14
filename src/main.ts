@@ -1,9 +1,10 @@
-import { FileSystemAdapter, Notice, Plugin, normalizePath, TextFileView, TFile, TAbstractFile, TFolder, ListedFiles } from "obsidian";
-import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS, SettingTab } from "./settings";
+import { FileSystemAdapter, Notice, Plugin, normalizePath, TextFileView, TFile, TAbstractFile, TFolder, ListedFiles, Menu } from "obsidian";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS, SettingTab } from "./settings";
 import * as path from "path";
 import {
   debugLog,
   getAttachmentsInVault,
+  getOverrideSetting,
   isAttachment,
   isCanvasFile,
   isImage,
@@ -23,6 +24,7 @@ import {
   RENAME_EVENT_TYPE_FILE,
   RenameEventType,
 } from "./constant";
+import { OverrideModal } from "./override";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -47,6 +49,23 @@ export default class AttachmentManagementPlugin extends Plugin {
     //   name: "Rearrange All Attachments",
     //   callback: () => this.rearrangeAttachment("all"),
     // });
+
+    this.registerEvent(
+      this.app.workspace.on("file-menu", (menu, file) => {
+        menu.addItem((item) => {
+          item
+            .setTitle("Set attachment path 👈")
+            .setIcon("document")
+            .onClick(async () => {
+              let fileSetting = getOverrideSetting(this.settings.overridePath, file)
+              if (fileSetting === undefined) {
+                fileSetting = this.settings.attachPath
+              }
+              this.overrideConfiguration(menu, file, fileSetting);
+            });
+        });
+      })
+    );
 
     this.registerEvent(
       // not working while drop file to text view
@@ -88,10 +107,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (
           !this.settings.autoRenameAttachment ||
-          (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
-            !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
-            !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES))
+          (!this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
+            !this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
+            !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
+            !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_DATES))
         ) {
           debugLog("No Variable Use, Skip");
           return;
@@ -116,13 +135,13 @@ export default class AttachmentManagementPlugin extends Plugin {
             debugLog("RenameType:", RENAME_EVENT_TYPE_FILE);
           }
 
-          let renameForamt = false;
-          if (this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
+          let renameFormat = false;
+          if (this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
             // need to rename the attachment file name
-            renameForamt = true;
+            renameFormat = true;
           }
 
-          await this.onRename(file, oldPath, renameType, renameForamt);
+          await this.onRename(file, oldPath, renameType, renameFormat);
         } else if (file instanceof TFolder) {
           // ignore rename event of folder
           debugLog("Ignore Rename Folder Event:", file.name, oldPath);
@@ -135,25 +154,30 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.addSettingTab(new SettingTab(this.app, this));
   }
 
+  async overrideConfiguration(menu: Menu, file: TAbstractFile, setting: AttachmentPathSettings) {
+    const overModel = new OverrideModal(this, file, setting)
+    overModel.open()
+  }
+
   async rearrangeAttachment(type: "all" | "links") {
     debugLog("On Rearrange Command");
 
     if (
       !this.settings.autoRenameAttachment ||
-      (!this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
-        !this.settings.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
-        !this.settings.attachFormat.includes(SETTINGS_VARIABLES_DATES))
+      (!this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
+        !this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
+        !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
+        !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_DATES))
     ) {
       debugLog("No Variable Use, Skip");
       return;
     }
 
     // only rearrange attachment that linked by markdown or canvas
-    const attachemtns = await getAttachmentsInVault(this.settings, this.app, type);
-    debugLog("Attachemtns:", Object.keys(attachemtns).length, Object.entries(attachemtns));
-    for (const obsFile of Object.keys(attachemtns)) {
-      for (let link of attachemtns[obsFile]) {
+    const attachments = await getAttachmentsInVault(this.settings, this.app, type);
+    debugLog("Attachments:", Object.keys(attachments).length, Object.entries(attachments));
+    for (const obsFile of Object.keys(attachments)) {
+      for (let link of attachments[obsFile]) {
         try {
           link = decodeURI(link);
         } catch (err) {
@@ -170,8 +194,8 @@ export default class AttachmentManagementPlugin extends Plugin {
         const attachName = this.getPastedImageFileName(noteName);
         const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
 
-        // check if the link was already statify the attachment name config
-        if (!needToRename(this.settings, attachPath, attachName, noteName, link)) {
+        // check if the link was already satisfy the attachment name config
+        if (!needToRename(this.settings.attachPath, attachPath, attachName, noteName, link)) {
           debugLog("No need to rename:", link);
           continue;
         }
@@ -197,7 +221,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
   }
 
-  async onRename(file: TAbstractFile, oldPath: string, renameType: RenameEventType, renameForamt: boolean) {
+  async onRename(file: TAbstractFile, oldPath: string, renameType: RenameEventType, renameFormat: boolean) {
     const rf = file as TFile;
     // generate old note path and name
     const oldNotePath = path.posix.dirname(oldPath);
@@ -255,9 +279,9 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
 
     // rename attachment filename as needed
-    if (renameForamt && renameType == RENAME_EVENT_TYPE_FILE) {
+    if (renameFormat && renameType == RENAME_EVENT_TYPE_FILE) {
       // suppose the attachment folder already renamed
-      // rename all attachment files that the filename content the notename in attachment path
+      // rename all attachment files that the filename content the ${notename} in attachment path
       const attachmentFiles: ListedFiles = await this.adapter.list(newAttachPath);
       for (const filePath of attachmentFiles.files) {
         debugLog("Listing File:", filePath);
@@ -280,7 +304,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
   /**
    * Post-processing of created attachment file (for paste and drop event).
-   * @param file - thie file to process
+   * @param file - the file to process
    * @returns - none
    */
   async processAttach(file: TFile) {
@@ -300,31 +324,30 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     debugLog("New Path of File:", path.posix.join(attachPath, attachName));
 
-    // no using updatelink right now.
     this.renameFile(file, attachPath, attachName, activeFile.path, ext, true);
   }
 
   /**
-   * Rename the file spcified by `@param file`, and update the link of the file if specified updateLink
+   * Rename the file specified by `@param file`, and update the link of the file if specified updateLink
    * @param file - file to rename
    * @param attachPath - where to the renamed file will be move to
    * @param attachName - name of the renamed file
-   * @param sourcePath - path of the associated activefile file
-   * @param extension - extension of associated activefile of file
+   * @param sourcePath - path of the associated active file
+   * @param extension - extension of associated active file
    * @param updateLink - whether to replace the link of renamed file
    * @returns - none
    */
   async renameFile(file: TFile, attachPath: string, attachName: string, sourcePath: string, extension: string, updateLink?: boolean) {
-    // Make sure the path was craeted
+    // Make sure the path was created
     if (!(await this.adapter.exists(attachPath))) {
       await this.adapter.mkdir(attachPath);
     }
 
-    debugLog("Souce Path of Reanme:", file.path);
+    debugLog("Source Path of Rename:", file.path);
 
     const dest = normalizePath(path.posix.join(attachPath, attachName));
 
-    debugLog("Destination Path of Reanme:", dest);
+    debugLog("Destination Path of Rename:", dest);
 
     const oldLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath);
     const oldPath = file.path;
@@ -353,14 +376,14 @@ export default class AttachmentManagementPlugin extends Plugin {
       new Notice(`Failed to update link in ${sourcePath}: no active view`);
       return;
     }
-    const contnet = view.getViewData();
+    const content = view.getViewData();
     let val = "";
     switch (extension) {
       case "md":
-        val = contnet.replace(oldLinkText, newLinkText);
+        val = content.replace(oldLinkText, newLinkText);
         break;
       case "canvas":
-        val = contnet.replace(`/(file\s*\:\s*\")${oldPath}(\")/g`, `$1${dest}$2`);
+        val = content.replace(`/(file\s*\:\s*\")${oldPath}(\")/g`, `$1${dest}$2`);
         break;
     }
 
@@ -396,7 +419,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     const root = this.getRootPath(notePath);
     const attachPath = path.join(
       root,
-      this.settings.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
+      this.settings.attachPath.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
     );
     return normalizePath(attachPath);
   }
@@ -412,12 +435,12 @@ export default class AttachmentManagementPlugin extends Plugin {
     //@ts-ignore
     const obsmediadir = app.vault.getConfig("attachmentFolderPath");
     // debugLog("obsmediadir", obsmediadir);
-    switch (this.settings.saveAttE) {
+    switch (this.settings.attachPath.saveAttE) {
       case `${SETTINGS_ROOT_INFOLDER}`:
-        root = path.posix.join(this.settings.attachmentRoot);
+        root = path.posix.join(this.settings.attachPath.attachmentRoot);
         break;
       case `${SETTINGS_ROOT_NEXTTONOTE}`:
-        root = path.posix.join(notePath, this.settings.attachmentRoot.replace("./", ""));
+        root = path.posix.join(notePath, this.settings.attachPath.attachmentRoot.replace("./", ""));
         break;
       default:
         if (obsmediadir === "/") {
@@ -444,8 +467,8 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @returns image file name
    */
   getPastedImageFileName(noteName: string) {
-    const datetime = window.moment().format(this.settings.dateFormat);
-    const imgName = this.settings.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, datetime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
+    const dateTime = window.moment().format(this.settings.dateFormat);
+    const imgName = this.settings.attachPath.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, dateTime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
     return imgName;
   }
 

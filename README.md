@@ -45,7 +45,7 @@ You must select a root folder to save the associated attachment of a `markdown` 
 It can be set use the config of obsidian in `Files & Links`, or reset in this option.
 
 - Copy Obsidian settings: use the config of obsidian in `Files & Links`.
-- In the folder specified below: set a fixd folder.
+- In the folder specified below: set a fixed folder.
 - Next to note in folder specified below: in the subfolder of current `markdown` or `canvas` file.
 
 ### Attachment Path

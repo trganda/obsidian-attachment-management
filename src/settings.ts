@@ -9,7 +9,13 @@ import {
   SETTINGS_ROOT_NEXTTONOTE,
 } from "./constant";
 
-export interface AttachmentManagementPluginSettings {
+export type SETTINGS_TYPE = string;
+
+export const SETTINGS_TYPE_FOLDER: SETTINGS_TYPE = "FOLDER";
+export const SETTINGS_TYPE_FILE: SETTINGS_TYPE = "FILE";
+export const SETTINGS_TYPE_GLOBAL: SETTINGS_TYPE = "GLOBAL";
+
+export interface AttachmentPathSettings {
   // Attachment root path
   attachmentRoot: string;
   // How to save attachment, in fixed folder, current folder or subfolder in current folder
@@ -18,6 +24,13 @@ export interface AttachmentManagementPluginSettings {
   attachmentPath: string;
   // How to renamed the image file
   attachFormat: string;
+  // Override type
+  type: SETTINGS_TYPE;
+}
+
+export interface AttachmentManagementPluginSettings {
+  // Path
+  attachPath: AttachmentPathSettings;
   // Date format
   dateFormat: string;
   // Handle all file
@@ -28,18 +41,24 @@ export interface AttachmentManagementPluginSettings {
   autoRenameAttachment: boolean;
   // Auto-rename duplicate file
   autoDuplicate: boolean;
+  // Path of notes that override global configuration
+  overridePath: Record<string, AttachmentPathSettings>;
 }
 
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
-  attachmentRoot: "",
-  saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
-  attachmentPath: `${SETTINGS_VARIABLES_NOTEPATH}/${SETTINGS_VARIABLES_NOTENAME}`,
-  attachFormat: `IMG-${SETTINGS_VARIABLES_DATES}`,
+  attachPath: {
+    attachmentRoot: "",
+    saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
+    attachmentPath: `${SETTINGS_VARIABLES_NOTEPATH}/${SETTINGS_VARIABLES_NOTENAME}`,
+    attachFormat: `IMG-${SETTINGS_VARIABLES_DATES}`,
+    type: SETTINGS_TYPE_GLOBAL,
+  },
   dateFormat: "YYYYMMDDHHmmssSSS",
   handleAll: false,
   excludeExtensionPattern: "",
   autoRenameAttachment: true,
   autoDuplicate: false,
+  overridePath: {},
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -53,7 +72,7 @@ export class SettingTab extends PluginSettingTab {
   displSw(cont: HTMLElement): void {
     cont.findAll(".setting-item").forEach((el: HTMLElement) => {
       if (el.getAttr("class")?.includes("root_folder_set")) {
-        if (this.plugin.settings.saveAttE === "obsFolder") {
+        if (this.plugin.settings.attachPath.saveAttE === "obsFolder") {
           el.hide();
         } else {
           el.show();
@@ -86,9 +105,9 @@ export class SettingTab extends PluginSettingTab {
           .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
           .addOption(`${SETTINGS_ROOT_INFOLDER}`, "In the folder specified below")
           .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, "Next to note in folder specified below")
-          .setValue(this.plugin.settings.saveAttE)
+          .setValue(this.plugin.settings.attachPath.saveAttE)
           .onChange(async (value) => {
-            this.plugin.settings.saveAttE = value;
+            this.plugin.settings.attachPath.saveAttE = value;
             this.displSw(containerEl);
             await this.plugin.saveSettings();
           })
@@ -100,11 +119,11 @@ export class SettingTab extends PluginSettingTab {
       .setClass("root_folder_set")
       .addText((text) =>
         text
-          .setPlaceholder(DEFAULT_SETTINGS.attachmentRoot)
-          .setValue(this.plugin.settings.attachmentRoot)
+          .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentRoot)
+          .setValue(this.plugin.settings.attachPath.attachmentRoot)
           .onChange(async (value) => {
             console.log("Attachment root: " + value);
-            this.plugin.settings.attachmentRoot = value;
+            this.plugin.settings.attachPath.attachmentRoot = value;
             await this.plugin.saveSettings();
           })
       );
@@ -114,11 +133,11 @@ export class SettingTab extends PluginSettingTab {
       .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH} and ${SETTINGS_VARIABLES_NOTENAME}`)
       .addText((text) =>
         text
-          .setPlaceholder(DEFAULT_SETTINGS.attachmentPath)
-          .setValue(this.plugin.settings.attachmentPath)
+          .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
+          .setValue(this.plugin.settings.attachPath.attachmentPath)
           .onChange(async (value) => {
             console.log("Attachment path: " + value);
-            this.plugin.settings.attachmentPath = value;
+            this.plugin.settings.attachPath.attachmentPath = value;
             await this.plugin.saveSettings();
           })
       );
@@ -128,11 +147,11 @@ export class SettingTab extends PluginSettingTab {
       .setDesc(`Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`)
       .addText((text) =>
         text
-          .setPlaceholder(DEFAULT_SETTINGS.attachFormat)
-          .setValue(this.plugin.settings.attachFormat)
+          .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
+          .setValue(this.plugin.settings.attachPath.attachFormat)
           .onChange(async (value: string) => {
             console.log("Attachment format: " + value);
-            this.plugin.settings.attachFormat = value;
+            this.plugin.settings.attachPath.attachFormat = value;
             await this.plugin.saveSettings();
           })
       );
@@ -143,7 +162,7 @@ export class SettingTab extends PluginSettingTab {
         createFragment((frag) => {
           frag.appendText("Moment date format to use ");
           frag.createEl("a", {
-            href: 'https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format',
+            href: "https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format",
             text: "Moment format options",
           });
         })
@@ -173,9 +192,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Exclude extension pattern")
-      .setDesc(
-        `This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`
-      )
+      .setDesc(`This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`)
       .setClass("exclude_extension_pattern")
       .addText((text) =>
         text
