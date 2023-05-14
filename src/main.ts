@@ -67,6 +67,23 @@ export default class AttachmentManagementPlugin extends Plugin {
       },
     });
 
+    this.addCommand({
+      id: "attachment-management-reset-override-setting",
+      name: "Reset Override Setting",
+      callback: async () => {
+        const file = this.getActiveFile();
+        if (file === undefined) {
+          new Notice("Error: no active file found.");
+          return;
+        }
+        delete this.settings.overridePath[file.path]
+        await this.saveSettings();
+        await this.loadSettings();
+        const oldSetting = getOverrideSetting(this.settings, file);
+        const fileSetting = Object.assign({}, oldSetting);
+      },
+    });
+
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {

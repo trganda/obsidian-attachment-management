@@ -44,7 +44,7 @@ export class OverrideModal extends Modal {
       text: "Override Settings",
     });
 
-    const rootSetting = new Setting(contentEl)
+    new Setting(contentEl)
       .setName("Root path to save new attachments")
       .setDesc("Select root path for all new attachments")
       .addDropdown((text) =>
@@ -100,11 +100,11 @@ export class OverrideModal extends Modal {
 
     new Setting(contentEl)
       .addButton((btn) => {
-        btn.setButtonText("Reset").onClick(() => {
+        btn.setButtonText("Reset").onClick(async () => {
           this.setting = this.plugin.settings.attachPath;
           delete this.plugin.settings.overridePath[this.file.path]
-          this.plugin.saveSettings();
-          this.plugin.loadSettings();
+          await this.plugin.saveSettings();
+          await this.plugin.loadSettings();
           new Notice("Reset attachment path setting");
           this.close();
         });
