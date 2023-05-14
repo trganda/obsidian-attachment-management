@@ -88,7 +88,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
           item
-            .setTitle("Set attachment path")
+            .setTitle("Override attachment setting")
             .setIcon("image-plus")
             .onClick(async () => {
               const oldSetting = getOverrideSetting(this.settings, file);
