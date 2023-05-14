@@ -1,4 +1,4 @@
-import { Modal, TFile, App, TAbstractFile, Setting, TFolder } from "obsidian";
+import { Modal, TFile, App, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
 import { debugLog } from "./utils";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
 import {
@@ -20,10 +20,11 @@ export class OverrideModal extends Modal {
     super(plugin.app);
     this.plugin = plugin;
     this.file = file;
+    debugLog(setting);
     this.setting = setting;
   }
 
-  displSw(cont: HTMLElement): void {
+  displaySw(cont: HTMLElement): void {
     cont.findAll(".setting-item").forEach((el: HTMLElement) => {
       if (el.getAttr("class")?.includes("override_root_folder_set")) {
         if (this.setting.saveAttE === "obsFolder") {
@@ -39,11 +40,11 @@ export class OverrideModal extends Modal {
     let { contentEl } = this;
     contentEl.empty();
 
-    contentEl.createEl("h2", {
+    contentEl.createEl("h3", {
       text: "Override Settings",
     });
 
-    new Setting(contentEl)
+    const rootSetting = new Setting(contentEl)
       .setName("Root path to save new attachments")
       .setDesc("Select root path for all new attachments")
       .addDropdown((text) =>
@@ -54,7 +55,7 @@ export class OverrideModal extends Modal {
           .setValue(this.setting.saveAttE)
           .onChange(async (value) => {
             this.setting.saveAttE = value;
-            this.displSw(contentEl);
+            this.displaySw(contentEl);
           })
       );
 
@@ -97,23 +98,35 @@ export class OverrideModal extends Modal {
           })
       );
 
-    new Setting(contentEl).addButton((btn) =>
-      btn
-        .setButtonText("Submit")
-        .setCta()
-        .onClick(() => {
-          if (this.file instanceof TFile) {
-            this.setting.type = SETTINGS_TYPE_FILE;
-          } else if (this.file instanceof TFolder) {
-            this.setting.type = SETTINGS_TYPE_FOLDER;
-          }
-          this.plugin.settings.overridePath[this.file.path] = this.setting;
+    new Setting(contentEl)
+      .addButton((btn) => {
+        btn.setButtonText("Reset").onClick(() => {
+          this.setting = this.plugin.settings.attachPath;
+          delete this.plugin.settings.overridePath[this.file.path]
           this.plugin.saveSettings();
+          this.plugin.loadSettings();
+          new Notice("Reset attachment path setting");
           this.close();
-        })
-    );
+        });
+      })
+      .addButton((btn) =>
+        btn
+          .setButtonText("Submit")
+          .setCta()
+          .onClick(() => {
+            if (this.file instanceof TFile) {
+              this.setting.type = SETTINGS_TYPE_FILE;
+            } else if (this.file instanceof TFolder) {
+              this.setting.type = SETTINGS_TYPE_FOLDER;
+            }
+            this.plugin.settings.overridePath[this.file.path] = this.setting;
+            this.plugin.saveSettings();
+            debugLog(`Override Settings, ${this.file.path}: ${this.setting}`);
+            this.close();
+          })
+      );
 
-    this.displSw(contentEl);
+    this.displaySw(contentEl);
   }
 
   onClose() {

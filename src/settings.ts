@@ -69,7 +69,7 @@ export class SettingTab extends PluginSettingTab {
     this.plugin = plugin;
   }
 
-  displSw(cont: HTMLElement): void {
+  displaySw(cont: HTMLElement): void {
     cont.findAll(".setting-item").forEach((el: HTMLElement) => {
       if (el.getAttr("class")?.includes("root_folder_set")) {
         if (this.plugin.settings.attachPath.saveAttE === "obsFolder") {
@@ -108,7 +108,7 @@ export class SettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.attachPath.saveAttE)
           .onChange(async (value) => {
             this.plugin.settings.attachPath.saveAttE = value;
-            this.displSw(containerEl);
+            this.displaySw(containerEl);
             await this.plugin.saveSettings();
           })
       );
@@ -185,7 +185,7 @@ export class SettingTab extends PluginSettingTab {
         toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
           console.log("Handle All Create Attachment: " + value);
           this.plugin.settings.handleAll = value;
-          this.displSw(containerEl);
+          this.displaySw(containerEl);
           await this.plugin.saveSettings();
         })
       );
@@ -229,6 +229,6 @@ export class SettingTab extends PluginSettingTab {
     // 			})
     // 	);
 
-    this.displSw(containerEl);
+    this.displaySw(containerEl);
   }
 }

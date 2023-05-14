@@ -28,6 +28,7 @@ import { OverrideModal } from "./override";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
+  globalAttachSetting: AttachmentPathSettings;
   adapter: FileSystemAdapter;
   originalObsAttachPath: string;
 
@@ -36,10 +37,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     console.log(`Plugin loading: ${process.env.npm_package_name} ${process.env.npm_package_version} BUILD_ENV=${process.env.BUILD_ENV}`);
     this.adapter = this.app.vault.adapter as FileSystemAdapter;
+    this.globalAttachSetting = getOverrideSetting(this.settings, this.app.vault.getRoot());
     // this.backupConfigs();
 
     this.addCommand({
-      id: "obsidian-attachment-rearrange-links",
+      id: "attachment-management-rearrange-links",
       name: "Rearrange Linked Attachments",
       callback: () => this.rearrangeAttachment("links"),
     });
@@ -50,18 +52,31 @@ export default class AttachmentManagementPlugin extends Plugin {
     //   callback: () => this.rearrangeAttachment("all"),
     // });
 
+    this.addCommand({
+      id: "attachment-management-override-setting",
+      name: "Override Setting",
+      callback: () => {
+        const file = this.getActiveFile();
+        if (file === undefined) {
+          new Notice("Error: no active file found.");
+          return;
+        }
+        const oldSetting = getOverrideSetting(this.settings, file);
+        const fileSetting = Object.assign({}, oldSetting);
+        this.overrideConfiguration(file, fileSetting);
+      },
+    });
+
     this.registerEvent(
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
           item
-            .setTitle("Set attachment path 👈")
-            .setIcon("document")
+            .setTitle("Set attachment path")
+            .setIcon("image-plus")
             .onClick(async () => {
-              let fileSetting = getOverrideSetting(this.settings.overridePath, file)
-              if (fileSetting === undefined) {
-                fileSetting = this.settings.attachPath
-              }
-              this.overrideConfiguration(menu, file, fileSetting);
+              const oldSetting = getOverrideSetting(this.settings, file);
+              const fileSetting = Object.assign({}, oldSetting);
+              this.overrideConfiguration(file, fileSetting);
             });
         });
       })
@@ -107,10 +122,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (
           !this.settings.autoRenameAttachment ||
-          (!this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
-            !this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-            !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
-            !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_DATES))
+          (!this.globalAttachSetting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
+            !this.globalAttachSetting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
+            !this.globalAttachSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
+            !this.globalAttachSetting.attachFormat.includes(SETTINGS_VARIABLES_DATES))
         ) {
           debugLog("No Variable Use, Skip");
           return;
@@ -136,7 +151,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           let renameFormat = false;
-          if (this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
+          if (this.globalAttachSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
             // need to rename the attachment file name
             renameFormat = true;
           }
@@ -154,9 +169,9 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.addSettingTab(new SettingTab(this.app, this));
   }
 
-  async overrideConfiguration(menu: Menu, file: TAbstractFile, setting: AttachmentPathSettings) {
-    const overModel = new OverrideModal(this, file, setting)
-    overModel.open()
+  async overrideConfiguration(file: TAbstractFile, setting: AttachmentPathSettings) {
+    const overModel = new OverrideModal(this, file, setting);
+    overModel.open();
   }
 
   async rearrangeAttachment(type: "all" | "links") {
@@ -164,10 +179,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     if (
       !this.settings.autoRenameAttachment ||
-      (!this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
-        !this.settings.attachPath.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-        !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
-        !this.settings.attachPath.attachFormat.includes(SETTINGS_VARIABLES_DATES))
+      (!this.globalAttachSetting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
+        !this.globalAttachSetting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
+        !this.globalAttachSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
+        !this.globalAttachSetting.attachFormat.includes(SETTINGS_VARIABLES_DATES))
     ) {
       debugLog("No Variable Use, Skip");
       return;
@@ -195,7 +210,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
 
         // check if the link was already satisfy the attachment name config
-        if (!needToRename(this.settings.attachPath, attachPath, attachName, noteName, link)) {
+        if (!needToRename(this.globalAttachSetting, attachPath, attachName, noteName, link)) {
           debugLog("No need to rename:", link);
           continue;
         }
@@ -419,7 +434,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     const root = this.getRootPath(notePath);
     const attachPath = path.join(
       root,
-      this.settings.attachPath.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
+      this.globalAttachSetting.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
     );
     return normalizePath(attachPath);
   }
@@ -435,12 +450,12 @@ export default class AttachmentManagementPlugin extends Plugin {
     //@ts-ignore
     const obsmediadir = app.vault.getConfig("attachmentFolderPath");
     // debugLog("obsmediadir", obsmediadir);
-    switch (this.settings.attachPath.saveAttE) {
+    switch (this.globalAttachSetting.saveAttE) {
       case `${SETTINGS_ROOT_INFOLDER}`:
-        root = path.posix.join(this.settings.attachPath.attachmentRoot);
+        root = path.posix.join(this.globalAttachSetting.attachmentRoot);
         break;
       case `${SETTINGS_ROOT_NEXTTONOTE}`:
-        root = path.posix.join(notePath, this.settings.attachPath.attachmentRoot.replace("./", ""));
+        root = path.posix.join(notePath, this.globalAttachSetting.attachmentRoot.replace("./", ""));
         break;
       default:
         if (obsmediadir === "/") {
@@ -468,7 +483,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    */
   getPastedImageFileName(noteName: string) {
     const dateTime = window.moment().format(this.settings.dateFormat);
-    const imgName = this.settings.attachPath.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, dateTime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
+    const imgName = this.globalAttachSetting.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, dateTime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
     return imgName;
   }
 

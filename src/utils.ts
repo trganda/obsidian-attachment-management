@@ -282,9 +282,9 @@ export function needToRename(settings: AttachmentPathSettings, attachPath: strin
   return false;
 }
 
-export function getOverrideSetting(overrideSettings: Record<string, AttachmentPathSettings>, file: TAbstractFile): AttachmentPathSettings | undefined {
-  if (Object.keys(overrideSettings).length === 0) {
-    return undefined;
+export function getOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile): AttachmentPathSettings {
+  if (Object.keys(settings.overridePath).length === 0) {
+    return settings.attachPath;
   }
 
   let candidates: Record<string, AttachmentPathSettings> = {};
@@ -293,8 +293,8 @@ export function getOverrideSetting(overrideSettings: Record<string, AttachmentPa
   fileType = file instanceof TFile ? true : false;
   fileType = file instanceof TFolder ? false : true;
 
-  for (const overridePath of Object.keys(overrideSettings)) {
-    const overrideSetting = overrideSettings[overridePath];
+  for (const overridePath of Object.keys(settings.overridePath)) {
+    const overrideSetting = settings.overridePath[overridePath];
     if (fileType) {
       if (overridePath === file.path && overrideSetting.type === SETTINGS_TYPE_FILE) {
         // best match
@@ -312,7 +312,7 @@ export function getOverrideSetting(overrideSettings: Record<string, AttachmentPa
   }
 
   if (Object.keys(candidates).length === 0) {
-    return undefined;
+    return settings.attachPath;
   }
 
   const sortedK = Object.keys(candidates).sort((a, b) => (a.split("/").length < b.split("/").length ? -1 : a.split("/").length > b.split("/").length ? 1 : 0));
@@ -323,5 +323,5 @@ export function getOverrideSetting(overrideSettings: Record<string, AttachmentPa
     }
   }
 
-  return undefined;
+  return settings.attachPath;
 }
