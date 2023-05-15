@@ -52,7 +52,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    console.log(`Plugin loading: ${process.env.npm_package_name} ${process.env.npm_package_version} BUILD_ENV=${process.env.BUILD_ENV}`);
+    console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
     this.adapter = this.app.vault.adapter as FileSystemAdapter;
     // this.backupConfigs();
 
