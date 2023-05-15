@@ -105,7 +105,7 @@ export class OverrideModal extends Modal {
           delete this.plugin.settings.overridePath[this.file.path]
           await this.plugin.saveSettings();
           await this.plugin.loadSettings();
-          new Notice("Reset attachment path setting");
+          new Notice(`Reset attachment setting of ${this.file.path}`);
           this.close();
         });
       })

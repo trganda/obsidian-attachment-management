@@ -41,11 +41,11 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.adapter = this.app.vault.adapter as FileSystemAdapter;
     // this.backupConfigs();
 
-    this.addCommand({
-      id: "attachment-management-rearrange-links",
-      name: "Rearrange Linked Attachments",
-      callback: () => this.rearrangeAttachment("links"),
-    });
+    // this.addCommand({
+    //   id: "attachment-management-rearrange-links",
+    //   name: "Rearrange Linked Attachments",
+    //   callback: () => this.rearrangeAttachment("links"),
+    // });
 
     // this.addCommand({
     //   id: "obsidian-attachment-rearrange-all",
@@ -80,6 +80,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         delete this.settings.overridePath[file.path];
         await this.saveSettings();
         await this.loadSettings();
+        new Notice(`Reset attachment setting of ${file.path}`);
       },
     });
 
@@ -140,6 +141,8 @@ export default class AttachmentManagementPlugin extends Plugin {
         // TODO: update overriding setting path
         if (setting.type === SETTINGS_TYPE_FOLDER || setting.type === SETTINGS_TYPE_FILE) {
           updateOverrideSetting(this.settings, file, oldPath);
+          await this.saveSettings();
+          await this.loadSettings();
         }
 
         if (!this.settings.autoRenameAttachment) {
@@ -209,14 +212,10 @@ export default class AttachmentManagementPlugin extends Plugin {
       }
       const { setting } = getOverrideSetting(this.settings, innerFile);
 
-      if (
-        !setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) &&
-        !setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) &&
-        !setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) &&
-        !setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)
-      ) {
-        debugLog("No Variable Use, continue");
-        continue;
+      const type = attachRenameType(setting);
+      if (type === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL) {
+        debugLog("No variable use, skipped");
+        return;
       }
 
       for (let link of attachments[obsFile]) {

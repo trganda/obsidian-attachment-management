@@ -10,7 +10,7 @@ This plugin currently support:
 - [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
 - [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
-- [x] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)
+- [ ] ~~Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)~~
 - [ ] Processing duplicate attachment
 - [ ] Override attachment configuration for specified notes or folder
 
@@ -58,7 +58,7 @@ Set how to rename the attachment, available variables `${notename}` and `${date}
 
 ### Date Format
 
-Use [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format) to set the `${date}`, default value `YYYYMMDDHHmmssSSS`.
+Use [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format) to set the `${date}`, default value `YYYYMMDDHHmmssSSS`. You should always use the `${date}` variable to prevent the same file name.
 
 ### Handle All Attachments
 
@@ -82,10 +82,21 @@ This plugin support a command `Rearrange Linked Attachments`, if you run this co
 
 ![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
-**Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to backup your files at first.
+~~**Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to backup your files at first.~~
+
+### Overriding Setting
+
+Your can set the attachment path setting for file or folder. The priority of these setting are:
+
+```
+file setting > most close parent folder setting > global setting
+```
+
+If you want to reset the setting of files or folder to the global setting, use the command `Reset Override Setting` or the `Reset` button of override setting panel. By the way, **the reset will only working on each file or folder that you have set on**. The more appropriate method to handle the reset will be add in future.
 
 ### Known Issues
 
+- No support for processing duplicated file name right now (in develop).
 - When drop a file in `canvas`, it's will delay to show the updated link/filename.
 
 ![Screen Recording](./images/canvas_drop_delay.gif)
