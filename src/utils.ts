@@ -1,8 +1,19 @@
-import { App, DataAdapter, TAbstractFile, TFile } from "obsidian";
+import { App, DataAdapter, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
 import * as path from "path";
-import { AttachmentManagementPluginSettings } from "./settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./constant";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
+import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH } from "./constant";
+
+export enum ATTACHMENT_RENAME_TYPE {
+  // need to rename the attachment folder and file name
+  ATTACHMENT_RENAME_TYPE_BOTH = "BOTH",
+  // need to rename the attachment folder
+  ATTACHMENT_RENAME_TYPE_FOLDER = "FOLDER",
+  // need to rename the attachment file name
+  ATTACHMENT_RENAME_TYPE_FILE = "FILE",
+  // no need to rename
+  ATTACHMENT_RENAME_TYPE_NULL = "NULL",
+}
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps)/i;
@@ -59,14 +70,19 @@ export function isImage(extension: string): boolean {
   return false;
 }
 
-// find the first prefix difference of two paths
-// e.g.:
-//     "Resources/Untitled/Untitled 313/Untitled"
-//     "Resources/Untitled1/Untitled 313/Untitled"
-// result:
-//     "Resources/Untitled"
-//     "Resources/Untitled1"
-export function stripPaths(src: string, dst: string): { nsrc: string; ndst: string } | undefined {
+/**
+ * find the first prefix difference of two paths
+ * e.g.:
+ *   "Resources/Untitled/Untitled 313/Untitled"
+ *   "Resources/Untitled1/Untitled 313/Untitled"
+ * result:
+ *   "Resources/Untitled"
+ *   "Resources/Untitled1"
+ * @param src source path
+ * @param dst destination path
+ * @returns the first different prefix, otherwise, return the original path
+ */
+export function stripPaths(src: string, dst: string): { nsrc: string; ndst: string } {
   if (src === dst) {
     return { nsrc: src, ndst: dst };
   }
@@ -96,6 +112,12 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
   return { nsrc: "", ndst: "" };
 }
 
+/**
+ * Test if the extension is matched by pattern
+ * @param extension extension of a file
+ * @param pattern patterns for match extension
+ * @returns true if matched, false otherwise
+ */
 export function testExcludeExtension(extension: string, pattern: string): boolean {
   if (!pattern || pattern === "") return false;
   return new RegExp(pattern).test(extension);
@@ -161,7 +183,7 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
             if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
               let fileName = frontmatter[k].match(bannerRegex)[1];
               let file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-              if (file && await isAttachment(settings, file.path)) {
+              if (file && (await isAttachment(settings, file.path))) {
                 addToSet(attachmentsSet, file.path);
               }
             }
@@ -203,7 +225,6 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
   return attachmentsRecord;
 }
 
-
 /**
  * Check whether the file is an attachment
  * @param settings plugins configuration
@@ -227,7 +248,7 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
   return false;
 }
 
-const addToRecord = (record: Record<string, Set<string>>, key: string, value: Set<string>) => {
+export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>){
   if (record[key] === undefined) {
     record[key] = value;
     return;
@@ -239,19 +260,37 @@ const addToRecord = (record: Record<string, Set<string>>, key: string, value: Se
   }
 
   record[key] = valueSet;
-};
+}
 
-const addToSet = (setObj: Set<string>, value: string) => {
+export function addToSet (setObj: Set<string>, value: string) {
   if (!setObj.has(value)) {
     setObj.add(value);
   }
-};
+}
 
-const pathIsAnImage = (path: string) => {
+export function pathIsAnImage (path: string) {
   return path.match(imageRegex);
-};
+}
 
-export function needToRename(settings: AttachmentManagementPluginSettings, attachPath: string, attachName: string, noteName: string, link: string): boolean {
+export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
+  let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
+
+  if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
+    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)) {
+      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH;
+    } else {
+      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
+    }
+  } else {
+    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)) {
+      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
+    }
+  }
+
+  return ret;
+}
+
+export function needToRename(settings: AttachmentPathSettings, attachPath: string, attachName: string, noteName: string, link: string): boolean {
   const linkPath = path.posix.dirname(link);
   const linkName = path.posix.basename(link, path.posix.extname(link));
 
@@ -281,4 +320,103 @@ export function needToRename(settings: AttachmentManagementPluginSettings, attac
   }
 
   return false;
+}
+
+/**
+ * Return the best matched override settings for the file/folder
+ * @param settings plugin setting
+ * @param file file need to get setting
+ * @param oldPath old path of the file, it it's be renamed (option)
+ * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting, 
+ * where settingPath is the relate path of this setting, it should be same with input path or is the 
+ * subpath of the settingPath.
+ */
+export function getOverrideSetting(
+  settings: AttachmentManagementPluginSettings,
+  file: TAbstractFile,
+  oldPath: string = ""
+): { settingPath: string; setting: AttachmentPathSettings } {
+  if (Object.keys(settings.overridePath).length === 0) {
+    return { settingPath: "", setting: settings.attachPath };
+  }
+
+  let candidates: Record<string, AttachmentPathSettings> = {};
+  let fileType: boolean;
+  let filePath: string;
+
+  fileType = file instanceof TFile ? true : false;
+  fileType = file instanceof TFolder ? false : true;
+
+  if (oldPath === "") {
+    filePath = file.path;
+  } else {
+    filePath = oldPath;
+  }
+
+  for (const overridePath of Object.keys(settings.overridePath)) {
+    const overrideSetting = settings.overridePath[overridePath];
+    if (fileType) {
+      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPE_FILE) {
+        // best match
+        return { settingPath: overridePath, setting: overrideSetting };
+      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+        // parent path
+        // TODO: reimplement the method to check whether the overridePath is a parent path of filePath
+        candidates[overridePath] = overrideSetting;
+      }
+    } else {
+      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+        // best match
+        return { settingPath: overridePath, setting: overrideSetting };
+      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+        // parent path
+        candidates[overridePath] = overrideSetting;
+      }
+    }
+  }
+
+  if (Object.keys(candidates).length === 0) {
+    return { settingPath: "", setting: settings.attachPath };
+  }
+
+  // sort by splitted path length, descending
+  const sortedK = Object.keys(candidates).sort((a, b) => (a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0));
+  debugLog("sortedK", sortedK);
+  for (const k of sortedK) {
+    if (filePath.startsWith(k)) {
+      return { settingPath: k, setting: candidates[k] };
+    }
+  }
+
+  return { settingPath: "", setting: settings.attachPath };
+}
+
+/**
+ * Update the override setting of the renamed file
+ * @param settings plugin setting
+ * @param file renamed file
+ * @param oldPath old path of the renamed file
+ * @returns
+ */
+export function updateOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile, oldPath: string) {
+  const keys = Object.keys(settings.overridePath);
+  if (keys.length === 0 || file.path === oldPath) {
+    return;
+  }
+
+  const { settingPath, setting } = getOverrideSetting(settings, file, oldPath);
+  const copySetting = Object.assign({}, setting);
+
+  if (oldPath === settingPath) {
+    settings.overridePath[file.path] = copySetting;
+    delete settings.overridePath[settingPath];
+    return;
+  } else {
+    const { nsrc, ndst } = stripPaths(oldPath, file.path);
+    if (nsrc === settingPath) {
+      settings.overridePath[ndst] = copySetting;
+      delete settings.overridePath[settingPath];
+      return;
+    }
+  }
 }
