@@ -20,7 +20,7 @@ export class OverrideModal extends Modal {
     super(plugin.app);
     this.plugin = plugin;
     this.file = file;
-    debugLog(setting);
+    debugLog("setting:", this.file.path, setting);
     this.setting = setting;
   }
 
@@ -121,7 +121,7 @@ export class OverrideModal extends Modal {
             }
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             this.plugin.saveSettings();
-            debugLog(`Override Settings, ${this.file.path}: ${this.setting}`);
+            debugLog("Overriding Settings:", this.file.path, this.setting);
             this.close();
           })
       );
