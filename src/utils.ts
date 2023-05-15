@@ -1,4 +1,4 @@
-import { App, DataAdapter, TAbstractFile, TFile, TFolder } from "obsidian";
+import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
 import * as path from "path";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
@@ -151,11 +151,11 @@ export async function getAttachmentsInVault(
 
 // refer https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
 export async function getAttachmentsInVaultByLinks(settings: AttachmentManagementPluginSettings, app: App): Promise<Record<string, Set<string>>> {
-  let attachmentsRecord: Record<string, Set<string>> = {};
-  let resolvedLinks = app.metadataCache.resolvedLinks;
+  const attachmentsRecord: Record<string, Set<string>> = {};
+  const resolvedLinks = app.metadataCache.resolvedLinks;
   if (resolvedLinks) {
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
-      let attachmentsSet: Set<string> = new Set();
+      const attachmentsSet: Set<string> = new Set();
       for (const [filePath, nr] of Object.entries(links)) {
         if (await isAttachment(settings, filePath)) {
           addToSet(attachmentsSet, filePath);
@@ -165,24 +165,24 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
     }
   }
   // Loop Files and Check Frontmatter/Canvas
-  let allFiles = app.vault.getFiles();
+  const allFiles = app.vault.getFiles();
   for (let i = 0; i < allFiles.length; i++) {
-    let obsFile = allFiles[i];
-    let attachmentsSet: Set<string> = new Set();
+    const obsFile = allFiles[i];
+    const attachmentsSet: Set<string> = new Set();
     // Check Frontmatter for md files and additional links that might be missed in resolved links
     if (isMarkdownFile(obsFile.extension)) {
       // Frontmatter
-      let fileCache = app.metadataCache.getFileCache(obsFile);
+      const fileCache = app.metadataCache.getFileCache(obsFile);
       if (fileCache === null) {
         continue;
       }
       if (fileCache.frontmatter) {
-        let frontmatter = fileCache.frontmatter;
-        for (let k of Object.keys(frontmatter)) {
+        const frontmatter = fileCache.frontmatter;
+        for (const k of Object.keys(frontmatter)) {
           if (typeof frontmatter[k] === "string") {
             if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
-              let fileName = frontmatter[k].match(bannerRegex)[1];
-              let file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
+              const fileName = frontmatter[k].match(bannerRegex)[1];
+              const file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
               if (file && (await isAttachment(settings, file.path))) {
                 addToSet(attachmentsSet, file.path);
               }
@@ -191,16 +191,16 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
         }
       }
       // Any Additional Link
-      let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
-      for (let linkMatch of linkMatches) {
+      const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
+      for (const linkMatch of linkMatches) {
         if (await isAttachment(settings, linkMatch.linkText)) {
           addToSet(attachmentsSet, linkMatch.linkText);
         }
       }
     } else if (isCanvasFile(obsFile.extension)) {
       // check canvas for links
-      let fileRead = await app.vault.cachedRead(obsFile);
-      let canvasData = JSON.parse(fileRead);
+      const fileRead = await app.vault.cachedRead(obsFile);
+      const canvasData = JSON.parse(fileRead);
       // debugLog("canvasData", canvasData);
       if (canvasData.nodes && canvasData.nodes.length > 0) {
         for (const node of canvasData.nodes) {
@@ -210,8 +210,8 @@ export async function getAttachmentsInVaultByLinks(settings: AttachmentManagemen
               addToSet(attachmentsSet, node.file);
             }
           } else if (node.type == "text") {
-            let linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
-            for (let linkMatch of linkMatches) {
+            const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
+            for (const linkMatch of linkMatches) {
               if (await isAttachment(settings, linkMatch.linkText)) {
                 addToSet(attachmentsSet, linkMatch.linkText);
               }
@@ -241,11 +241,9 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
     return false;
   }
 
-  if (isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern))) {
-    return true;
-  }
+  return isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern));
 
-  return false;
+  
 }
 
 export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>){
@@ -253,7 +251,7 @@ export function addToRecord(record: Record<string, Set<string>>, key: string, va
     record[key] = value;
     return;
   }
-  let valueSet = record[key];
+  const valueSet = record[key];
 
   for (const val of value) {
     addToSet(valueSet, val);
@@ -334,18 +332,18 @@ export function needToRename(settings: AttachmentPathSettings, attachPath: strin
 export function getOverrideSetting(
   settings: AttachmentManagementPluginSettings,
   file: TAbstractFile,
-  oldPath: string = ""
+  oldPath = ""
 ): { settingPath: string; setting: AttachmentPathSettings } {
   if (Object.keys(settings.overridePath).length === 0) {
     return { settingPath: "", setting: settings.attachPath };
   }
 
-  let candidates: Record<string, AttachmentPathSettings> = {};
+  const candidates: Record<string, AttachmentPathSettings> = {};
   let fileType: boolean;
   let filePath: string;
 
-  fileType = file instanceof TFile ? true : false;
-  fileType = file instanceof TFolder ? false : true;
+  fileType = file instanceof TFile;
+  fileType = !(file instanceof TFolder);
 
   if (oldPath === "") {
     filePath = file.path;

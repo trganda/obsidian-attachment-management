@@ -1,33 +1,48 @@
-import { FileSystemAdapter, Notice, Plugin, normalizePath, TextFileView, TFile, TAbstractFile, TFolder, ListedFiles, Menu } from "obsidian";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER, SETTINGS_TYPE_GLOBAL, SettingTab } from "./settings";
+import {
+  FileSystemAdapter,
+  ListedFiles,
+  normalizePath,
+  Notice,
+  Plugin,
+  TAbstractFile,
+  TextFileView,
+  TFile,
+  TFolder
+} from "obsidian";
+import {
+  AttachmentManagementPluginSettings,
+  AttachmentPathSettings,
+  DEFAULT_SETTINGS,
+  SETTINGS_TYPE_FILE,
+  SETTINGS_TYPE_FOLDER,
+  SettingTab
+} from "./settings";
 import * as path from "path";
 import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
   debugLog,
-  getAttachmentsInVault,
   getOverrideSetting,
   isAttachment,
   isCanvasFile,
   isImage,
   isMarkdownFile,
   isPastedImage,
-  needToRename,
   stripPaths,
   testExcludeExtension,
   updateOverrideSetting,
 } from "./utils";
 import {
-  SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_NOTENAME,
+  RENAME_EVENT_TYPE_FILE,
+  RENAME_EVENT_TYPE_FOLDER,
+  RenameEventType,
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
   SETTINGS_VARIABLES_DATES,
-  RENAME_EVENT_TYPE_FOLDER,
-  RENAME_EVENT_TYPE_FILE,
-  RenameEventType,
+  SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_NOTEPATH,
 } from "./constant";
-import { OverrideModal } from "./override";
+import {OverrideModal} from "./override";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -56,31 +71,34 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.addCommand({
       id: "attachment-management-override-setting",
       name: "Override Setting",
-      callback: () => {
+      checkCallback: (checking:boolean) => {
         const file = this.getActiveFile();
-        if (file === undefined) {
-          new Notice("Error: no active file found.");
-          return;
+        if (file) {
+          if (!checking) {
+            const {setting} = getOverrideSetting(this.settings, file);
+            const fileSetting = Object.assign({}, setting);
+            this.overrideConfiguration(file, fileSetting);
+          }
+          return true;
         }
-        const {setting} = getOverrideSetting(this.settings, file);
-        const fileSetting = Object.assign({}, setting);
-        this.overrideConfiguration(file, fileSetting);
+        return false;
       },
     });
 
     this.addCommand({
       id: "attachment-management-reset-override-setting",
       name: "Reset Override Setting",
-      callback: async () => {
+      checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
-        if (file === undefined) {
-          new Notice("Error: no active file found.");
-          return;
+        if (file) {
+          if (!checking) {
+            delete this.settings.overridePath[file.path];
+            this.saveSettings();
+            new Notice(`Reset attachment setting of ${file.path}`);
+          }
+          return true;
         }
-        delete this.settings.overridePath[file.path];
-        await this.saveSettings();
-        await this.loadSettings();
-        new Notice(`Reset attachment setting of ${file.path}`);
+        return false;
       },
     });
 
@@ -471,6 +489,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    * Generate the attachment path with specified variables
    * @param noteName - basename (without extension) of note
    * @param notePath - path of note
+   * @param setting
    * @returns attachment path
    */
   getAttachmentPath(noteName: string, notePath: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
@@ -485,6 +504,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   /**
    * Get root path to save attachment file
    * @param notePath - path of note
+   * @param setting
    * @returns root path to save attachment file
    */
   getRootPath(notePath: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
@@ -522,12 +542,12 @@ export default class AttachmentManagementPlugin extends Plugin {
   /**
    * Generate the image file name with specified variable
    * @param noteName - basename (without extension) of note
+   * @param setting
    * @returns image file name
    */
   getPastedImageFileName(noteName: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
     const dateTime = window.moment().format(this.settings.dateFormat);
-    const imgName = setting.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, dateTime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
-    return imgName;
+    return setting.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, dateTime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
   }
 
   backupConfigs() {
