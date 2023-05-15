@@ -241,11 +241,9 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
     return false;
   }
 
-  if (isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern))) {
-    return true;
-  }
+  return isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern));
 
-  return false;
+  
 }
 
 export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>){
@@ -344,8 +342,8 @@ export function getOverrideSetting(
   let fileType: boolean;
   let filePath: string;
 
-  fileType = file instanceof TFile ? true : false;
-  fileType = file instanceof TFolder ? false : true;
+  fileType = file instanceof TFile;
+  fileType = !(file instanceof TFolder);
 
   if (oldPath === "") {
     filePath = file.path;
