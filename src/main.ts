@@ -193,74 +193,74 @@ export default class AttachmentManagementPlugin extends Plugin {
     overModel.open();
   }
 
-  async rearrangeAttachment(type: "all" | "links") {
-    debugLog("On Rearrange Command");
+  // async rearrangeAttachment(type: "all" | "links") {
+  //   debugLog("On Rearrange Command");
 
-    if (!this.settings.autoRenameAttachment) {
-      debugLog("No Variable Use, Skip");
-      return;
-    }
+  //   if (!this.settings.autoRenameAttachment) {
+  //     debugLog("No Variable Use, Skip");
+  //     return;
+  //   }
 
-    // only rearrange attachment that linked by markdown or canvas
-    const attachments = await getAttachmentsInVault(this.settings, this.app, type);
-    debugLog("Attachments:", Object.keys(attachments).length, Object.entries(attachments));
-    for (const obsFile of Object.keys(attachments)) {
-      const innerFile = this.app.vault.getAbstractFileByPath(obsFile);
-      if (innerFile === null) {
-        debugLog(`${obsFile} not exists, skipped`);
-        continue;
-      }
-      const { setting } = getOverrideSetting(this.settings, innerFile);
+  //   // only rearrange attachment that linked by markdown or canvas
+  //   const attachments = await getAttachmentsInVault(this.settings, this.app, type);
+  //   debugLog("Attachments:", Object.keys(attachments).length, Object.entries(attachments));
+  //   for (const obsFile of Object.keys(attachments)) {
+  //     const innerFile = this.app.vault.getAbstractFileByPath(obsFile);
+  //     if (innerFile === null) {
+  //       debugLog(`${obsFile} not exists, skipped`);
+  //       continue;
+  //     }
+  //     const { setting } = getOverrideSetting(this.settings, innerFile);
 
-      const type = attachRenameType(setting);
-      if (type === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL) {
-        debugLog("No variable use, skipped");
-        return;
-      }
+  //     const type = attachRenameType(setting);
+  //     if (type === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL) {
+  //       debugLog("No variable use, skipped");
+  //       return;
+  //     }
 
-      for (let link of attachments[obsFile]) {
-        try {
-          link = decodeURI(link);
-        } catch (err) {
-          // new Notice(`Invalid link: ${link}, err: ${err}`);
-          console.log(`Invalid link: ${link}, err: ${err}`);
-          continue;
-        }
-        debugLog(`Article: ${obsFile} Links: ${link}`);
-        const noteExt = path.posix.extname(obsFile);
-        const noteName = path.posix.basename(obsFile, noteExt);
-        const notePath = path.posix.dirname(obsFile);
+  //     for (let link of attachments[obsFile]) {
+  //       try {
+  //         link = decodeURI(link);
+  //       } catch (err) {
+  //         // new Notice(`Invalid link: ${link}, err: ${err}`);
+  //         console.log(`Invalid link: ${link}, err: ${err}`);
+  //         continue;
+  //       }
+  //       debugLog(`Article: ${obsFile} Links: ${link}`);
+  //       const noteExt = path.posix.extname(obsFile);
+  //       const noteName = path.posix.basename(obsFile, noteExt);
+  //       const notePath = path.posix.dirname(obsFile);
 
-        const attachPath = this.getAttachmentPath(noteName, notePath, setting);
-        const attachName = this.getPastedImageFileName(noteName, setting);
-        const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
+  //       const attachPath = this.getAttachmentPath(noteName, notePath, setting);
+  //       const attachName = this.getPastedImageFileName(noteName, setting);
+  //       const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
 
-        // check if the link was already satisfy the attachment name config
-        if (!needToRename(setting, attachPath, attachName, noteName, link)) {
-          debugLog("No need to rename:", link);
-          continue;
-        }
-        const linkFile = this.app.vault.getAbstractFileByPath(link);
-        if (linkFile === null) {
-          debugLog(`${link} not exists, skipped`);
-          continue;
-        }
+  //       // check if the link was already satisfy the attachment name config
+  //       if (!needToRename(setting, attachPath, attachName, noteName, link)) {
+  //         debugLog("No need to rename:", link);
+  //         continue;
+  //       }
+  //       const linkFile = this.app.vault.getAbstractFileByPath(link);
+  //       if (linkFile === null) {
+  //         debugLog(`${link} not exists, skipped`);
+  //         continue;
+  //       }
 
-        if (!(await this.adapter.exists(attachPath))) {
-          this.adapter.mkdir(attachPath);
-        }
+  //       if (!(await this.adapter.exists(attachPath))) {
+  //         this.adapter.mkdir(attachPath);
+  //       }
 
-        // TODO: check if the file already exists
-        if (await this.adapter.exists(dest)) {
-          new Notice(`${dest} already exists, skipped`);
-          console.log(`${dest} already exists, skipped`);
-          continue;
-        }
+  //       // TODO: check if the file already exists
+  //       if (await this.adapter.exists(dest)) {
+  //         new Notice(`${dest} already exists, skipped`);
+  //         console.log(`${dest} already exists, skipped`);
+  //         continue;
+  //       }
 
-        await this.app.fileManager.renameFile(linkFile, dest);
-      }
-    }
-  }
+  //       await this.app.fileManager.renameFile(linkFile, dest);
+  //     }
+  //   }
+  // }
 
   async onRename(
     file: TAbstractFile,
@@ -308,6 +308,11 @@ export default class AttachmentManagementPlugin extends Plugin {
       debugLog("Striped Source:", stripedOldAttachPath);
       debugLog("Striped Destination:", stripedNewAttachPath);
 
+      if (stripedOldAttachPath === stripedNewAttachPath) {
+        debugLog("Same Striped Path");
+        return;
+      }
+
       const exitsDst = await this.adapter.exists(stripedNewAttachPath);
       if (exitsDst) {
         // if the file exists in the vault
@@ -315,7 +320,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           new Notice(`Same file name exists: ${stripedNewAttachPath}`);
           return;
         } else if (eventType === RENAME_EVENT_TYPE_FOLDER) {
-          // for most case, this should not be happen, we just notice it.
+          // for most case, this should not be happen, just notice it.
           new Notice(`Folder already exists: ${stripedNewAttachPath}`);
           return;
         }

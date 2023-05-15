@@ -5,9 +5,13 @@ import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TY
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH } from "./constant";
 
 export enum ATTACHMENT_RENAME_TYPE {
+  // need to rename the attachment folder and file name
   ATTACHMENT_RENAME_TYPE_BOTH = "BOTH",
+  // need to rename the attachment folder
   ATTACHMENT_RENAME_TYPE_FOLDER = "FOLDER",
+  // need to rename the attachment file name
   ATTACHMENT_RENAME_TYPE_FILE = "FILE",
+  // no need to rename
   ATTACHMENT_RENAME_TYPE_NULL = "NULL",
 }
 
@@ -66,13 +70,18 @@ export function isImage(extension: string): boolean {
   return false;
 }
 
-// find the first prefix difference of two paths
-// e.g.:
-//     "Resources/Untitled/Untitled 313/Untitled"
-//     "Resources/Untitled1/Untitled 313/Untitled"
-// result:
-//     "Resources/Untitled"
-//     "Resources/Untitled1"
+/**
+ * find the first prefix difference of two paths
+ * e.g.:
+ *   "Resources/Untitled/Untitled 313/Untitled"
+ *   "Resources/Untitled1/Untitled 313/Untitled"
+ * result:
+ *   "Resources/Untitled"
+ *   "Resources/Untitled1"
+ * @param src source path
+ * @param dst destination path
+ * @returns the first different prefix, otherwise, return the original path
+ */
 export function stripPaths(src: string, dst: string): { nsrc: string; ndst: string } {
   if (src === dst) {
     return { nsrc: src, ndst: dst };
@@ -103,6 +112,12 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
   return { nsrc: "", ndst: "" };
 }
 
+/**
+ * Test if the extension is matched by pattern
+ * @param extension extension of a file
+ * @param pattern patterns for match extension
+ * @returns true if matched, false otherwise
+ */
 export function testExcludeExtension(extension: string, pattern: string): boolean {
   if (!pattern || pattern === "") return false;
   return new RegExp(pattern).test(extension);
@@ -233,7 +248,7 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
   return false;
 }
 
-const addToRecord = (record: Record<string, Set<string>>, key: string, value: Set<string>) => {
+export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>){
   if (record[key] === undefined) {
     record[key] = value;
     return;
@@ -245,17 +260,17 @@ const addToRecord = (record: Record<string, Set<string>>, key: string, value: Se
   }
 
   record[key] = valueSet;
-};
+}
 
-const addToSet = (setObj: Set<string>, value: string) => {
+export function addToSet (setObj: Set<string>, value: string) {
   if (!setObj.has(value)) {
     setObj.add(value);
   }
-};
+}
 
-const pathIsAnImage = (path: string) => {
+export function pathIsAnImage (path: string) {
   return path.match(imageRegex);
-};
+}
 
 export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
   let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
@@ -307,6 +322,15 @@ export function needToRename(settings: AttachmentPathSettings, attachPath: strin
   return false;
 }
 
+/**
+ * Return the best matched override settings for the file/folder
+ * @param settings plugin setting
+ * @param file file need to get setting
+ * @param oldPath old path of the file, it it's be renamed (option)
+ * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting, 
+ * where settingPath is the relate path of this setting, it should be same with input path or is the 
+ * subpath of the settingPath.
+ */
 export function getOverrideSetting(
   settings: AttachmentManagementPluginSettings,
   file: TAbstractFile,
@@ -367,7 +391,14 @@ export function getOverrideSetting(
   return { settingPath: "", setting: settings.attachPath };
 }
 
-export function updateOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile, oldPath: string = "") {
+/**
+ * Update the override setting of the renamed file
+ * @param settings plugin setting
+ * @param file renamed file
+ * @param oldPath old path of the renamed file
+ * @returns
+ */
+export function updateOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile, oldPath: string) {
   const keys = Object.keys(settings.overridePath);
   if (keys.length === 0 || file.path === oldPath) {
     return;
