@@ -85,17 +85,15 @@ export default class AttachmentManagementPlugin extends Plugin {
       },
     });
 
-    // @ts-ignore
     this.addCommand({
       id: "attachment-management-reset-override-setting",
       name: "Reset Override Setting",
-      //@ts-ignore
-      checkCallback: async (checking: boolean) => {
+      checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
         if (file) {
           if (!checking) {
             delete this.settings.overridePath[file.path];
-            await this.saveSettings();
+            this.saveSettings();
             new Notice(`Reset attachment setting of ${file.path}`);
           }
           return true;
