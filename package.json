@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-attachment-management",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"description": "This plugin support to more flexibly to setting your attachment location with variable ${notepath}, ${notename}, ${date} in Obsidian.",
 	"main": "main.js",
 	"scripts": {
