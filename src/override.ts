@@ -1,4 +1,4 @@
-import { Modal, TFile, App, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
+import { Modal, TFile, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
 import { debugLog } from "./utils";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
 import {
@@ -37,7 +37,7 @@ export class OverrideModal extends Modal {
   }
 
   onOpen() {
-    let { contentEl } = this;
+    const { contentEl } = this;
     contentEl.empty();
 
     contentEl.createEl("h3", {
@@ -113,14 +113,14 @@ export class OverrideModal extends Modal {
         btn
           .setButtonText("Submit")
           .setCta()
-          .onClick(() => {
+          .onClick(async () => {
             if (this.file instanceof TFile) {
               this.setting.type = SETTINGS_TYPE_FILE;
             } else if (this.file instanceof TFolder) {
               this.setting.type = SETTINGS_TYPE_FOLDER;
             }
             this.plugin.settings.overridePath[this.file.path] = this.setting;
-            this.plugin.saveSettings();
+            await this.plugin.saveSettings();
             debugLog("Overriding Settings:", this.file.path, this.setting);
             this.close();
           })
@@ -130,7 +130,7 @@ export class OverrideModal extends Modal {
   }
 
   onClose() {
-    let { contentEl } = this;
+    const { contentEl } = this;
     contentEl.empty();
   }
 }

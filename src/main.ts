@@ -1,22 +1,5 @@
-import {
-  FileSystemAdapter,
-  ListedFiles,
-  normalizePath,
-  Notice,
-  Plugin,
-  TAbstractFile,
-  TextFileView,
-  TFile,
-  TFolder
-} from "obsidian";
-import {
-  AttachmentManagementPluginSettings,
-  AttachmentPathSettings,
-  DEFAULT_SETTINGS,
-  SETTINGS_TYPE_FILE,
-  SETTINGS_TYPE_FOLDER,
-  SettingTab
-} from "./settings";
+import { FileSystemAdapter, ListedFiles, normalizePath, Notice, Plugin, TAbstractFile, TextFileView, TFile, TFolder } from "obsidian";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER, SettingTab } from "./settings";
 import * as path from "path";
 import {
   ATTACHMENT_RENAME_TYPE,
@@ -42,7 +25,7 @@ import {
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
 } from "./constant";
-import {OverrideModal} from "./override";
+import { OverrideModal } from "./override";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -52,7 +35,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    console.log(`Plugin loading: ${process.env.npm_package_name} ${process.env.npm_package_version} BUILD_ENV=${process.env.BUILD_ENV}`);
+    console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
     this.adapter = this.app.vault.adapter as FileSystemAdapter;
     // this.backupConfigs();
 
@@ -111,7 +94,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             .onClick(async () => {
               const { setting } = getOverrideSetting(this.settings, file);
               const fileSetting = Object.assign({}, setting);
-              this.overrideConfiguration(file, fileSetting);
+              await this.overrideConfiguration(file, fileSetting);
             });
         });
       })
@@ -207,8 +190,8 @@ export default class AttachmentManagementPlugin extends Plugin {
   }
 
   async overrideConfiguration(file: TAbstractFile, setting: AttachmentPathSettings) {
-    const overModel = new OverrideModal(this, file, setting);
-    overModel.open();
+    new OverrideModal(this, file, setting).open();
+    await this.loadSettings();
   }
 
   // async rearrangeAttachment(type: "all" | "links") {
@@ -473,8 +456,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    */
   getActiveFile(): TFile | undefined {
     const view = this.getActiveView();
-    const file = view?.file;
-    return file;
+    return view?.file;
   }
 
   /**
@@ -508,7 +490,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @returns root path to save attachment file
    */
   getRootPath(notePath: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
-    let root = "";
+    let root: string;
 
     //@ts-ignore
     const obsmediadir = app.vault.getConfig("attachmentFolderPath");
