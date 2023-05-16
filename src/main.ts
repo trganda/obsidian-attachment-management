@@ -54,11 +54,11 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.addCommand({
       id: "attachment-management-override-setting",
       name: "Override Setting",
-      checkCallback: (checking:boolean) => {
+      checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
         if (file) {
           if (!checking) {
-            const {setting} = getOverrideSetting(this.settings, file);
+            const { setting } = getOverrideSetting(this.settings, file);
             const fileSetting = Object.assign({}, setting);
             this.overrideConfiguration(file, fileSetting);
           }
