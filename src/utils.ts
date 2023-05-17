@@ -15,9 +15,9 @@ export enum ATTACHMENT_RENAME_TYPE {
 }
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
-const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps)/i;
+const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
-const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps"]);
+const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps", "webp"]);
 
 export const DEBUG = !(process.env.BUILD_ENV === "production");
 if (DEBUG) console.log("DEBUG is enabled");
@@ -37,17 +37,12 @@ export const blobToArrayBuffer = (blob: Blob) => {
 };
 
 export function isMarkdownFile(extension: string): boolean {
-  if (extension === "md") {
-    return true;
-  }
-  return false;
+  return extension === "md";
+  
 }
 
 export function isCanvasFile(extension: string): boolean {
-  if (extension === "canvas") {
-    return true;
-  }
-  return false;
+  return extension === "canvas";
 }
 
 export function isPastedImage(file: TAbstractFile): boolean {
