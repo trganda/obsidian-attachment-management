@@ -1,6 +1,5 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
-import * as path from "path";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH } from "./constant";
 
@@ -38,14 +37,14 @@ export const blobToArrayBuffer = (blob: Blob) => {
 };
 
 export function isMarkdownFile(extension: string): boolean {
-  if (extension === "md" || extension === ".md") {
+  if (extension === "md") {
     return true;
   }
   return false;
 }
 
 export function isCanvasFile(extension: string): boolean {
-  if (extension === "canvas" || extension === ".canvas") {
+  if (extension === "canvas") {
     return true;
   }
   return false;
