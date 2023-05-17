@@ -1,6 +1,5 @@
 import { FileSystemAdapter, ListedFiles, normalizePath, Notice, Plugin, TAbstractFile, TextFileView, TFile, TFolder } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER, SettingTab } from "./settings";
-import * as path from "path";
 import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
@@ -26,17 +25,16 @@ import {
   SETTINGS_VARIABLES_NOTEPATH,
 } from "./constant";
 import { OverrideModal } from "./override";
+import { path } from "./path";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
-  adapter: FileSystemAdapter;
   originalObsAttachPath: string;
 
   async onload() {
     await this.loadSettings();
 
     console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
-    this.adapter = this.app.vault.adapter as FileSystemAdapter;
     // this.backupConfigs();
 
     // this.addCommand({
@@ -52,7 +50,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     // });
 
     this.addCommand({
-      id: "attachment-management-override-setting",
+      id: "override-setting",
       name: "Override Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
@@ -69,7 +67,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "attachment-management-reset-override-setting",
+      id: "reset-override-setting",
       name: "Reset Override Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
@@ -108,28 +106,31 @@ export default class AttachmentManagementPlugin extends Plugin {
         if (!(file instanceof TFile)) {
           return;
         }
-        // https://github.com/reorx/obsidian-paste-image-rename/blob/master/src/main.ts#LL81C23-L81C23
-        // if the file is created more than 1 second ago, the event is most likely be fired on vault initialization when starting Obsidian app, ignore it
-        const timeGapMs = new Date().getTime() - file.stat.ctime;
-        if (timeGapMs > 1000) {
-          return;
-        }
-        // ignore markdown and canvas file.
-        if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
-          return;
-        }
-        if (isImage(file.extension) || isPastedImage(file)) {
-          this.processAttach(file);
-        } else {
-          if (this.settings.handleAll) {
-            debugLog("handleAll for file", file);
-            if (testExcludeExtension(file.extension, this.settings.excludeExtensionPattern)) {
-              debugLog("Excluded File by Extension", file);
-              return;
-            }
-            this.processAttach(file);
+
+        this.app.workspace.onLayoutReady(() => {
+          // if the file is created more than 1 second ago, the event is most likely be fired by copy file to
+          // vault folder without using obsidian (e.g. file manager of op system), we should ignore it.
+          const timeGapMs = new Date().getTime() - file.stat.ctime;
+          if (timeGapMs > 1000) {
+            return;
           }
-        }
+          // ignore markdown and canvas file.
+          if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
+            return;
+          }
+          if (isImage(file.extension) || isPastedImage(file)) {
+            this.processAttach(file);
+          } else {
+            if (this.settings.handleAll) {
+              debugLog("handleAll for file", file);
+              if (testExcludeExtension(file.extension, this.settings.excludeExtensionPattern)) {
+                debugLog("Excluded File by Extension", file);
+                return;
+              }
+              this.processAttach(file);
+            }
+          }
+        });
       })
     );
 
@@ -166,7 +167,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           let eventType: RenameEventType;
-          if (path.posix.basename(oldPath, path.posix.extname(oldPath)) === path.posix.basename(file.path, path.posix.extname(file.path))) {
+          if (path.basename(oldPath, path.extname(oldPath)) === path.basename(file.path, path.extname(file.path))) {
             // rename event of folder
             eventType = RENAME_EVENT_TYPE_FOLDER;
             debugLog("RenameEventType:", RENAME_EVENT_TYPE_FOLDER);
@@ -247,12 +248,12 @@ export default class AttachmentManagementPlugin extends Plugin {
   //         continue;
   //       }
 
-  //       if (!(await this.adapter.exists(attachPath))) {
-  //         this.adapter.mkdir(attachPath);
+  //       if (!(await this.app.vault.adapter.exists(attachPath))) {
+  //         this.app.vault.adapter.mkdir(attachPath);
   //       }
 
   //       // TODO: check if the file already exists
-  //       if (await this.adapter.exists(dest)) {
+  //       if (await this.app.vault.adapter.exists(dest)) {
   //         new Notice(`${dest} already exists, skipped`);
   //         console.log(`${dest} already exists, skipped`);
   //         continue;
@@ -273,9 +274,9 @@ export default class AttachmentManagementPlugin extends Plugin {
     const rf = file as TFile;
 
     // generate old note path and name
-    const oldNotePath = path.posix.dirname(oldPath);
-    const oldNoteExtension = path.posix.extname(oldPath);
-    const oldNoteName = path.posix.basename(oldPath, oldNoteExtension);
+    const oldNotePath = path.dirname(oldPath);
+    const oldNoteExtension = path.extname(oldPath);
+    const oldNoteName = path.basename(oldPath, oldNoteExtension);
 
     debugLog("Old Note Path:", oldNotePath);
     debugLog("Old Note Name:", oldNoteName);
@@ -288,7 +289,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     debugLog("New Attachment Path:", newAttachPath);
 
     // if the old attachment folder does not exist, skip
-    const exitsAttachPath = await this.adapter.exists(oldAttachPath);
+    const exitsAttachPath = await this.app.vault.adapter.exists(oldAttachPath);
     if (!exitsAttachPath) {
       debugLog("Attachment path does not exist:", oldAttachPath);
       return;
@@ -314,7 +315,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         return;
       }
 
-      const exitsDst = await this.adapter.exists(stripedNewAttachPath);
+      const exitsDst = await this.app.vault.adapter.exists(stripedNewAttachPath);
       if (exitsDst) {
         // if the file exists in the vault
         if (eventType === RENAME_EVENT_TYPE_FILE) {
@@ -341,10 +342,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     ) {
       // suppose the attachment folder already renamed
       // rename all attachment files that the filename content the ${notename} in attachment path
-      const attachmentFiles: ListedFiles = await this.adapter.list(newAttachPath);
+      const attachmentFiles: ListedFiles = await this.app.vault.adapter.list(newAttachPath);
       for (const filePath of attachmentFiles.files) {
         debugLog("Listing File:", filePath);
-        let fileName = path.posix.basename(filePath);
+        let fileName = path.basename(filePath);
         const fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
         if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileExtension)) {
           debugLog("No Handle Extension:", fileExtension);
@@ -352,7 +353,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
         fileName = fileName.replace(oldNoteName, rf.basename);
 
-        const newFilePath = normalizePath(path.posix.join(newAttachPath, fileName));
+        const newFilePath = normalizePath(path.join(newAttachPath, fileName));
         debugLog("New File Path:", newFilePath);
         const tfile = this.app.vault.getAbstractFileByPath(filePath);
         if (tfile === null) continue;
@@ -381,7 +382,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     const attachPath = this.getAttachmentPath(activeFile.basename, activeFile.parent?.path as string, setting);
     const attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
 
-    debugLog("New Path of File:", path.posix.join(attachPath, attachName));
+    debugLog("New Path of File:", path.join(attachPath, attachName));
 
     this.renameFile(file, attachPath, attachName, activeFile.path, ext, true);
   }
@@ -398,13 +399,13 @@ export default class AttachmentManagementPlugin extends Plugin {
    */
   async renameFile(file: TFile, attachPath: string, attachName: string, sourcePath: string, extension: string, updateLink?: boolean) {
     // Make sure the path was created
-    if (!(await this.adapter.exists(attachPath))) {
-      await this.adapter.mkdir(attachPath);
+    if (!(await this.app.vault.adapter.exists(attachPath))) {
+      await this.app.vault.adapter.mkdir(attachPath);
     }
 
     debugLog("Source Path of Rename:", file.path);
 
-    const dest = normalizePath(path.posix.join(attachPath, attachName));
+    const dest = normalizePath(path.join(attachPath, attachName));
 
     debugLog("Destination Path of Rename:", dest);
 
@@ -497,10 +498,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     // debugLog("obsmediadir", obsmediadir);
     switch (setting.saveAttE) {
       case `${SETTINGS_ROOT_INFOLDER}`:
-        root = path.posix.join(setting.attachmentRoot);
+        root = path.join(setting.attachmentRoot);
         break;
       case `${SETTINGS_ROOT_NEXTTONOTE}`:
-        root = path.posix.join(notePath, setting.attachmentRoot.replace("./", ""));
+        root = path.join(notePath, setting.attachmentRoot.replace("./", ""));
         break;
       default:
         if (obsmediadir === "/") {
@@ -508,10 +509,10 @@ export default class AttachmentManagementPlugin extends Plugin {
           root = obsmediadir;
         } else if (obsmediadir === "./") {
           // in current folder case
-          root = path.posix.join(notePath);
+          root = path.join(notePath);
         } else if (obsmediadir.match(/\.\/.+/g) !== null) {
           // in subfolder case
-          root = path.posix.join(notePath, obsmediadir.replace("./", ""));
+          root = path.join(notePath, obsmediadir.replace("./", ""));
         } else {
           // in specified folder case
           root = obsmediadir;

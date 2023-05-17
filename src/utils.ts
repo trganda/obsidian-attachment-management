@@ -1,6 +1,5 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
-import * as path from "path";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH } from "./constant";
 
@@ -38,14 +37,14 @@ export const blobToArrayBuffer = (blob: Blob) => {
 };
 
 export function isMarkdownFile(extension: string): boolean {
-  if (extension === "md" || extension === ".md") {
+  if (extension === "md") {
     return true;
   }
   return false;
 }
 
 export function isCanvasFile(extension: string): boolean {
-  if (extension === "canvas" || extension === ".canvas") {
+  if (extension === "canvas") {
     return true;
   }
   return false;
@@ -288,37 +287,37 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
   return ret;
 }
 
-export function needToRename(settings: AttachmentPathSettings, attachPath: string, attachName: string, noteName: string, link: string): boolean {
-  const linkPath = path.posix.dirname(link);
-  const linkName = path.posix.basename(link, path.posix.extname(link));
+// export function needToRename(settings: AttachmentPathSettings, attachPath: string, attachName: string, noteName: string, link: string): boolean {
+//   const linkPath = path.posix.dirname(link);
+//   const linkName = path.posix.basename(link, path.posix.extname(link));
 
-  if (linkName.length !== attachName.length) {
-    return true;
-  }
+//   if (linkName.length !== attachName.length) {
+//     return true;
+//   }
 
-  if (attachPath !== linkPath) {
-    return true;
-  } else {
-    if (settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && !linkName.includes(noteName)) {
-      return true;
-    }
-    // suppose the ${notename} was in format
-    const noNoteNameAttachFormat = settings.attachFormat.split(SETTINGS_VARIABLES_NOTENAME);
-    if (settings.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
-      for (const formatPart in noNoteNameAttachFormat) {
-        // suppose the ${date} was in format, split each part and search in linkName
-        const splited = formatPart.split(SETTINGS_VARIABLES_DATES);
-        for (const part in splited) {
-          if (!linkName.includes(part)) {
-            return true;
-          }
-        }
-      }
-    }
-  }
+//   if (attachPath !== linkPath) {
+//     return true;
+//   } else {
+//     if (settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && !linkName.includes(noteName)) {
+//       return true;
+//     }
+//     // suppose the ${notename} was in format
+//     const noNoteNameAttachFormat = settings.attachFormat.split(SETTINGS_VARIABLES_NOTENAME);
+//     if (settings.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
+//       for (const formatPart in noNoteNameAttachFormat) {
+//         // suppose the ${date} was in format, split each part and search in linkName
+//         const splited = formatPart.split(SETTINGS_VARIABLES_DATES);
+//         for (const part in splited) {
+//           if (!linkName.includes(part)) {
+//             return true;
+//           }
+//         }
+//       }
+//     }
+//   }
 
-  return false;
-}
+//   return false;
+// }
 
 /**
  * Return the best matched override settings for the file/folder
