@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.3](https://github.com/trganda/obsidian-attachment-management/compare/0.3.2...0.3.3) (2023-05-17)
+
+
+### Features
+
+* mobile support remove FileSystemAdapter ([7a0a7dd](https://github.com/trganda/obsidian-attachment-management/commit/7a0a7dd36a50c67e5ac3efd9b24bb3e3d5fc409e))
+* mobile support, add a tiny path lib ([d413573](https://github.com/trganda/obsidian-attachment-management/commit/d413573efc8e22ed1314b9f71f3c3b76e6bd8cc4))
+
+
+### Bug Fixes
+
+* rewrited description in manifest.json ([206096e](https://github.com/trganda/obsidian-attachment-management/commit/206096e522df8b8b4ccabcf5ce252685d56be86b))
+* rm the prefix of command id ([92ae3c0](https://github.com/trganda/obsidian-attachment-management/commit/92ae3c06dd15a583c7bc0c44e5be3e660c2b8ba9))
+* using onLayoutReady to replace time gap ([e33d825](https://github.com/trganda/obsidian-attachment-management/commit/e33d825abf1b1815a206fb53e2627114712f40a4))
+
 ### [0.3.2](https://github.com/trganda/obsidian-attachment-management/compare/0.3.1...0.3.2) (2023-05-16)
 
 ### [0.3.1](https://github.com/trganda/obsidian-attachment-management/compare/0.3.0...0.3.1) (2023-05-16)
