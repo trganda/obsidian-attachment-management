@@ -108,28 +108,31 @@ export default class AttachmentManagementPlugin extends Plugin {
         if (!(file instanceof TFile)) {
           return;
         }
-        // https://github.com/reorx/obsidian-paste-image-rename/blob/master/src/main.ts#LL81C23-L81C23
-        // if the file is created more than 1 second ago, the event is most likely be fired on vault initialization when starting Obsidian app, ignore it
-        const timeGapMs = new Date().getTime() - file.stat.ctime;
-        if (timeGapMs > 1000) {
-          return;
-        }
-        // ignore markdown and canvas file.
-        if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
-          return;
-        }
-        if (isImage(file.extension) || isPastedImage(file)) {
-          this.processAttach(file);
-        } else {
-          if (this.settings.handleAll) {
-            debugLog("handleAll for file", file);
-            if (testExcludeExtension(file.extension, this.settings.excludeExtensionPattern)) {
-              debugLog("Excluded File by Extension", file);
-              return;
-            }
-            this.processAttach(file);
+
+        this.app.workspace.onLayoutReady(() => {
+          // if the file is created more than 1 second ago, the event is most likely be fired by copy file to 
+          // vault folder without using obsidian (e.g. file manager of op system), we should ignore it.
+          const timeGapMs = new Date().getTime() - file.stat.ctime;
+          if (timeGapMs > 1000) {
+            return;
           }
-        }
+          // ignore markdown and canvas file.
+          if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
+            return;
+          }
+          if (isImage(file.extension) || isPastedImage(file)) {
+            this.processAttach(file);
+          } else {
+            if (this.settings.handleAll) {
+              debugLog("handleAll for file", file);
+              if (testExcludeExtension(file.extension, this.settings.excludeExtensionPattern)) {
+                debugLog("Excluded File by Extension", file);
+                return;
+              }
+              this.processAttach(file);
+            }
+          }
+        });
       })
     );
 
