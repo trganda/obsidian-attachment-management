@@ -7,7 +7,7 @@ import {
   SETTINGS_ROOT_NEXTTONOTE,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_PARENTFILE
 } from "./constant";
 import AttachmentManagementPlugin from "./main";
 
@@ -67,20 +67,20 @@ export class OverrideModal extends Modal {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentRoot)
           .setValue(this.setting.attachmentRoot)
           .onChange(async (value) => {
-            console.log("Attachment root: " + value);
+            debugLog("Attachment root: " + value);
             this.setting.attachmentRoot = value;
           })
       );
 
     new Setting(contentEl)
       .setName("Attachment path")
-      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH} and ${SETTINGS_VARIABLES_NOTENAME}`)
+      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_PARENTFILE}`)
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
           .setValue(this.setting.attachmentPath)
           .onChange(async (value) => {
-            console.log("Attachment path: " + value);
+            debugLog("Attachment path: " + value);
             this.setting.attachmentPath = value;
           })
       );
@@ -93,7 +93,7 @@ export class OverrideModal extends Modal {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.setting.attachFormat)
           .onChange(async (value: string) => {
-            console.log("Attachment format: " + value);
+            debugLog("Attachment format: " + value);
             this.setting.attachFormat = value;
           })
       );

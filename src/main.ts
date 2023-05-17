@@ -23,6 +23,7 @@ import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
+  SETTINGS_VARIABLES_PARENTFILE
 } from "./constant";
 import { OverrideModal } from "./override";
 import { path } from "./path";
@@ -277,13 +278,15 @@ export default class AttachmentManagementPlugin extends Plugin {
     const oldNotePath = path.dirname(oldPath);
     const oldNoteExtension = path.extname(oldPath);
     const oldNoteName = path.basename(oldPath, oldNoteExtension);
-
+    //generate parent of oldnotepath, last of the oldNotePath
+    const oldNoteParent = path.basename(path.dirname(oldPath));
+    
     debugLog("Old Note Path:", oldNotePath);
     debugLog("Old Note Name:", oldNoteName);
 
     // generate old attachment path
-    const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, setting);
-    const newAttachPath = this.getAttachmentPath(rf.basename, rf.parent?.path as string, setting);
+    const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, setting, oldNoteParent);
+    const newAttachPath = this.getAttachmentPath(rf.basename, rf.parent?.path as string, setting, rf.parent?.parent?.name as string);
 
     debugLog("Old Attachment Path:", oldAttachPath);
     debugLog("New Attachment Path:", newAttachPath);
@@ -379,12 +382,12 @@ export default class AttachmentManagementPlugin extends Plugin {
     debugLog("Active File Path", activeFile.path);
 
     // TODO: what if activeFile.parent was undefined
-    const attachPath = this.getAttachmentPath(activeFile.basename, activeFile.parent?.path as string, setting);
+    const attachPath = this.getAttachmentPath(activeFile.basename, activeFile.parent?.path as string, setting, activeFile.parent?.name as string);
     const attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
 
     debugLog("New Path of File:", path.join(attachPath, attachName));
 
-    this.renameFile(file, attachPath, attachName, activeFile.path, ext, true);
+    await this.renameFile(file, attachPath, attachName, activeFile.path, ext, true);
   }
 
   /**
@@ -473,13 +476,16 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param noteName - basename (without extension) of note
    * @param notePath - path of note
    * @param setting
+   * @param parentFolderBasename
    * @returns attachment path
    */
-  getAttachmentPath(noteName: string, notePath: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
+  getAttachmentPath(noteName: string, notePath: string, setting: AttachmentPathSettings = this.settings.attachPath, parentFolderBasename=""): string {
     const root = this.getRootPath(notePath, setting);
     const attachPath = path.join(
       root,
-      setting.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
+      setting.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath)
+        .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
+        .replace(`${SETTINGS_VARIABLES_PARENTFILE}`, parentFolderBasename)
     );
     return normalizePath(attachPath);
   }

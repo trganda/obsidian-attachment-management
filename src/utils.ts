@@ -1,7 +1,7 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH } from "./constant";
+import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_PARENTFILE } from "./constant";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -273,10 +273,8 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
     } else {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
     }
-  } else {
-    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)) {
+  } else if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) || setting.attachmentPath.includes(SETTINGS_VARIABLES_PARENTFILE)) {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
-    }
   }
 
   return ret;
