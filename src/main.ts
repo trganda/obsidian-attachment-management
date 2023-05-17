@@ -52,7 +52,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     // });
 
     this.addCommand({
-      id: "attachment-management-override-setting",
+      id: "override-setting",
       name: "Override Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
@@ -69,7 +69,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     });
 
     this.addCommand({
-      id: "attachment-management-reset-override-setting",
+      id: "reset-override-setting",
       name: "Reset Override Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
