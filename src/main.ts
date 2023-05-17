@@ -1,6 +1,5 @@
 import { FileSystemAdapter, ListedFiles, normalizePath, Notice, Plugin, TAbstractFile, TextFileView, TFile, TFolder } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER, SettingTab } from "./settings";
-// import * as path from "path";
 import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
