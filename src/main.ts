@@ -4,7 +4,8 @@ import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
   debugLog,
-  getOverrideSetting, getParentFolder,
+  getOverrideSetting,
+  getParentFolder,
   isAttachment,
   isCanvasFile,
   isImage,
@@ -12,7 +13,7 @@ import {
   isPastedImage,
   stripPaths,
   testExcludeExtension,
-  updateOverrideSetting
+  updateOverrideSetting,
 } from "./utils";
 import {
   RENAME_EVENT_TYPE_FILE,
@@ -23,7 +24,7 @@ import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_PARENTFILE
+  SETTINGS_VARIABLES_NOTEPARENT,
 } from "./constant";
 import { OverrideModal } from "./override";
 import { path } from "./path";
@@ -280,11 +281,11 @@ export default class AttachmentManagementPlugin extends Plugin {
     const oldNoteName = path.basename(oldPath, oldNoteExtension);
     //generate parent of oldnotepath, last of the oldNotePath
     const oldNoteParent = path.basename(path.dirname(oldPath));
-    
+
     debugLog("Old Note Path:", oldNotePath);
     debugLog("Old Note Name:", oldNoteName);
 
-    const {parentPath, parentName} = getParentFolder(rf);
+    const { parentPath, parentName } = getParentFolder(rf);
     // generate old attachment path
     const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, setting, oldNoteParent);
     const newAttachPath = this.getAttachmentPath(rf.basename, parentPath, setting, parentName);
@@ -299,26 +300,22 @@ export default class AttachmentManagementPlugin extends Plugin {
       return;
     }
 
-    if (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH) {
-      // rename attachment folder first
-      const strip = stripPaths(oldAttachPath, newAttachPath);
-      // if (strip === undefined) {
-      //   new Notice(`Error rename path ${oldAttachPath} to ${newAttachPath}`);
-      //   console.log(`Error rename path ${oldAttachPath} to ${newAttachPath}`);
-      //   return;
-      // }
+    // rename attachment folder first
+    const strip = stripPaths(oldAttachPath, newAttachPath);
 
-      const stripedOldAttachPath = strip.nsrc;
-      const stripedNewAttachPath = strip.ndst;
+    const stripedOldAttachPath = strip.nsrc;
+    const stripedNewAttachPath = strip.ndst;
 
-      debugLog("Striped Source:", stripedOldAttachPath);
-      debugLog("Striped Destination:", stripedNewAttachPath);
+    debugLog("Striped Source:", stripedOldAttachPath);
+    debugLog("Striped Destination:", stripedNewAttachPath);
+    if (stripedOldAttachPath === stripedNewAttachPath) {
+      debugLog("Same Striped Path");
+    }
 
-      if (stripedOldAttachPath === stripedNewAttachPath) {
-        debugLog("Same Striped Path");
-        return;
-      }
-
+    if (
+      stripedOldAttachPath !== stripedNewAttachPath &&
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
+    ) {
       const exitsDst = await this.app.vault.adapter.exists(stripedNewAttachPath);
       if (exitsDst) {
         // if the file exists in the vault
@@ -350,7 +347,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       for (const filePath of attachmentFiles.files) {
         debugLog("Listing File:", filePath);
         let fileName = path.basename(filePath);
-        const fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
+        const fileExtension = path.extname(fileName);
         if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileExtension)) {
           debugLog("No Handle Extension:", fileExtension);
           continue;
@@ -382,10 +379,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     debugLog("Active File Path", activeFile.path);
 
-    const {parentPath, parentName} = getParentFolder(activeFile);
+    const { parentPath, parentName } = getParentFolder(activeFile);
     debugLog("Parent Path:", parentPath);
-    
-    // TODO: what if activeFile.parent was undefined
+
     const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, setting, parentName);
     const attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
 
@@ -487,9 +483,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     const root = this.getRootPath(notePath, setting);
     const attachPath = path.join(
       root,
-      setting.attachmentPath.replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath)
+      setting.attachmentPath
+        .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath)
         .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
-        .replace(`${SETTINGS_VARIABLES_PARENTFILE}`, parentFolderBasename)
+        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, parentFolderBasename)
     );
     return normalizePath(attachPath);
   }

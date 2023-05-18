@@ -7,7 +7,7 @@ import {
   SETTINGS_ROOT_NEXTTONOTE,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_PARENTFILE
+  SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTEPARENT
 } from "./constant";
 import AttachmentManagementPlugin from "./main";
 
@@ -74,7 +74,7 @@ export class OverrideModal extends Modal {
 
     new Setting(contentEl)
       .setName("Attachment path")
-      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_PARENTFILE}`)
+      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`)
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
