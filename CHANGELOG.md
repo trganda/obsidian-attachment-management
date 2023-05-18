@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.3.4](https://github.com/trganda/obsidian-attachment-managment/compare/0.3.3...0.3.4) (2023-05-18)
+
+
+### Features
+
+* "parent" as variable ([c8be1e3](https://github.com/trganda/obsidian-attachment-managment/commit/c8be1e3c91228c991479bf66ca2502432110fd5a)), closes [#7](https://github.com/trganda/obsidian-attachment-managment/issues/7)
+* add webp image support ([9f3f9fb](https://github.com/trganda/obsidian-attachment-managment/commit/9f3f9fb4b01b76a346fade32d489b54ba300b986))
+
+
+### Bug Fixes
+
+* no rename attachment for same parent folder ([2efb706](https://github.com/trganda/obsidian-attachment-managment/commit/2efb706622cdce5dff887f60b95c2e72ac49a91e))
+* review by maintener ([7a58d1d](https://github.com/trganda/obsidian-attachment-managment/commit/7a58d1d2c9ab592cefc0513c1c7e9587cc38d603))
+
 ### [0.3.3](https://github.com/trganda/obsidian-attachment-management/compare/0.3.2...0.3.3) (2023-05-17)
 
 
