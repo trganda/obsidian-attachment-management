@@ -268,7 +268,10 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
   let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
 
   if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
-    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)) {
+    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME)
+      || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)
+      || setting.attachmentPath.includes(SETTINGS_VARIABLES_PARENTFILE)
+    ) {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH;
     } else {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
@@ -409,4 +412,15 @@ export function updateOverrideSetting(settings: AttachmentManagementPluginSettin
       return;
     }
   }
+}
+
+export function getParentFolder(rf: TFile) {
+  const parent = rf.parent;
+  let parentPath = "/";
+  let parentName = "/";
+  if (parent) {
+    parentPath = parent.path;
+    parentName = parent.name;
+  }
+  return { parentPath, parentName };
 }
