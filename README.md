@@ -1,10 +1,10 @@
 # Obsidian Attachment Management
 
-This plugin support to more flexibly to setting your attachment location with variable `${notepath}`, `${notename}`, `${date}`.
+This plugin supports more flexibly to setting your attachment location with variable like `${notepath}`, `${notename}` and `${date}`.
 
 ## Features
 
-This plugin currently support:
+This plugin currently supports:
 
 - [x] Setting the attachment location with `${notepath}`, `${notename}`, `${date}`
 - [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
@@ -24,14 +24,13 @@ This plugin currently support:
 
 ## Settings
 
-The path of attachment was compose of three part
+The path of attachment is composed of three parts :
 
 ```
 {root path}/{attachment path}/{attachment name}.extension
 ```
 
-And your can use the variables below to config
-
+And you can use the variables below to config:
 - `${notepath}`: file path of the `markdown` or `canvas` file under the vault root.
 - `${notename}`: file name of the `markdown` or `canvas` file (not include file extension).
 - `${date}`: date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
@@ -50,7 +49,12 @@ It can be set use the config of obsidian in `Files & Links`, or reset in this op
 
 ### Attachment Path
 
-A sub-folder to place attachment under the `{root path}`, available variables `${notename}` and `${notepath}`, default value `${notepath}/${notename}`.
+A sub-folder to place attachment under the `{root path}`, available variables :
+- `${notename}` : The note name of the `markdown` or `canvas` file where the attachment be placed.
+- `${notepath}` : The note path of the `markdown` or `canvas` file where the attachment be placed.
+- `${parent}` : The **parent** folder name of the `markdown` or `canvas` file where the attachment be placed.
+
+Default value `${notepath}/${notename}`.
 
 ### Attachment Format
 
@@ -78,15 +82,15 @@ Automatically rename the attachment folder/filename when you rename the folder/f
 
 Install and enable the plugin, after configure you can paste or drop attachment file as usually and it will be auto rename.
 
-This plugin support a command `Rearrange Linked Attachments`, if you run this command, it will rename all attachment that has bee linked in `markdown` or `canvas` file as you configured.
+This plugin supports a command `Rearrange Linked Attachments`. If you run this command, it will rename all attachment that has been linked in `markdown` or `canvas` file as you configured.
 
 ![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
-~~**Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to backup your files at first.~~
+~~**Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to back up your files at first.~~
 
 ### Overriding Setting
 
-Your can set the attachment path setting for file or folder. The priority of these setting are:
+You can set the attachment path setting for file or folder. The priority of these setting are:
 
 ```
 file setting > most close parent folder setting > global setting
@@ -96,7 +100,7 @@ If you want to reset the setting of files or folder to the global setting, use t
 
 ### Known Issues
 
-- No support for processing duplicated file name right now (in develop).
+- No support for processing duplicated file name right now (in develop). In backup, you could use the data variable [`x`](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/) to use Unix timestamp with millisecond as filename (it will prevent duplicated filename).
 - When drop a file in `canvas`, it's will delay to show the updated link/filename.
 
 ![Screen Recording](./images/canvas_drop_delay.gif)

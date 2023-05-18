@@ -33,7 +33,7 @@ export const path = {
   },
 
   // returns the last part of a path, e.g. 'foo.jpg'
-  basename(filepath: string, extension: string = ""): string {
+  basename(filepath: string, extension = ""): string {
     const sp = filepath.split("/");
     const filename = sp[sp.length - 1];
     if (extension !== "") {

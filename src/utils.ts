@@ -1,7 +1,7 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH } from "./constant";
+import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_PARENTFILE } from "./constant";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -15,9 +15,9 @@ export enum ATTACHMENT_RENAME_TYPE {
 }
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
-const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps)/i;
+const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
-const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps"]);
+const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps", "webp"]);
 
 export const DEBUG = !(process.env.BUILD_ENV === "production");
 if (DEBUG) console.log("DEBUG is enabled");
@@ -37,17 +37,12 @@ export const blobToArrayBuffer = (blob: Blob) => {
 };
 
 export function isMarkdownFile(extension: string): boolean {
-  if (extension === "md") {
-    return true;
-  }
-  return false;
+  return extension === "md";
+  
 }
 
 export function isCanvasFile(extension: string): boolean {
-  if (extension === "canvas") {
-    return true;
-  }
-  return false;
+  return extension === "canvas";
 }
 
 export function isPastedImage(file: TAbstractFile): boolean {
@@ -273,15 +268,16 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
   let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
 
   if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
-    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)) {
+    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME)
+      || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)
+      || setting.attachmentPath.includes(SETTINGS_VARIABLES_PARENTFILE)
+    ) {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH;
     } else {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
     }
-  } else {
-    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)) {
+  } else if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) || setting.attachmentPath.includes(SETTINGS_VARIABLES_PARENTFILE)) {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
-    }
   }
 
   return ret;
@@ -416,4 +412,15 @@ export function updateOverrideSetting(settings: AttachmentManagementPluginSettin
       return;
     }
   }
+}
+
+export function getParentFolder(rf: TFile) {
+  const parent = rf.parent;
+  let parentPath = "/";
+  let parentName = "/";
+  if (parent) {
+    parentPath = parent.path;
+    parentName = parent.name;
+  }
+  return { parentPath, parentName };
 }

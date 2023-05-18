@@ -4,10 +4,12 @@ import {
   SETTINGS_ROOT_OBSFOLDER,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_PARENTFILE,
   SETTINGS_VARIABLES_DATES,
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
 } from "./constant";
+import { debugLog } from "./utils";
 
 export type SETTINGS_TYPE = string;
 
@@ -79,7 +81,7 @@ export class SettingTab extends PluginSettingTab {
         }
       }
       if (el.getAttr("class")?.includes("exclude_extension_pattern")) {
-        if (this.plugin.settings.handleAll === false) {
+        if (!this.plugin.settings.handleAll) {
           el.hide();
         } else {
           el.show();
@@ -122,7 +124,7 @@ export class SettingTab extends PluginSettingTab {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentRoot)
           .setValue(this.plugin.settings.attachPath.attachmentRoot)
           .onChange(async (value) => {
-            console.log("Attachment root: " + value);
+            debugLog("Attachment root: " + value);
             this.plugin.settings.attachPath.attachmentRoot = value;
             await this.plugin.saveSettings();
           })
@@ -130,13 +132,13 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Attachment path")
-      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH} and ${SETTINGS_VARIABLES_NOTENAME}`)
+      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_PARENTFILE}`)
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
           .setValue(this.plugin.settings.attachPath.attachmentPath)
           .onChange(async (value) => {
-            console.log("Attachment path: " + value);
+            debugLog("Attachment path: " + value);
             this.plugin.settings.attachPath.attachmentPath = value;
             await this.plugin.saveSettings();
           })
@@ -150,7 +152,7 @@ export class SettingTab extends PluginSettingTab {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.plugin.settings.attachPath.attachFormat)
           .onChange(async (value: string) => {
-            console.log("Attachment format: " + value);
+            debugLog("Attachment format: " + value);
             this.plugin.settings.attachPath.attachFormat = value;
             await this.plugin.saveSettings();
           })
@@ -172,7 +174,7 @@ export class SettingTab extends PluginSettingTab {
           .setPlaceholder(DEFAULT_SETTINGS.dateFormat)
           .setValue(this.plugin.settings.dateFormat)
           .onChange(async (value) => {
-            console.log("Date format: " + value);
+            debugLog("Date format: " + value);
             this.plugin.settings.dateFormat = value;
             await this.plugin.saveSettings();
           })
@@ -183,7 +185,7 @@ export class SettingTab extends PluginSettingTab {
       .setDesc("By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically")
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
-          console.log("Handle All Create Attachment: " + value);
+          debugLog("Handle All Create Attachment: " + value);
           this.plugin.settings.handleAll = value;
           this.displaySw(containerEl);
           await this.plugin.saveSettings();
@@ -209,7 +211,7 @@ export class SettingTab extends PluginSettingTab {
       .setDesc("Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed.")
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
-          console.log("Automatically rename attachment folder: " + value);
+          debugLog("Automatically rename attachment folder: " + value);
           this.plugin.settings.autoRenameAttachment = value;
           await this.plugin.saveSettings();
         })
