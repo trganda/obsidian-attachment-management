@@ -1,5 +1,12 @@
 import { ListedFiles, normalizePath, Notice, Plugin, TAbstractFile, TextFileView, TFile, TFolder } from "obsidian";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER, SettingTab } from "./settings";
+import {
+  AttachmentManagementPluginSettings,
+  AttachmentPathSettings,
+  DEFAULT_SETTINGS,
+  SETTINGS_TYPE_FILE,
+  SETTINGS_TYPE_FOLDER,
+  SettingTab,
+} from "./settings";
 import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
@@ -142,13 +149,14 @@ export default class AttachmentManagementPlugin extends Plugin {
         debugLog("On Rename Event - New Path and Old Path:", file.path, oldPath);
         // using oldPath here
         const { setting } = getOverrideSetting(this.settings, file, oldPath);
-        // TODO: update overriding setting path
+        debugLog("before settings", setting);
+        // BUG: if the settings was updated here, the future rename event will not get the right setting.
         if (setting.type === SETTINGS_TYPE_FOLDER || setting.type === SETTINGS_TYPE_FILE) {
           updateOverrideSetting(this.settings, file, oldPath);
           await this.saveSettings();
           await this.loadSettings();
         }
-
+        debugLog("updated settings", setting);
         if (!this.settings.autoRenameAttachment) {
           debugLog("No enable auto rename", this.settings.autoRenameAttachment);
           return;
@@ -301,7 +309,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
 
     // rename attachment folder first
-    const {stripedSrc, stripedDst} = stripPaths(oldAttachPath, newAttachPath);
+    const { stripedSrc, stripedDst } = stripPaths(oldAttachPath, newAttachPath);
 
     debugLog("Striped Source:", stripedSrc);
     debugLog("Striped Destination:", stripedDst);
@@ -311,31 +319,27 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     if (
       stripedSrc !== stripedDst &&
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER ||
+        attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
     ) {
       const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
-        // if the file exists in the vault
-        if (eventType === RENAME_EVENT_TYPE_FILE) {
-          new Notice(`Same file name exists: ${stripedDst}`);
-          return;
-        } else if (eventType === RENAME_EVENT_TYPE_FOLDER) {
-          // for most case, this should not be happen, just notice it.
-          new Notice(`Folder already exists: ${stripedDst}`);
-          return;
-        }
+        // if the target folder exists in the vault, just rename the file under the source path
+        debugLog("Target Folder Exists:", stripedDst);
       } else {
-        const cfile = this.app.vault.getAbstractFileByPath(stripedSrc);
-        if (cfile === null) {
+        const src = this.app.vault.getAbstractFileByPath(stripedSrc);
+        if (src === null) {
+          debugLog("Source File Not Exists:", stripedSrc);
           return;
         }
-        await this.app.fileManager.renameFile(cfile, stripedDst);
+        await this.app.fileManager.renameFile(src, stripedDst);
       }
     }
 
     // rename attachment filename as needed
     if (
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE || attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH) &&
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE ||
+        attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH) &&
       eventType === RENAME_EVENT_TYPE_FILE
     ) {
       // suppose the attachment folder already renamed
@@ -345,7 +349,10 @@ export default class AttachmentManagementPlugin extends Plugin {
         debugLog("Listing File:", filePath);
         let fileName = path.basename(filePath);
         const fileExtension = path.extname(fileName);
-        if ((this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) || !isImage(fileExtension)) {
+        if (
+          (this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) ||
+          !isImage(fileExtension)
+        ) {
           debugLog("No Handle Extension:", fileExtension);
           continue;
         }
@@ -353,9 +360,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         const newFilePath = normalizePath(path.join(newAttachPath, fileName));
         debugLog("New File Path:", newFilePath);
-        const tfile = this.app.vault.getAbstractFileByPath(filePath);
-        if (tfile === null) continue;
-        await this.app.fileManager.renameFile(tfile, newFilePath);
+        const src = this.app.vault.getAbstractFileByPath(filePath);
+        if (src === null) continue;
+        await this.app.fileManager.renameFile(src, newFilePath);
       }
     }
   }
@@ -397,7 +404,14 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param updateLink - whether to replace the link of renamed file
    * @returns - none
    */
-  async renameFile(file: TFile, attachPath: string, attachName: string, sourcePath: string, extension: string, updateLink?: boolean) {
+  async renameFile(
+    file: TFile,
+    attachPath: string,
+    attachName: string,
+    sourcePath: string,
+    extension: string,
+    updateLink?: boolean
+  ) {
     // Make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath))) {
       await this.app.vault.adapter.mkdir(attachPath);
@@ -476,8 +490,14 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param parentFolderBasename
    * @returns attachment path
    */
-  getAttachmentPath(noteName: string, notePath: string, parentFolderBasename: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
+  getAttachmentPath(
+    noteName: string,
+    notePath: string,
+    parentFolderBasename: string,
+    setting: AttachmentPathSettings = this.settings.attachPath
+  ): string {
     const root = this.getRootPath(notePath, setting);
+    debugLog("setting.attachmentPath", setting.attachmentPath);
     const attachPath = path.join(
       root,
       setting.attachmentPath
@@ -534,7 +554,9 @@ export default class AttachmentManagementPlugin extends Plugin {
    */
   getPastedImageFileName(noteName: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
     const dateTime = window.moment().format(this.settings.dateFormat);
-    return setting.attachFormat.replace(`${SETTINGS_VARIABLES_DATES}`, dateTime).replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
+    return setting.attachFormat
+      .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
+      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
   }
 
   backupConfigs() {
