@@ -6,7 +6,7 @@ This plugin supports more flexibly to setting your attachment location with vari
 
 This plugin currently supports:
 
-- [x] Setting the attachment location with `${notepath}`, `${notename}`, `${date}`
+- [x] Setting the attachment location with `${notepath}`, `${notename}`, `${date}` and `${parent}`
 - [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
 - [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
@@ -18,7 +18,7 @@ This plugin currently supports:
 
 - Install from Obsidian community plugins (under [open pull request](https://github.com/obsidianmd/obsidian-releases/pull/1947)).
 - Clone this repo
-  - `npm i` or `yarn` to install dependencies
+  - `npm i` to install dependencies
   - `npm run build` to start compilation in watch mode.
   - Copy the `main.js` and `manifest.json` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
 
@@ -31,9 +31,11 @@ The path of attachment is composed of three parts :
 ```
 
 And you can use the variables below to config:
-- `${notepath}`: file path of the `markdown` or `canvas` file under the vault root.
-- `${notename}`: file name of the `markdown` or `canvas` file (not include file extension).
-- `${date}`: date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
+
+- `${notepath}`: The **directory** of the `markdown` or `canvas` file under the vault root.
+- `${notename}`: The **filename** of the `markdown` or `canvas` file (without file extension).
+- `${parent}` : The **parent** folder name of the `markdown` or `canvas` file.
+- `${date}`: Date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
 
 ### Root Path to Save New Attachments
 
@@ -50,9 +52,10 @@ It can be set use the config of obsidian in `Files & Links`, or reset in this op
 ### Attachment Path
 
 A sub-folder to place attachment under the `{root path}`, available variables :
-- `${notename}` : The note name of the `markdown` or `canvas` file where the attachment be placed.
-- `${notepath}` : The note path of the `markdown` or `canvas` file where the attachment be placed.
-- `${parent}` : The **parent** folder name of the `markdown` or `canvas` file where the attachment be placed.
+
+- `${notepath}`: The **directory** of the `markdown` or `canvas` file under the vault root.
+- `${notename}`: The **filename** of the `markdown` or `canvas` file (without file extension).
+- `${parent}` : The **parent** folder name of the `markdown` or `canvas` file.
 
 Default value `${notepath}/${notename}`.
 
@@ -66,7 +69,7 @@ Use [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/
 
 ### Handle All Attachments
 
-By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically
+By default, only auto-rename the image file (see [Accepted file formats](https://help.obsidian.md/Advanced+topics/Accepted+file+formats)), if enable this option, all created file (except `md` or `canvas`) will be renamed automatically
 
 #### Exclude Extension Pattern
 
@@ -82,9 +85,9 @@ Automatically rename the attachment folder/filename when you rename the folder/f
 
 Install and enable the plugin, after configure you can paste or drop attachment file as usually and it will be auto rename.
 
-This plugin supports a command `Rearrange Linked Attachments`. If you run this command, it will rename all attachment that has been linked in `markdown` or `canvas` file as you configured.
+~~This plugin supports a command `Rearrange Linked Attachments`. If you run this command, it will rename all attachment that has been linked in `markdown` or `canvas` file as you configured.~~
 
-![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
+~~![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)~~
 
 ~~**Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to back up your files at first.~~
 
