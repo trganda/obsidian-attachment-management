@@ -75,9 +75,9 @@ export function isImage(extension: string): boolean {
  * @param dst destination path
  * @returns the first different prefix, otherwise, return the original path
  */
-export function stripPaths(src: string, dst: string): { nsrc: string; ndst: string } {
+export function stripPaths(src: string, dst: string): { stripedSrc: string; stripedDst: string } {
   if (src === dst) {
-    return { nsrc: src, ndst: dst };
+    return { stripedSrc: src, stripedDst: dst };
   }
 
   const srcParts = src.split("/");
@@ -86,7 +86,7 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
   // if src and dst have difference count of parts,
   // we think the paths was not in a same parent folder and no need to strip the prefix
   if (srcParts.length !== dstParts.length) {
-    return { nsrc: src, ndst: dst };
+    return { stripedSrc: src, stripedDst: dst };
   }
 
   for (let i = 0; i < srcParts.length; i++) {
@@ -96,13 +96,13 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
     // find the first different part
     if (srcPart !== dstPart) {
       return {
-        nsrc: srcParts.slice(0, i + 1).join("/"),
-        ndst: dstParts.slice(0, i + 1).join("/"),
+        stripedSrc: srcParts.slice(0, i + 1).join("/"),
+        stripedDst: dstParts.slice(0, i + 1).join("/"),
       };
     }
   }
 
-  return { nsrc: "", ndst: "" };
+  return { stripedSrc: "", stripedDst: "" };
 }
 
 /**
@@ -407,9 +407,9 @@ export function updateOverrideSetting(settings: AttachmentManagementPluginSettin
     delete settings.overridePath[settingPath];
     return;
   } else {
-    const { nsrc, ndst } = stripPaths(oldPath, file.path);
-    if (nsrc === settingPath) {
-      settings.overridePath[ndst] = copySetting;
+    const { stripedSrc, stripedDst } = stripPaths(oldPath, file.path);
+    if (stripedSrc === settingPath) {
+      settings.overridePath[stripedDst] = copySetting;
       delete settings.overridePath[settingPath];
       return;
     }

@@ -279,7 +279,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     const oldNotePath = path.dirname(oldPath);
     const oldNoteExtension = path.extname(oldPath);
     const oldNoteName = path.basename(oldPath, oldNoteExtension);
-    //generate parent of oldnotepath, last of the oldNotePath
+    //generate parent of oldNotePath, last of the oldNotePath
     const oldNoteParent = path.basename(path.dirname(oldPath));
 
     debugLog("Old Note Path:", oldNotePath);
@@ -301,38 +301,35 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
 
     // rename attachment folder first
-    const strip = stripPaths(oldAttachPath, newAttachPath);
+    const {stripedSrc, stripedDst} = stripPaths(oldAttachPath, newAttachPath);
 
-    const stripedOldAttachPath = strip.nsrc;
-    const stripedNewAttachPath = strip.ndst;
-
-    debugLog("Striped Source:", stripedOldAttachPath);
-    debugLog("Striped Destination:", stripedNewAttachPath);
-    if (stripedOldAttachPath === stripedNewAttachPath) {
+    debugLog("Striped Source:", stripedSrc);
+    debugLog("Striped Destination:", stripedDst);
+    if (stripedSrc === stripedDst) {
       debugLog("Same Striped Path");
     }
 
     if (
-      stripedOldAttachPath !== stripedNewAttachPath &&
+      stripedSrc !== stripedDst &&
       (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
     ) {
-      const exitsDst = await this.app.vault.adapter.exists(stripedNewAttachPath);
+      const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
         // if the file exists in the vault
         if (eventType === RENAME_EVENT_TYPE_FILE) {
-          new Notice(`Same file name exists: ${stripedNewAttachPath}`);
+          new Notice(`Same file name exists: ${stripedDst}`);
           return;
         } else if (eventType === RENAME_EVENT_TYPE_FOLDER) {
           // for most case, this should not be happen, just notice it.
-          new Notice(`Folder already exists: ${stripedNewAttachPath}`);
+          new Notice(`Folder already exists: ${stripedDst}`);
           return;
         }
       } else {
-        const cfile = this.app.vault.getAbstractFileByPath(stripedOldAttachPath);
+        const cfile = this.app.vault.getAbstractFileByPath(stripedSrc);
         if (cfile === null) {
           return;
         }
-        await this.app.fileManager.renameFile(cfile, stripedNewAttachPath);
+        await this.app.fileManager.renameFile(cfile, stripedDst);
       }
     }
 
