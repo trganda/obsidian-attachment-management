@@ -3,8 +3,7 @@ import {
   AttachmentManagementPluginSettings,
   AttachmentPathSettings,
   DEFAULT_SETTINGS,
-  SETTINGS_TYPE_FILE,
-  SETTINGS_TYPE_FOLDER,
+  SETTINGS_TYPES,
   SettingTab,
 } from "./settings";
 import {
@@ -151,7 +150,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         const { setting } = getOverrideSetting(this.settings, file, oldPath);
         debugLog("before settings", setting);
         // BUG: if the settings was updated here, the future rename event will not get the right setting.
-        if (setting.type === SETTINGS_TYPE_FOLDER || setting.type === SETTINGS_TYPE_FILE) {
+        if (setting.type === SETTINGS_TYPES.FOLDER || setting.type === SETTINGS_TYPES.FILE) {
           updateOverrideSetting(this.settings, file, oldPath);
           await this.saveSettings();
           await this.loadSettings();

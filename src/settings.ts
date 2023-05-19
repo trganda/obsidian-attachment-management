@@ -11,11 +11,11 @@ import {
 } from "./constant";
 import { debugLog } from "./utils";
 
-export type SETTINGS_TYPE = string;
-
-export const SETTINGS_TYPE_FOLDER: SETTINGS_TYPE = "FOLDER";
-export const SETTINGS_TYPE_FILE: SETTINGS_TYPE = "FILE";
-export const SETTINGS_TYPE_GLOBAL: SETTINGS_TYPE = "GLOBAL";
+export enum SETTINGS_TYPES {
+  GLOBAL = 0,
+  FOLDER = 1,
+  FILE = 2,
+}
 
 export interface AttachmentPathSettings {
   // Attachment root path
@@ -27,7 +27,7 @@ export interface AttachmentPathSettings {
   // How to renamed the image file
   attachFormat: string;
   // Override type
-  type: SETTINGS_TYPE;
+  type: SETTINGS_TYPES;
 }
 
 export interface AttachmentManagementPluginSettings {
@@ -53,7 +53,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
     saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
     attachmentPath: `${SETTINGS_VARIABLES_NOTEPATH}/${SETTINGS_VARIABLES_NOTENAME}`,
     attachFormat: `IMG-${SETTINGS_VARIABLES_DATES}`,
-    type: SETTINGS_TYPE_GLOBAL,
+    type: SETTINGS_TYPES.GLOBAL,
   },
   dateFormat: "YYYYMMDDHHmmssSSS",
   handleAll: false,

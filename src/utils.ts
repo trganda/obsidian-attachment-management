@@ -1,6 +1,6 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTEPARENT } from "./constant";
 
 export enum ATTACHMENT_RENAME_TYPE {
@@ -351,19 +351,19 @@ export function getOverrideSetting(
   for (const overridePath of Object.keys(settings.overridePath)) {
     const overrideSetting = settings.overridePath[overridePath];
     if (fileType) {
-      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPE_FILE) {
+      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPES.FILE) {
         // best match
         return { settingPath: overridePath, setting: overrideSetting };
-      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
         // parent path
         // TODO: reimplement the method to check whether the overridePath is a parent path of filePath
         candidates[overridePath] = overrideSetting;
       }
     } else {
-      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
         // best match
         return { settingPath: overridePath, setting: overrideSetting };
-      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
         // parent path
         candidates[overridePath] = overrideSetting;
       }
