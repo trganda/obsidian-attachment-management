@@ -1,6 +1,6 @@
 import { Modal, TFile, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
 import { debugLog } from "./utils";
-import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
+import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPES } from "./settings";
 import {
   SETTINGS_ROOT_OBSFOLDER,
   SETTINGS_ROOT_INFOLDER,
@@ -115,9 +115,9 @@ export class OverrideModal extends Modal {
           .setCta()
           .onClick(async () => {
             if (this.file instanceof TFile) {
-              this.setting.type = SETTINGS_TYPE_FILE;
+              this.setting.type = SETTINGS_TYPES.FILE;
             } else if (this.file instanceof TFolder) {
-              this.setting.type = SETTINGS_TYPE_FOLDER;
+              this.setting.type = SETTINGS_TYPES.FOLDER;
             }
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             await this.plugin.saveSettings();

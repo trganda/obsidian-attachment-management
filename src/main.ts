@@ -12,6 +12,7 @@ import {
   debugLog,
   getOverrideSetting,
   getParentFolder,
+  getRenameOverrideSetting,
   isAttachment,
   isCanvasFile,
   isImage,
@@ -147,7 +148,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       this.app.vault.on("rename", async (file: TAbstractFile, oldPath: string) => {
         debugLog("On Rename Event - New Path and Old Path:", file.path, oldPath);
         // using oldPath here
-        const { setting } = getOverrideSetting(this.settings, file, oldPath);
+        const { setting } = getRenameOverrideSetting(this.settings, file, oldPath);
         debugLog("before settings", setting);
         // BUG: if the settings was updated here, the future rename event will not get the right setting.
         if (setting.type === SETTINGS_TYPES.FOLDER || setting.type === SETTINGS_TYPES.FILE) {
