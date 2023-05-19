@@ -287,8 +287,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     const { parentPath, parentName } = getParentFolder(rf);
     // generate old attachment path
-    const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, setting, oldNoteParent);
-    const newAttachPath = this.getAttachmentPath(rf.basename, parentPath, setting, parentName);
+    const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, oldNoteParent, setting);
+    const newAttachPath = this.getAttachmentPath(rf.basename, parentPath, parentName, setting);
 
     debugLog("Old Attachment Path:", oldAttachPath);
     debugLog("New Attachment Path:", newAttachPath);
@@ -382,7 +382,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     const { parentPath, parentName } = getParentFolder(activeFile);
     debugLog("Parent Path:", parentPath);
 
-    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, setting, parentName);
+    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
     const attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
 
     debugLog("New Path of File:", path.join(attachPath, attachName));
@@ -479,7 +479,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param parentFolderBasename
    * @returns attachment path
    */
-  getAttachmentPath(noteName: string, notePath: string, setting: AttachmentPathSettings = this.settings.attachPath, parentFolderBasename: string): string {
+  getAttachmentPath(noteName: string, notePath: string, parentFolderBasename: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
     const root = this.getRootPath(notePath, setting);
     const attachPath = path.join(
       root,

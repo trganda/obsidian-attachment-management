@@ -38,7 +38,6 @@ export const blobToArrayBuffer = (blob: Blob) => {
 
 export function isMarkdownFile(extension: string): boolean {
   return extension === "md";
-  
 }
 
 export function isCanvasFile(extension: string): boolean {
@@ -236,11 +235,9 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
   }
 
   return isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern));
-
-  
 }
 
-export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>){
+export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>) {
   if (record[key] === undefined) {
     record[key] = value;
     return;
@@ -254,13 +251,13 @@ export function addToRecord(record: Record<string, Set<string>>, key: string, va
   record[key] = valueSet;
 }
 
-export function addToSet (setObj: Set<string>, value: string) {
+export function addToSet(setObj: Set<string>, value: string) {
   if (!setObj.has(value)) {
     setObj.add(value);
   }
 }
 
-export function pathIsAnImage (path: string) {
+export function pathIsAnImage(path: string) {
   return path.match(imageRegex);
 }
 
@@ -268,16 +265,21 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
   let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
 
   if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
-    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME)
-      || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)
-      || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
+    if (
+      setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
+      setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
+      setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
     ) {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH;
     } else {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
     }
-  } else if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)) {
-      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
+  } else if (
+    setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
+    setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
+    setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
+  ) {
+    ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
   }
 
   return ret;
@@ -320,8 +322,8 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
  * @param settings plugin setting
  * @param file file need to get setting
  * @param oldPath old path of the file, it it's be renamed (option)
- * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting, 
- * where settingPath is the relate path of this setting, it should be same with input path or is the 
+ * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting,
+ * where settingPath is the relate path of this setting, it should be same with input path or is the
  * subpath of the settingPath.
  */
 export function getOverrideSetting(

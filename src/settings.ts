@@ -132,7 +132,9 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Attachment path")
-      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`)
+      .setDesc(
+        `Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`
+      )
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
