@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.3.5](https://github.com/trganda/obsidian-attachment-management/compare/0.3.4...0.3.5) (2023-05-20)
 
+
+### Bug Fixes
+
+* override setting not work on rename event ([2e1092a](https://github.com/trganda/obsidian-attachment-management/commit/2e1092a56dd171100477351cf1767c41a016dc89))
+* override setting not work on rename event ([1850acc](https://github.com/trganda/obsidian-attachment-management/commit/1850acc0c1700a8308d1657828f378ee6e81679a))
+
+### [0.3.5](https://github.com/trganda/obsidian-attachment-management/compare/0.3.4...0.3.5) (2023-05-20)
+
 ### [0.3.4](https://github.com/trganda/obsidian-attachment-managment/compare/0.3.3...0.3.4) (2023-05-18)
 
 
