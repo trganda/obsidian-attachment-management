@@ -23,7 +23,6 @@ export enum ATTACHMENT_RENAME_TYPE {
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
-const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps", "webp"]);
 
 export const DEBUG = !(process.env.BUILD_ENV === "production");
 if (DEBUG) console.log("DEBUG is enabled");
@@ -60,12 +59,10 @@ export function isPastedImage(file: TAbstractFile): boolean {
 }
 
 export function isImage(extension: string): boolean {
-  for (const type of imageExtensions) {
-    if (type.indexOf(extension.toLowerCase()) !== -1) {
-      return true;
-    }
+  const match = extension.match(imageRegex);
+  if (match !== null) {
+    return true;
   }
-
   return false;
 }
 
