@@ -325,8 +325,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     ) {
       const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
-        // if the target folder exists in the vault, just rename the file under the source path
+        // if the target folder exists in the vault, ignore it.
         debugLog("onRename - target folder exists:", stripedDst);
+        new Notice(`Target folder already exists ${stripedDst}`);
+        return;
       } else {
         const src = this.app.vault.getAbstractFileByPath(stripedSrc);
         if (src === null) {
@@ -339,9 +341,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // rename attachment filename as needed
     if (
+      eventType === RENAME_EVENT_TYPE_FILE &&
       (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE ||
-        attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH) &&
-      eventType === RENAME_EVENT_TYPE_FILE
+        attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
     ) {
       // suppose the attachment folder already renamed
       // rename all attachment files that the filename content the ${notename} in attachment path
