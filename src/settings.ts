@@ -12,9 +12,9 @@ import {
 import { debugLog } from "./utils";
 
 export enum SETTINGS_TYPES {
-  GLOBAL = 0,
-  FOLDER = 1,
-  FILE = 2,
+  GLOBAL = "GLOBAL",
+  FOLDER = "FOLDER",
+  FILE = "FILE",
 }
 
 export interface AttachmentPathSettings {

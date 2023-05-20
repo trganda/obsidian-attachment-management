@@ -366,7 +366,11 @@ export function getOverrideSetting(
       if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPES.FILE) {
         // best match
         return { settingPath: overridePath, setting: overrideSetting };
-      } else if (path.dirname(filePath).startsWith(overridePath) && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
+      } else if (
+        filePath.startsWith(overridePath) &&
+        filePath.charAt(overridePath.length) === "/" &&
+        overrideSetting.type === SETTINGS_TYPES.FOLDER
+      ) {
         // parent path
         candidates[overridePath] = overrideSetting;
       }
@@ -374,7 +378,11 @@ export function getOverrideSetting(
       if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
         // best match
         return { settingPath: overridePath, setting: overrideSetting };
-      } else if (path.dirname(filePath).startsWith(overridePath) && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
+      } else if (
+        filePath.startsWith(overridePath) &&
+        filePath.charAt(overridePath.length) === "/" &&
+        overrideSetting.type === SETTINGS_TYPES.FOLDER
+      ) {
         // parent path
         candidates[overridePath] = overrideSetting;
       }
