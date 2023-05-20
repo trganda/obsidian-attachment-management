@@ -1,7 +1,13 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPE_FILE, SETTINGS_TYPE_FOLDER } from "./settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTEPARENT } from "./constant";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings";
+import {
+  SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_NOTEPATH,
+  SETTINGS_VARIABLES_NOTEPARENT,
+} from "./constant";
+import { path } from "./path";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -17,7 +23,6 @@ export enum ATTACHMENT_RENAME_TYPE {
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
-const imageExtensions: Set<string> = new Set(["jpeg", "jpg", "png", "gif", "svg", "bmp", "eps", "webp"]);
 
 export const DEBUG = !(process.env.BUILD_ENV === "production");
 if (DEBUG) console.log("DEBUG is enabled");
@@ -38,7 +43,6 @@ export const blobToArrayBuffer = (blob: Blob) => {
 
 export function isMarkdownFile(extension: string): boolean {
   return extension === "md";
-  
 }
 
 export function isCanvasFile(extension: string): boolean {
@@ -55,12 +59,10 @@ export function isPastedImage(file: TAbstractFile): boolean {
 }
 
 export function isImage(extension: string): boolean {
-  for (const type of imageExtensions) {
-    if (type.indexOf(extension.toLowerCase()) !== -1) {
-      return true;
-    }
+  const match = extension.match(imageRegex);
+  if (match !== null) {
+    return true;
   }
-
   return false;
 }
 
@@ -76,9 +78,9 @@ export function isImage(extension: string): boolean {
  * @param dst destination path
  * @returns the first different prefix, otherwise, return the original path
  */
-export function stripPaths(src: string, dst: string): { nsrc: string; ndst: string } {
+export function stripPaths(src: string, dst: string): { stripedSrc: string; stripedDst: string } {
   if (src === dst) {
-    return { nsrc: src, ndst: dst };
+    return { stripedSrc: src, stripedDst: dst };
   }
 
   const srcParts = src.split("/");
@@ -87,7 +89,7 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
   // if src and dst have difference count of parts,
   // we think the paths was not in a same parent folder and no need to strip the prefix
   if (srcParts.length !== dstParts.length) {
-    return { nsrc: src, ndst: dst };
+    return { stripedSrc: src, stripedDst: dst };
   }
 
   for (let i = 0; i < srcParts.length; i++) {
@@ -97,13 +99,13 @@ export function stripPaths(src: string, dst: string): { nsrc: string; ndst: stri
     // find the first different part
     if (srcPart !== dstPart) {
       return {
-        nsrc: srcParts.slice(0, i + 1).join("/"),
-        ndst: dstParts.slice(0, i + 1).join("/"),
+        stripedSrc: srcParts.slice(0, i + 1).join("/"),
+        stripedDst: dstParts.slice(0, i + 1).join("/"),
       };
     }
   }
 
-  return { nsrc: "", ndst: "" };
+  return { stripedSrc: "", stripedDst: "" };
 }
 
 /**
@@ -144,7 +146,10 @@ export async function getAttachmentsInVault(
 }
 
 // refer https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
-export async function getAttachmentsInVaultByLinks(settings: AttachmentManagementPluginSettings, app: App): Promise<Record<string, Set<string>>> {
+export async function getAttachmentsInVaultByLinks(
+  settings: AttachmentManagementPluginSettings,
+  app: App
+): Promise<Record<string, Set<string>>> {
   const attachmentsRecord: Record<string, Set<string>> = {};
   const resolvedLinks = app.metadataCache.resolvedLinks;
   if (resolvedLinks) {
@@ -235,12 +240,13 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
     return false;
   }
 
-  return isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern));
-
-  
+  return (
+    isImage(file.extension) ||
+    (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern))
+  );
 }
 
-export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>){
+export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>) {
   if (record[key] === undefined) {
     record[key] = value;
     return;
@@ -254,30 +260,38 @@ export function addToRecord(record: Record<string, Set<string>>, key: string, va
   record[key] = valueSet;
 }
 
-export function addToSet (setObj: Set<string>, value: string) {
+export function addToSet(setObj: Set<string>, value: string) {
   if (!setObj.has(value)) {
     setObj.add(value);
   }
 }
 
-export function pathIsAnImage (path: string) {
+export function pathIsAnImage(path: string) {
   return path.match(imageRegex);
 }
 
 export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
   let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
 
-  if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
-    if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME)
-      || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH)
-      || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
+  if (
+    setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) ||
+    setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)
+  ) {
+    if (
+      setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
+      setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
+      setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
     ) {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH;
     } else {
       ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
     }
-  } else if (setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) || setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)) {
-      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
+  } else if (
+    setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
+    setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
+    setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
+  ) {
+    ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
   }
 
   return ret;
@@ -320,8 +334,8 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
  * @param settings plugin setting
  * @param file file need to get setting
  * @param oldPath old path of the file, it it's be renamed (option)
- * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting, 
- * where settingPath is the relate path of this setting, it should be same with input path or is the 
+ * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting,
+ * where settingPath is the relate path of this setting, it should be same with input path or is the
  * subpath of the settingPath.
  */
 export function getOverrideSetting(
@@ -349,19 +363,26 @@ export function getOverrideSetting(
   for (const overridePath of Object.keys(settings.overridePath)) {
     const overrideSetting = settings.overridePath[overridePath];
     if (fileType) {
-      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPE_FILE) {
+      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPES.FILE) {
         // best match
         return { settingPath: overridePath, setting: overrideSetting };
-      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+      } else if (
+        filePath.startsWith(overridePath) &&
+        filePath.charAt(overridePath.length) === "/" &&
+        overrideSetting.type === SETTINGS_TYPES.FOLDER
+      ) {
         // parent path
-        // TODO: reimplement the method to check whether the overridePath is a parent path of filePath
         candidates[overridePath] = overrideSetting;
       }
     } else {
-      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+      if (overridePath === filePath && overrideSetting.type === SETTINGS_TYPES.FOLDER) {
         // best match
         return { settingPath: overridePath, setting: overrideSetting };
-      } else if (filePath.startsWith(overridePath) && filePath.charAt(overridePath.length) === "/" && overrideSetting.type === SETTINGS_TYPE_FOLDER) {
+      } else if (
+        filePath.startsWith(overridePath) &&
+        filePath.charAt(overridePath.length) === "/" &&
+        overrideSetting.type === SETTINGS_TYPES.FOLDER
+      ) {
         // parent path
         candidates[overridePath] = overrideSetting;
       }
@@ -373,11 +394,74 @@ export function getOverrideSetting(
   }
 
   // sort by splitted path length, descending
-  const sortedK = Object.keys(candidates).sort((a, b) => (a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0));
-  debugLog("sortedK", sortedK);
+  const sortedK = Object.keys(candidates).sort((a, b) =>
+    a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0
+  );
+  debugLog("getOverrideSetting - sortedK:", sortedK);
   for (const k of sortedK) {
     if (filePath.startsWith(k)) {
       return { settingPath: k, setting: candidates[k] };
+    }
+  }
+
+  return { settingPath: "", setting: settings.attachPath };
+}
+
+/**
+ * Return the best matched override settings for the file/folder on rename event.
+ * We need this function to process the use case below:
+ *  suppose you have override settings of a folder, and when your rename the folder,
+ *  the override setting of oldPath may be updated and will not to be found
+ *  in rename event that trigger by subpath of oldPath.
+ * @param settings plugin setting
+ * @param file file need to get setting
+ * @param oldPath old path of the file, it it's be renamed (option)
+ * @returns { settingPath: string; setting: AttachmentPathSettings }, the best matched setting,
+ * where settingPath is the relate path of this setting, it should be same with input path or is the
+ * subpath of the settingPath.
+ */
+export function getRenameOverrideSetting(
+  settings: AttachmentManagementPluginSettings,
+  file: TAbstractFile,
+  oldPath: string
+): { settingPath: string; setting: AttachmentPathSettings } {
+  if (Object.keys(settings.overridePath).length === 0) {
+    return { settingPath: "", setting: settings.attachPath };
+  }
+
+  const { settingPath: np, setting: ns } = getOverrideSetting(settings, file);
+  const { settingPath: op, setting: os } = getOverrideSetting(settings, file, oldPath);
+
+  if (ns.type === SETTINGS_TYPES.GLOBAL) {
+    return { settingPath: op, setting: os };
+  }
+
+  if (os.type === SETTINGS_TYPES.GLOBAL) {
+    return { settingPath: np, setting: ns };
+  }
+
+  if (ns.type === SETTINGS_TYPES.FILE && os.type === SETTINGS_TYPES.FILE) {
+    // This should not happen
+    debugLog("getRenameOverrideSetting - both file type setting", np, op);
+    return { settingPath: "", setting: settings.attachPath };
+  }
+
+  if (ns.type === SETTINGS_TYPES.FILE && os.type === SETTINGS_TYPES.FOLDER) {
+    return { settingPath: np, setting: ns };
+  } else if (ns.type === SETTINGS_TYPES.FOLDER && os.type === SETTINGS_TYPES.FILE) {
+    return { settingPath: op, setting: os };
+  }
+
+  if (ns.type === SETTINGS_TYPES.FOLDER && os.type === SETTINGS_TYPES.FOLDER) {
+    const l = np.split("/").length;
+    const r = op.split("/").length;
+
+    if (l > r) {
+      return { settingPath: np, setting: ns };
+    } else if (l < r) {
+      return { settingPath: op, setting: os };
+    } else if (l === r) {
+      return { settingPath: "", setting: settings.attachPath };
     }
   }
 
@@ -391,7 +475,11 @@ export function getOverrideSetting(
  * @param oldPath old path of the renamed file
  * @returns
  */
-export function updateOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile, oldPath: string) {
+export function updateOverrideSetting(
+  settings: AttachmentManagementPluginSettings,
+  file: TAbstractFile,
+  oldPath: string
+) {
   const keys = Object.keys(settings.overridePath);
   if (keys.length === 0 || file.path === oldPath) {
     return;
@@ -405,9 +493,9 @@ export function updateOverrideSetting(settings: AttachmentManagementPluginSettin
     delete settings.overridePath[settingPath];
     return;
   } else {
-    const { nsrc, ndst } = stripPaths(oldPath, file.path);
-    if (nsrc === settingPath) {
-      settings.overridePath[ndst] = copySetting;
+    const { stripedSrc, stripedDst } = stripPaths(oldPath, file.path);
+    if (stripedSrc === settingPath) {
+      settings.overridePath[stripedDst] = copySetting;
       delete settings.overridePath[settingPath];
       return;
     }
