@@ -7,7 +7,8 @@ import {
   SETTINGS_ROOT_NEXTTONOTE,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTEPARENT
+  SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_NOTEPARENT,
 } from "./constant";
 import AttachmentManagementPlugin from "./main";
 
@@ -20,7 +21,6 @@ export class OverrideModal extends Modal {
     super(plugin.app);
     this.plugin = plugin;
     this.file = file;
-    debugLog("setting:", this.file.path, setting);
     this.setting = setting;
   }
 
@@ -67,33 +67,37 @@ export class OverrideModal extends Modal {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentRoot)
           .setValue(this.setting.attachmentRoot)
           .onChange(async (value) => {
-            debugLog("Attachment root: " + value);
+            debugLog("override - attachment root:" + value);
             this.setting.attachmentRoot = value;
           })
       );
 
     new Setting(contentEl)
       .setName("Attachment path")
-      .setDesc(`Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`)
+      .setDesc(
+        `Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`
+      )
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
           .setValue(this.setting.attachmentPath)
           .onChange(async (value) => {
-            debugLog("Attachment path: " + value);
+            debugLog("override - attachment path:" + value);
             this.setting.attachmentPath = value;
           })
       );
 
     new Setting(contentEl)
       .setName("Attachment format")
-      .setDesc(`Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`)
+      .setDesc(
+        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
+      )
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.setting.attachFormat)
           .onChange(async (value: string) => {
-            debugLog("Attachment format: " + value);
+            debugLog("override - attachment format:" + value);
             this.setting.attachFormat = value;
           })
       );
@@ -102,7 +106,7 @@ export class OverrideModal extends Modal {
       .addButton((btn) => {
         btn.setButtonText("Reset").onClick(async () => {
           this.setting = this.plugin.settings.attachPath;
-          delete this.plugin.settings.overridePath[this.file.path]
+          delete this.plugin.settings.overridePath[this.file.path];
           await this.plugin.saveSettings();
           await this.plugin.loadSettings();
           new Notice(`Reset attachment setting of ${this.file.path}`);
@@ -121,7 +125,7 @@ export class OverrideModal extends Modal {
             }
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             await this.plugin.saveSettings();
-            debugLog("Overriding Settings:", this.file.path, this.setting);
+            debugLog("override - overriding settings:", this.file.path, this.setting);
             this.close();
           })
       );

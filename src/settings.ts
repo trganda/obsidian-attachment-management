@@ -124,7 +124,7 @@ export class SettingTab extends PluginSettingTab {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentRoot)
           .setValue(this.plugin.settings.attachPath.attachmentRoot)
           .onChange(async (value) => {
-            debugLog("Attachment root: " + value);
+            debugLog("setting - attachment root:" + value);
             this.plugin.settings.attachPath.attachmentRoot = value;
             await this.plugin.saveSettings();
           })
@@ -140,7 +140,7 @@ export class SettingTab extends PluginSettingTab {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
           .setValue(this.plugin.settings.attachPath.attachmentPath)
           .onChange(async (value) => {
-            debugLog("Attachment path: " + value);
+            debugLog("setting - attachment path:" + value);
             this.plugin.settings.attachPath.attachmentPath = value;
             await this.plugin.saveSettings();
           })
@@ -148,13 +148,15 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Attachment format")
-      .setDesc(`Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`)
+      .setDesc(
+        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
+      )
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.plugin.settings.attachPath.attachFormat)
           .onChange(async (value: string) => {
-            debugLog("Attachment format: " + value);
+            debugLog("setting - attachment format:" + value);
             this.plugin.settings.attachPath.attachFormat = value;
             await this.plugin.saveSettings();
           })
@@ -176,7 +178,7 @@ export class SettingTab extends PluginSettingTab {
           .setPlaceholder(DEFAULT_SETTINGS.dateFormat)
           .setValue(this.plugin.settings.dateFormat)
           .onChange(async (value) => {
-            debugLog("Date format: " + value);
+            debugLog("setting - date format:" + value);
             this.plugin.settings.dateFormat = value;
             await this.plugin.saveSettings();
           })
@@ -184,10 +186,12 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Handle all attachments")
-      .setDesc("By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically")
+      .setDesc(
+        "By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically"
+      )
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
-          debugLog("Handle All Create Attachment: " + value);
+          debugLog("setting - handle all attachment:" + value);
           this.plugin.settings.handleAll = value;
           this.displaySw(containerEl);
           await this.plugin.saveSettings();
@@ -196,7 +200,9 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Exclude extension pattern")
-      .setDesc(`This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`)
+      .setDesc(
+        `This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`
+      )
       .setClass("exclude_extension_pattern")
       .addText((text) =>
         text
@@ -210,10 +216,12 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Automatically rename attachment")
-      .setDesc("Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed.")
+      .setDesc(
+        "Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed."
+      )
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
-          debugLog("Automatically rename attachment folder: " + value);
+          debugLog("setting - automatically rename attachment folder:" + value);
           this.plugin.settings.autoRenameAttachment = value;
           await this.plugin.saveSettings();
         })

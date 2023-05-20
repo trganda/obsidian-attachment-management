@@ -1,7 +1,12 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
 import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTEPARENT } from "./constant";
+import {
+  SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_NOTEPATH,
+  SETTINGS_VARIABLES_NOTEPARENT,
+} from "./constant";
 import { path } from "./path";
 
 export enum ATTACHMENT_RENAME_TYPE {
@@ -144,7 +149,10 @@ export async function getAttachmentsInVault(
 }
 
 // refer https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
-export async function getAttachmentsInVaultByLinks(settings: AttachmentManagementPluginSettings, app: App): Promise<Record<string, Set<string>>> {
+export async function getAttachmentsInVaultByLinks(
+  settings: AttachmentManagementPluginSettings,
+  app: App
+): Promise<Record<string, Set<string>>> {
   const attachmentsRecord: Record<string, Set<string>> = {};
   const resolvedLinks = app.metadataCache.resolvedLinks;
   if (resolvedLinks) {
@@ -235,7 +243,10 @@ export async function isAttachment(settings: AttachmentManagementPluginSettings,
     return false;
   }
 
-  return isImage(file.extension) || (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern));
+  return (
+    isImage(file.extension) ||
+    (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern))
+  );
 }
 
 export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>) {
@@ -265,7 +276,10 @@ export function pathIsAnImage(path: string) {
 export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
   let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
 
-  if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) || setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
+  if (
+    setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) ||
+    setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)
+  ) {
     if (
       setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
       setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
@@ -375,8 +389,10 @@ export function getOverrideSetting(
   }
 
   // sort by splitted path length, descending
-  const sortedK = Object.keys(candidates).sort((a, b) => (a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0));
-  debugLog("sortedK", sortedK);
+  const sortedK = Object.keys(candidates).sort((a, b) =>
+    a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0
+  );
+  debugLog("getOverrideSetting - sortedK:", sortedK);
   for (const k of sortedK) {
     if (filePath.startsWith(k)) {
       return { settingPath: k, setting: candidates[k] };
@@ -388,9 +404,9 @@ export function getOverrideSetting(
 
 /**
  * Return the best matched override settings for the file/folder on rename event.
- * We need this function to process the use case below: 
+ * We need this function to process the use case below:
  *  suppose you have override settings of a folder, and when your rename the folder,
- *  the override setting of oldPath may be updated and will not to be found 
+ *  the override setting of oldPath may be updated and will not to be found
  *  in rename event that trigger by subpath of oldPath.
  * @param settings plugin setting
  * @param file file need to get setting
@@ -402,14 +418,14 @@ export function getOverrideSetting(
 export function getRenameOverrideSetting(
   settings: AttachmentManagementPluginSettings,
   file: TAbstractFile,
-  oldPath: string 
+  oldPath: string
 ): { settingPath: string; setting: AttachmentPathSettings } {
   if (Object.keys(settings.overridePath).length === 0) {
     return { settingPath: "", setting: settings.attachPath };
   }
 
-  const {settingPath: np, setting: ns} = getOverrideSetting(settings, file);
-  const {settingPath: op, setting: os} = getOverrideSetting(settings, file, oldPath);
+  const { settingPath: np, setting: ns } = getOverrideSetting(settings, file);
+  const { settingPath: op, setting: os } = getOverrideSetting(settings, file, oldPath);
 
   if (ns.type === SETTINGS_TYPES.GLOBAL) {
     return { settingPath: op, setting: os };
@@ -421,7 +437,7 @@ export function getRenameOverrideSetting(
 
   if (ns.type === SETTINGS_TYPES.FILE && os.type === SETTINGS_TYPES.FILE) {
     // This should not happen
-    debugLog("getRenameOverrideSetting: Both file type setting", np, op);
+    debugLog("getRenameOverrideSetting - both file type setting", np, op);
     return { settingPath: "", setting: settings.attachPath };
   }
 
@@ -454,7 +470,11 @@ export function getRenameOverrideSetting(
  * @param oldPath old path of the renamed file
  * @returns
  */
-export function updateOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile, oldPath: string) {
+export function updateOverrideSetting(
+  settings: AttachmentManagementPluginSettings,
+  file: TAbstractFile,
+  oldPath: string
+) {
   const keys = Object.keys(settings.overridePath);
   if (keys.length === 0 || file.path === oldPath) {
     return;
