@@ -5,7 +5,7 @@ import {
   DEFAULT_SETTINGS,
   SETTINGS_TYPES,
   SettingTab,
-} from "./settings";
+} from "./settings/settings";
 import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
@@ -32,9 +32,10 @@ import {
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
-} from "./constant";
-import { OverrideModal } from "./override";
-import { path } from "./path";
+} from "./lib/constant";
+import { OverrideModal } from "./model/override";
+import { path } from "./lib/path";
+import { deduplicateNewName } from "./deduplicate";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -387,14 +388,19 @@ export default class AttachmentManagementPlugin extends Plugin {
     debugLog("processAttach - active file path", activeFile.path);
 
     const { parentPath, parentName } = getParentFolder(activeFile);
+    
     debugLog("processAttach - parent path:", parentPath);
 
-    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
-    const attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
+    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting),
+      attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
+
+    const attachPathFile = (await this.app.vault.getAbstractFileByPath(attachPath)) as TFolder;
+    const { name } = await deduplicateNewName(attachName, attachPathFile);
+    debugLog("renameFile - deduplicateName:", name);
 
     debugLog("processAttach - new path of file:", path.join(attachPath, attachName));
 
-    await this.renameFile(file, attachPath, attachName, activeFile.path, ext, true);
+    await this.renameFile(file, attachPath, name, activeFile.path, ext, true);
   }
 
   /**

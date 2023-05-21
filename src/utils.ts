@@ -1,13 +1,13 @@
 import { App, TAbstractFile, TFile, TFolder } from "obsidian";
-import { LinkMatch, getAllLinkMatchesInFile } from "./linkDetector";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings";
+import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
-} from "./constant";
-import { path } from "./path";
+} from "./lib/constant";
+import { path } from "./lib/path";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name

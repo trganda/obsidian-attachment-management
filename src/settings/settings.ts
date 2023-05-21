@@ -1,5 +1,5 @@
 import { App, PluginSettingTab, Setting } from "obsidian";
-import AttachmentManagementPlugin from "./main";
+import AttachmentManagementPlugin from "../main";
 import {
   SETTINGS_ROOT_OBSFOLDER,
   SETTINGS_VARIABLES_NOTEPATH,
@@ -8,8 +8,8 @@ import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
-} from "./constant";
-import { debugLog } from "./utils";
+} from "../lib/constant";
+import { debugLog } from "../utils";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
