@@ -12,6 +12,8 @@ This plugin currently supports:
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
 - [ ] ~~Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)~~
 - [ ] Processing duplicate attachment
+	- [x] Processing duplicate attachment on craete (the first time, you paste or drop a attach in notes)
+	- [ ] Processing duplicate attachment on rename
 - [x] Override attachment configuration for specified notes or folder
 
 ## How to install
