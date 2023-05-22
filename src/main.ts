@@ -287,8 +287,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // old note path and name
     const oldNotePath = path.dirname(oldPath);
-    const oldNoteExtension = path.extname(oldPath);
-    const oldNoteName = path.basename(oldPath, oldNoteExtension);
+    const oldNoteName = path.basename(oldPath, path.extname(oldPath));
     // parent of oldNotePath
     const oldNoteParent = path.basename(path.dirname(oldPath));
 
@@ -304,70 +303,104 @@ export default class AttachmentManagementPlugin extends Plugin {
     debugLog("onRename - new attachment path:", newAttachPath);
 
     // if the old attachment folder does not exist, skip
+    // this will happen when we have already rename the attachment file or folder in previous rename event
     const exitsAttachPath = await this.app.vault.adapter.exists(oldAttachPath);
     if (!exitsAttachPath) {
       debugLog("onRename - attachment path does not exist:", oldAttachPath);
       return;
     }
 
+    let oldName = "";
+    let newName = "";
+    if (
+      eventType === RENAME_EVENT_TYPE_FILE &&
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.FILE || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
+    ) {
+      oldName = oldNoteName;
+      newName = rf.basename;
+    }
+
     // rename attachment folder first
+    await this.renameFolder(oldAttachPath, newAttachPath, oldName, newName, attachRenameType);
+
+    // rename attachment filename as needed
+    if (
+      eventType === RENAME_EVENT_TYPE_FILE &&
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.FILE || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
+    ) {
+      // suppose the attachment folder already renamed
+      await this.renameFiles(oldAttachPath, newAttachPath, false, oldName, newName);
+    }
+  }
+
+  async renameFolder(
+    oldAttachPath: string,
+    newAttachPath: string,
+    oldName: string,
+    newName: string,
+    attachRenameType: ATTACHMENT_RENAME_TYPE
+  ) {
     const { stripedSrc, stripedDst } = stripPaths(oldAttachPath, newAttachPath);
 
     debugLog("onRename - striped source:", stripedSrc);
     debugLog("onRename - striped destination:", stripedDst);
+
     if (stripedSrc === stripedDst) {
       debugLog("onRename - same striped path");
     }
 
     if (
       stripedSrc !== stripedDst &&
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.FOLDER ||
-        attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
     ) {
       const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
-        // if the target folder exists in the vault, ignore it.
-        debugLog("onRename - target folder exists:", stripedDst);
-        new Notice(`Target folder already exists ${stripedDst}`);
+        debugLog("renameFolder - target folder exists:", newAttachPath);
+        await this.renameFiles(oldAttachPath, newAttachPath, true, oldName, newName);
         return;
       } else {
-        const src = this.app.vault.getAbstractFileByPath(stripedSrc);
+        const src = this.app.vault.getAbstractFileByPath(oldAttachPath);
         if (src === null) {
-          debugLog("onRename - source file not exists:", stripedSrc);
+          debugLog("renameFolder - source file not exists:", oldAttachPath);
           return;
         }
-        await this.app.fileManager.renameFile(src, stripedDst);
+        await this.app.fileManager.renameFile(src, newAttachPath);
       }
     }
+  }
 
-    // rename attachment filename as needed
-    if (
-      eventType === RENAME_EVENT_TYPE_FILE &&
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.FILE ||
-        attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
-    ) {
-      // suppose the attachment folder already renamed
-      // rename all attachment files that the filename content the ${notename} in attachment path
-      const attachmentFiles: ListedFiles = await this.app.vault.adapter.list(newAttachPath);
-      for (const filePath of attachmentFiles.files) {
-        debugLog("onRename - listing file:", filePath);
-        let fileName = path.basename(filePath);
-        const fileExtension = path.extname(fileName);
-        if (
-          (this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) ||
-          !isImage(fileExtension)
-        ) {
-          debugLog("onRename - no handle extension:", fileExtension);
-          continue;
-        }
-        fileName = fileName.replace(oldNoteName, rf.basename);
+  async renameFiles(srcPath: string, dstPath: string, exists: boolean, oldName: string, newName: string) {
+    let attachmentFiles: ListedFiles;
+    if (exists) {
+      attachmentFiles = await this.app.vault.adapter.list(srcPath);
+    } else {
+      attachmentFiles = await this.app.vault.adapter.list(dstPath);
+    }
 
-        const newFilePath = normalizePath(path.join(newAttachPath, fileName));
-        debugLog("onRename - new file path:", newFilePath);
-        const src = this.app.vault.getAbstractFileByPath(filePath);
-        if (src === null) continue;
-        await this.app.fileManager.renameFile(src, newFilePath);
+    // rename all attachment files that the filename content the ${notename} in attachment path
+    for (const filePath of attachmentFiles.files) {
+      let fileName = path.basename(filePath);
+      const fileExtension = path.extname(fileName);
+      if (
+        (this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) ||
+        !isImage(fileExtension)
+      ) {
+        debugLog("renameFiles - no handle extension:", fileExtension);
+        continue;
       }
+
+      fileName = fileName.replace(oldName, newName);
+
+      const dstFolder = this.app.vault.getAbstractFileByPath(dstPath) as TFolder,
+        { name } = await deduplicateNewName(fileName, dstFolder),
+        newFilePath = normalizePath(path.join(dstPath, name)),
+        src = this.app.vault.getAbstractFileByPath(filePath);
+
+      debugLog("renameFiles - new file path:", newFilePath);
+      if (src === null) {
+        continue;
+      }
+      await this.app.fileManager.renameFile(src, newFilePath);
     }
   }
 
@@ -388,19 +421,24 @@ export default class AttachmentManagementPlugin extends Plugin {
     debugLog("processAttach - active file path", activeFile.path);
 
     const { parentPath, parentName } = getParentFolder(activeFile);
-    
+
     debugLog("processAttach - parent path:", parentPath);
 
     const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting),
       attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
 
-    const attachPathFile = (await this.app.vault.getAbstractFileByPath(attachPath)) as TFolder;
+    // Make sure the path was created
+    if (!(await this.app.vault.adapter.exists(attachPath))) {
+      await this.app.vault.adapter.mkdir(attachPath);
+    }
+
+    const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
     const { name } = await deduplicateNewName(attachName, attachPathFile);
     debugLog("renameFile - deduplicateName:", name);
 
     debugLog("processAttach - new path of file:", path.join(attachPath, attachName));
 
-    await this.renameFile(file, attachPath, name, activeFile.path, ext, true);
+    await this.renameCreateFile(file, attachPath, name, activeFile.path, ext, true);
   }
 
   /**
@@ -413,7 +451,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param updateLink - whether to replace the link of renamed file
    * @returns - none
    */
-  async renameFile(
+  async renameCreateFile(
     file: TFile,
     attachPath: string,
     attachName: string,
@@ -421,11 +459,6 @@ export default class AttachmentManagementPlugin extends Plugin {
     extension: string,
     updateLink?: boolean
   ) {
-    // Make sure the path was created
-    if (!(await this.app.vault.adapter.exists(attachPath))) {
-      await this.app.vault.adapter.mkdir(attachPath);
-    }
-
     debugLog("renameFile - src of rename:", file.path);
 
     const dst = normalizePath(path.join(attachPath, attachName));
