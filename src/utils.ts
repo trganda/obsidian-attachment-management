@@ -11,13 +11,13 @@ import { path } from "./lib/path";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
-  ATTACHMENT_RENAME_TYPE_BOTH = "BOTH",
+  BOTH = "BOTH",
   // need to rename the attachment folder
-  ATTACHMENT_RENAME_TYPE_FOLDER = "FOLDER",
+  FOLDER = "FOLDER",
   // need to rename the attachment file name
-  ATTACHMENT_RENAME_TYPE_FILE = "FILE",
+  FILE = "FILE",
   // no need to rename
-  ATTACHMENT_RENAME_TYPE_NULL = "NULL",
+  NULL = "NULL",
 }
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
@@ -271,7 +271,7 @@ export function pathIsAnImage(path: string) {
 }
 
 export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
-  let ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL;
+  let ret = ATTACHMENT_RENAME_TYPE.NULL;
 
   if (
     setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) ||
@@ -282,16 +282,16 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
       setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
       setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
     ) {
-      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH;
+      ret = ATTACHMENT_RENAME_TYPE.BOTH;
     } else {
-      ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE;
+      ret = ATTACHMENT_RENAME_TYPE.FILE;
     }
   } else if (
     setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
     setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
     setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
   ) {
-    ret = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER;
+    ret = ATTACHMENT_RENAME_TYPE.FOLDER;
   }
 
   return ret;

@@ -165,7 +165,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
 
         const type = attachRenameType(setting);
-        if (type === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL) {
+        if (type === ATTACHMENT_RENAME_TYPE.NULL) {
           debugLog("rename - no variable use, skipped");
           return;
         }
@@ -192,7 +192,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           await this.onRename(file, oldPath, eventType, type, setting);
         } else if (file instanceof TFolder) {
           // ignore rename event of folder
-          debugLog("rename - ignore rename folder event:", file.name, oldPath);
+          // debugLog("rename - ignore rename folder event:", file.name, oldPath);
           return;
         }
       })
@@ -280,23 +280,23 @@ export default class AttachmentManagementPlugin extends Plugin {
     file: TAbstractFile,
     oldPath: string,
     eventType: RenameEventType,
-    attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL,
+    attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
     setting: AttachmentPathSettings
   ) {
     const rf = file as TFile;
 
-    // generate old note path and name
+    // old note path and name
     const oldNotePath = path.dirname(oldPath);
     const oldNoteExtension = path.extname(oldPath);
     const oldNoteName = path.basename(oldPath, oldNoteExtension);
-    //generate parent of oldNotePath, last of the oldNotePath
+    // parent of oldNotePath
     const oldNoteParent = path.basename(path.dirname(oldPath));
 
     debugLog("onRename - old note path:", oldNotePath);
     debugLog("onRename - old note name:", oldNoteName);
 
     const { parentPath, parentName } = getParentFolder(rf);
-    // generate old attachment path
+    // old attachment path
     const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, oldNoteParent, setting);
     const newAttachPath = this.getAttachmentPath(rf.basename, parentPath, parentName, setting);
 
@@ -321,8 +321,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     if (
       stripedSrc !== stripedDst &&
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FOLDER ||
-        attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.FOLDER ||
+        attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
     ) {
       const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
@@ -343,8 +343,8 @@ export default class AttachmentManagementPlugin extends Plugin {
     // rename attachment filename as needed
     if (
       eventType === RENAME_EVENT_TYPE_FILE &&
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_FILE ||
-        attachRenameType === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_BOTH)
+      (attachRenameType === ATTACHMENT_RENAME_TYPE.FILE ||
+        attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
     ) {
       // suppose the attachment folder already renamed
       // rename all attachment files that the filename content the ${notename} in attachment path
