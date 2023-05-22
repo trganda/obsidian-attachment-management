@@ -151,7 +151,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         const { setting } = getRenameOverrideSetting(this.settings, file, oldPath);
 
-        debugLog("rename - before settings:", setting);
+        debugLog("rename - using settings:", setting);
         if (setting.type === SETTINGS_TYPES.FOLDER || setting.type === SETTINGS_TYPES.FILE) {
           updateOverrideSetting(this.settings, file, oldPath);
           await this.saveSettings();
