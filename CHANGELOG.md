@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.4.0](https://github.com/trganda/obsidian-attachment-management/compare/0.3.5...0.4.0) (2023-05-23)
+
+
+### Features
+
+* merge deplciate folder on rename ([a75cddb](https://github.com/trganda/obsidian-attachment-management/commit/a75cddb9a975b5cd6a2a922ba57017ab9c01240e))
+* support deplciate of folder ([ae7e71e](https://github.com/trganda/obsidian-attachment-management/commit/ae7e71e1de7f23023e91ab02bb161f25e32cd3ab))
+
+
+### Bug Fixes
+
+* add tag name to action release ([b8f2d80](https://github.com/trganda/obsidian-attachment-management/commit/b8f2d80364171eb5d0d7861602980400db710afa))
+
 ### [0.3.5](https://github.com/trganda/obsidian-attachment-management/compare/0.3.4...0.3.5) (2023-05-20)
 
 
