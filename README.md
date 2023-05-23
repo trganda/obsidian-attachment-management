@@ -11,9 +11,9 @@ This plugin currently supports:
 - [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
 - [ ] ~~Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)~~
-- [ ] Processing duplicate attachment
+- [x] Processing duplicate attachment
 	- [x] Processing duplicate attachment on craete (the first time, you paste or drop a attach in notes)
-	- [ ] Processing duplicate attachment on rename
+	- [x] Processing duplicate attachment on rename
 - [x] Override attachment configuration for specified notes or folder
 
 ## How to install
@@ -105,7 +105,7 @@ If you want to reset the setting of files or folder to the global setting, use t
 
 ### Known Issues
 
-- No support for processing duplicated file name right now (in develop). In backup, you could use the data variable [`x`](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/) to use Unix timestamp with millisecond as filename (it will prevent duplicated filename).
+- ~~No support for processing duplicated file name right now (in develop). In backup, you could use the data variable [`x`](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/) to use Unix timestamp with millisecond as filename (it will prevent duplicated filename).~~
 - When drop a file in `canvas`, it's will delay to show the updated link/filename.
 
 ![Screen Recording](./images/canvas_drop_delay.gif)
