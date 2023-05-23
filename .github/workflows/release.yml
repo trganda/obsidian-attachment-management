@@ -20,9 +20,11 @@ jobs:
         with:
           node-version: 18
 
-      # - name: Get Tag
-      #   run: |
-      #     echo "ACTION_TAG=$(git tag --sort version:refname | tail -n 1)" >> "$GITHUB_ENV"
+      - name: Build Changelog
+        id: release_changelog
+        uses: mikepenz/release-changelog-builder-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         id: build
@@ -39,3 +41,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: "main.js,manifest.json,${{ env.PLUGIN_NAME }}-${{ github.ref_name }}.zip"
+          body: ${{ steps.release_changelog.outputs.changelog }}
