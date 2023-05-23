@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.4.1](https://github.com/trganda/obsidian-attachment-management/compare/0.4.0...0.4.1) (2023-05-23)
+
+
+### Bug Fixes
+
+* Exclude extension pattern is not working ([64d554f](https://github.com/trganda/obsidian-attachment-management/commit/64d554f60e959998eccfd63f64ff1526241a682c))
+
 ## [0.4.0](https://github.com/trganda/obsidian-attachment-management/compare/0.3.5...0.4.0) (2023-05-23)
 
 
