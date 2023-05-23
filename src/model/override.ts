@@ -1,5 +1,5 @@
 import { Modal, TFile, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
-import { debugLog } from "../utils";
+import { debugLog } from "src/log";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPES } from "../settings/settings";
 import {
   SETTINGS_ROOT_OBSFOLDER,

@@ -9,7 +9,6 @@ import {
 import {
   ATTACHMENT_RENAME_TYPE,
   attachRenameType,
-  debugLog,
   getOverrideSetting,
   getParentFolder,
   getRenameOverrideSetting,
@@ -22,6 +21,7 @@ import {
   testExcludeExtension,
   updateOverrideSetting,
 } from "./utils";
+import { debugLog } from "./log";
 import {
   RENAME_EVENT_TYPE_FILE,
   RENAME_EVENT_TYPE_FOLDER,
@@ -304,10 +304,13 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // if the old attachment folder does not exist, skip
     // this will happen when we have already rename the attachment file or folder in previous rename event
-    const exitsAttachPath = await this.app.vault.adapter.exists(oldAttachPath);
-    if (!exitsAttachPath) {
+    if (!(await this.app.vault.adapter.exists(oldAttachPath))) {
       debugLog("onRename - attachment path does not exist:", oldAttachPath);
       return;
+    }
+
+    if (!(await this.app.vault.adapter.exists(newAttachPath))) {
+      await this.app.vault.adapter.mkdir(newAttachPath);
     }
 
     let oldName = "";
@@ -355,8 +358,14 @@ export default class AttachmentManagementPlugin extends Plugin {
     ) {
       const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
-        debugLog("renameFolder - target folder exists:", newAttachPath);
+        debugLog("renameFolder - target folder exists:", stripedDst);
+        // move the files in oldAttachPath to newAttachPath
         await this.renameFiles(oldAttachPath, newAttachPath, true, oldName, newName);
+        // rm the old folder if it's empty
+        const old = await this.app.vault.adapter.list(oldAttachPath);
+        if (old.files.length === 0 && old.folders.length === 0) {
+          await this.app.vault.adapter.rmdir(oldAttachPath, false);
+        }
         return;
       } else {
         const src = this.app.vault.getAbstractFileByPath(oldAttachPath);
@@ -376,6 +385,8 @@ export default class AttachmentManagementPlugin extends Plugin {
     } else {
       attachmentFiles = await this.app.vault.adapter.list(dstPath);
     }
+
+    debugLog("renameFiles - attachmentFiles:", attachmentFiles);
 
     // rename all attachment files that the filename content the ${notename} in attachment path
     for (const filePath of attachmentFiles.files) {
@@ -416,7 +427,6 @@ export default class AttachmentManagementPlugin extends Plugin {
       return;
     }
     const { setting } = getOverrideSetting(this.settings, activeFile);
-    const ext = activeFile.extension;
 
     debugLog("processAttach - active file path", activeFile.path);
 
@@ -427,18 +437,17 @@ export default class AttachmentManagementPlugin extends Plugin {
     const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting),
       attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
 
-    // Make sure the path was created
+    // make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath))) {
       await this.app.vault.adapter.mkdir(attachPath);
     }
 
     const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
     const { name } = await deduplicateNewName(attachName, attachPathFile);
-    debugLog("renameFile - deduplicateName:", name);
 
-    debugLog("processAttach - new path of file:", path.join(attachPath, attachName));
+    debugLog("processAttach - new path of file:", path.join(attachPath, name));
 
-    await this.renameCreateFile(file, attachPath, name, activeFile.path, ext, true);
+    await this.renameCreateFile(file, attachPath, name, activeFile, true);
   }
 
   /**
@@ -446,8 +455,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param file - file to rename
    * @param attachPath - where to the renamed file will be move to
    * @param attachName - name of the renamed file
-   * @param sourcePath - path of the associated active file
-   * @param extension - extension of associated active file
+   * @param activeFile - associated active file
    * @param updateLink - whether to replace the link of renamed file
    * @returns - none
    */
@@ -455,8 +463,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     file: TFile,
     attachPath: string,
     attachName: string,
-    sourcePath: string,
-    extension: string,
+    activeFile: TFile,
     updateLink?: boolean
   ) {
     debugLog("renameFile - src of rename:", file.path);
@@ -465,7 +472,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     debugLog("renameFile - dst of rename:", dst);
 
-    const oldLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath);
+    const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
     const oldPath = file.path;
     const oldName = file.name;
 
@@ -484,17 +491,17 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // in case fileManager.renameFile may not update the internal link in the active file,
     // we manually replace the current line by manipulating the editor
-    const newLinkText = this.app.fileManager.generateMarkdownLink(file, sourcePath);
+    const newLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
     debugLog("renameFile - replace text:", oldLinkText, newLinkText);
 
     const view = this.getActiveView();
     if (view === null) {
-      new Notice(`Failed to update link in ${sourcePath}: no active view`);
+      new Notice(`Failed to update link in ${activeFile.path}: no active view`);
       return;
     }
     const content = view.getViewData();
     let val = "";
-    switch (extension) {
+    switch (activeFile.extension) {
       case "md":
         val = content.replace(oldLinkText, newLinkText);
         break;
@@ -504,7 +511,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     }
 
     view.setViewData(val, false);
-    new Notice(`Updated 1 link in ${sourcePath}`);
+    new Notice(`Updated 1 link in ${activeFile.path}`);
   }
 
   /**

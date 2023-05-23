@@ -8,6 +8,7 @@ import {
   SETTINGS_VARIABLES_NOTEPARENT,
 } from "./lib/constant";
 import { path } from "./lib/path";
+import { debugLog } from "./log";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -23,15 +24,6 @@ export enum ATTACHMENT_RENAME_TYPE {
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
 const bannerRegex = /!\[\[(.*?)\]\]/i;
-
-export const DEBUG = !(process.env.BUILD_ENV === "production");
-if (DEBUG) console.log("DEBUG is enabled");
-
-export function debugLog(...args: unknown[]) {
-  if (DEBUG) {
-    console.log(new Date().toISOString().slice(11, 23), ...args);
-  }
-}
 
 export const blobToArrayBuffer = (blob: Blob) => {
   return new Promise((resolve) => {

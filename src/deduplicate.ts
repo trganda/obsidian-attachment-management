@@ -1,5 +1,5 @@
 import { TFile, TFolder } from "obsidian";
-import { debugLog } from "./utils";
+import { debugLog } from "./log";
 import { path } from "./lib/path";
 
 export interface NameObj {

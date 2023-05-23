@@ -9,7 +9,7 @@ import {
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
 } from "../lib/constant";
-import { debugLog } from "../utils";
+import { debugLog } from "src/log";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
