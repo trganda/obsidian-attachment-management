@@ -31,7 +31,7 @@ import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_NOTEPARENT,
+  SETTINGS_VARIABLES_NOTEPARENT, SETTINGS_VARIABLES_ORIGINALNAME, KEY_ORIGINAL_NAME_RENAMING
 } from "./lib/constant";
 import { OverrideModal } from "./model/override";
 import { path } from "./lib/path";
@@ -296,8 +296,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     const { parentPath, parentName } = getParentFolder(rf);
     // old attachment path
-    const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, oldNoteParent, setting);
-    const newAttachPath = this.getAttachmentPath(rf.basename, parentPath, parentName, setting);
+    const oldAttachPath = this.getAttachmentPath(oldNoteName, oldNotePath, oldNoteParent, oldNoteName, setting);
+    const newAttachPath = this.getAttachmentPath(rf.basename, parentPath, parentName, oldNoteName, setting);
 
     debugLog("onRename - old attachment path:", oldAttachPath);
     debugLog("onRename - new attachment path:", newAttachPath);
@@ -433,10 +433,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     const { parentPath, parentName } = getParentFolder(activeFile);
 
     debugLog("processAttach - parent path:", parentPath);
-
-    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting),
-      attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
-
+    
+    const attachName = this.getPastedImageFileName(activeFile.basename, file.basename, setting) + "." + file.extension;
+    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, attachName, setting);
+    
     // make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath))) {
       await this.app.vault.adapter.mkdir(attachPath);
@@ -467,9 +467,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     updateLink?: boolean
   ) {
     debugLog("renameFile - src of rename:", file.path);
-
-    const dst = normalizePath(path.join(attachPath, attachName));
-
+    const dst = normalizePath(path.join(attachPath, attachName.replace(KEY_ORIGINAL_NAME_RENAMING, "")));
     debugLog("renameFile - dst of rename:", dst);
 
     const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
@@ -479,9 +477,9 @@ export default class AttachmentManagementPlugin extends Plugin {
     try {
       // this api will not update the link automatically on `create` event
       await this.app.fileManager.renameFile(file, dst);
-      new Notice(`Renamed ${oldName} to ${attachName}`);
+      new Notice(`Renamed ${oldName} to ${attachName.replace(KEY_ORIGINAL_NAME_RENAMING, "")}.`);
     } catch (err) {
-      new Notice(`Failed to rename ${file.path} to ${dst}`);
+      new Notice(`Failed to rename ${file.path} to ${dst.replace(KEY_ORIGINAL_NAME_RENAMING, "")}`);
       throw err;
     }
 
@@ -537,15 +535,18 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param notePath - path of note
    * @param setting
    * @param parentFolderBasename
+   * @param oldName - original name of attachment file
    * @returns attachment path
    */
   getAttachmentPath(
     noteName: string,
     notePath: string,
     parentFolderBasename: string,
+    oldName: string,
     setting: AttachmentPathSettings = this.settings.attachPath
   ): string {
     const root = this.getRootPath(notePath, setting);
+    
 
     const attachPath = path.join(
       root,
@@ -598,14 +599,16 @@ export default class AttachmentManagementPlugin extends Plugin {
   /**
    * Generate the image file name with specified variable
    * @param noteName - basename (without extension) of note
+   * @param originalName - original name of attachment file
    * @param setting
    * @returns image file name
    */
-  getPastedImageFileName(noteName: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
+  getPastedImageFileName(noteName: string, originalName:string, setting: AttachmentPathSettings = this.settings.attachPath): string {
     const dateTime = window.moment().format(this.settings.dateFormat);
     return setting.attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
+      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
+      .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName + KEY_ORIGINAL_NAME_RENAMING);
   }
 
   backupConfigs() {

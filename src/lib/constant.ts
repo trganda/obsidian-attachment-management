@@ -7,6 +7,9 @@ export const SETTINGS_VARIABLES_DATES = "${date}";
 export const SETTINGS_VARIABLES_NOTEPATH = "${notepath}";
 export const SETTINGS_VARIABLES_NOTENAME = "${notename}";
 export const SETTINGS_VARIABLES_NOTEPARENT = "${parent}";
+export const SETTINGS_VARIABLES_ORIGINALNAME = "${originalname}";
 export const SETTINGS_ROOT_OBSFOLDER = "obsFolder";
 export const SETTINGS_ROOT_INFOLDER = "inFolderBelow";
 export const SETTINGS_ROOT_NEXTTONOTE = "nextToNote";
+
+export const KEY_ORIGINAL_NAME_RENAMING = "IMAKEYTODELETE"; //Prevent false duplicate, removed during onRename event
