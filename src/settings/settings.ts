@@ -8,6 +8,7 @@ import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
+  SETTINGS_VARIABLES_ORIGINALNAME,
 } from "../lib/constant";
 import { debugLog } from "src/log";
 
@@ -149,7 +150,7 @@ export class SettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Attachment format")
       .setDesc(
-        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
+        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
       )
       .addText((text) =>
         text

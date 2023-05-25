@@ -32,6 +32,7 @@ import {
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
+  SETTINGS_VARIABLES_ORIGINALNAME,
 } from "./lib/constant";
 import { OverrideModal } from "./model/override";
 import { path } from "./lib/path";
@@ -61,7 +62,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "override-setting",
-      name: "Override Setting",
+      name: "Overriding Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
         if (file) {
@@ -78,7 +79,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "reset-override-setting",
-      name: "Reset Override Setting",
+      name: "Reset Overrode Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
         if (file) {
@@ -97,7 +98,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       this.app.workspace.on("file-menu", (menu, file) => {
         menu.addItem((item) => {
           item
-            .setTitle("Override attachment setting")
+            .setTitle("Overriding attachment setting")
             .setIcon("image-plus")
             .onClick(async () => {
               const { setting } = getOverrideSetting(this.settings, file);
@@ -434,8 +435,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     debugLog("processAttach - parent path:", parentPath);
 
-    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting),
-      attachName = this.getPastedImageFileName(activeFile.basename, setting) + "." + file.extension;
+    const attachName = this.getPastedImageFileName(activeFile.basename, file.basename, setting) + "." + file.extension;
+    const attachPath = this.getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
 
     // make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath))) {
@@ -459,17 +460,9 @@ export default class AttachmentManagementPlugin extends Plugin {
    * @param updateLink - whether to replace the link of renamed file
    * @returns - none
    */
-  async renameCreateFile(
-    file: TFile,
-    attachPath: string,
-    attachName: string,
-    activeFile: TFile,
-    updateLink?: boolean
-  ) {
+  async renameCreateFile(file: TFile, attachPath: string, attachName: string, activeFile: TFile, updateLink?: boolean) {
     debugLog("renameFile - src of rename:", file.path);
-
     const dst = normalizePath(path.join(attachPath, attachName));
-
     debugLog("renameFile - dst of rename:", dst);
 
     const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
@@ -479,7 +472,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     try {
       // this api will not update the link automatically on `create` event
       await this.app.fileManager.renameFile(file, dst);
-      new Notice(`Renamed ${oldName} to ${attachName}`);
+      new Notice(`Renamed ${oldName} to ${attachName}.`);
     } catch (err) {
       new Notice(`Failed to rename ${file.path} to ${dst}`);
       throw err;
@@ -598,14 +591,20 @@ export default class AttachmentManagementPlugin extends Plugin {
   /**
    * Generate the image file name with specified variable
    * @param noteName - basename (without extension) of note
+   * @param originalName - original name of attachment file
    * @param setting
    * @returns image file name
    */
-  getPastedImageFileName(noteName: string, setting: AttachmentPathSettings = this.settings.attachPath): string {
+  getPastedImageFileName(
+    noteName: string,
+    originalName: string,
+    setting: AttachmentPathSettings = this.settings.attachPath
+  ): string {
     const dateTime = window.moment().format(this.settings.dateFormat);
     return setting.attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName);
+      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
+      .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
   }
 
   backupConfigs() {
