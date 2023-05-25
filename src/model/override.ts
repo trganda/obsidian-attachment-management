@@ -41,7 +41,7 @@ export class OverrideModal extends Modal {
     contentEl.empty();
 
     contentEl.createEl("h3", {
-      text: "Override Settings",
+      text: "Overriding Settings",
     });
 
     new Setting(contentEl)
