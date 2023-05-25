@@ -12,8 +12,8 @@ This plugin currently supports:
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
 - [ ] ~~Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)~~
 - [x] Processing duplicate attachment
-	- [x] Processing duplicate attachment on craete (the first time, you paste or drop a attach in notes)
-	- [x] Processing duplicate attachment on rename
+  - [x] Processing duplicate attachment on craete (the first time, you paste or drop a attach in notes)
+  - [x] Processing duplicate attachment on rename
 - [x] Override attachment configuration for specified notes or folder
 
 ## How to install
@@ -36,7 +36,8 @@ And you can use the variables below to config:
 
 - `${notepath}`: The **directory** of the `markdown` or `canvas` file under the vault root.
 - `${notename}`: The **filename** of the `markdown` or `canvas` file (without file extension).
-- `${parent}` : The **parent** folder name of the `markdown` or `canvas` file.
+- `${parent}`: The **parent** folder name of the `markdown` or `canvas` file.
+- `${originalname}`: The **filename** of the attachment file when first time it created in obsidian.
 - `${date}`: Date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
 
 ### Root Path to Save New Attachments
@@ -53,7 +54,7 @@ It can be set use the config of obsidian in `Files & Links`, or reset in this op
 
 ### Attachment Path
 
-A sub-folder to place attachment under the `{root path}`, available variables :
+A sub-folder to place attachment under the `{root path}`, available variables:
 
 - `${notepath}`: The **directory** of the `markdown` or `canvas` file under the vault root.
 - `${notename}`: The **filename** of the `markdown` or `canvas` file (without file extension).
@@ -63,7 +64,13 @@ Default value `${notepath}/${notename}`.
 
 ### Attachment Format
 
-Set how to rename the attachment, available variables `${notename}` and `${date}`, default value `IMG-{date}`.
+Set how to rename the attachment, available variables:
+
+- `${notename}`: The **filename** of the `markdown` or `canvas` file (without file extension).
+- `${originalname}`: The **filename** of the attachment file when first time it created.
+- `${date}`: Date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
+
+default value `IMG-{date}`.
 
 ### Date Format
 
