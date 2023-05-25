@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.5.0](https://github.com/trganda/obsidian-attachment-management/compare/0.4.1...0.5.0) (2023-05-25)
+
+
+### Features
+
+* add  variable ([be50df4](https://github.com/trganda/obsidian-attachment-management/commit/be50df4aa0eaa7030730988cbad750c1ce87cb16))
+* add changelog with action on release ([093b7c3](https://github.com/trganda/obsidian-attachment-management/commit/093b7c3b2058d8efa74d911832d905519327d446))
+* proposition for keeping original file name ([ffb4ac6](https://github.com/trganda/obsidian-attachment-management/commit/ffb4ac6e0a8ca6242adabce466830c87af297c0e))
+
+
+### Bug Fixes
+
+* remove unused variable ([dcf9c17](https://github.com/trganda/obsidian-attachment-management/commit/dcf9c177829a6fc7d3beb8cbae1e792d7e0a30b8))
+
 ### [0.4.1](https://github.com/trganda/obsidian-attachment-management/compare/0.4.0...0.4.1) (2023-05-23)
 
 
