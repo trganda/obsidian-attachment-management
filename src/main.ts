@@ -79,7 +79,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "reset-override-setting",
-      name: "Reset Overrode Setting",
+      name: "Reset Override Setting",
       checkCallback: (checking: boolean) => {
         const file = this.getActiveFile();
         if (file) {

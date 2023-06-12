@@ -96,10 +96,6 @@ export class SettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", {
-      text: "Settings for Attachment Management.",
-    });
-
     new Setting(containerEl)
       .setName("Root path to save new attachments")
       .setDesc("Select root path for all new attachments")
