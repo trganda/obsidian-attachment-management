@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.1](https://github.com/trganda/obsidian-attachment-management/compare/0.5.0...0.5.1) (2023-06-12)
+
+
+### Bug Fixes
+
+* typo error and redundant header of settings ([84c50c3](https://github.com/trganda/obsidian-attachment-management/commit/84c50c37d84af8b26db9f99cd1653aa13b5e6a54))
+
 ## [0.5.0](https://github.com/trganda/obsidian-attachment-management/compare/0.4.1...0.5.0) (2023-05-25)
 
 
