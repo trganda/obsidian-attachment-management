@@ -36,7 +36,7 @@ import {
 } from "./lib/constant";
 import { OverrideModal } from "./model/override";
 import { path } from "./lib/path";
-import { deduplicateNewName } from "./deduplicate";
+import { deduplicateNewName } from "./lib/deduplicate";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
