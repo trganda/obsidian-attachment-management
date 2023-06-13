@@ -68,7 +68,7 @@ export default class RenameProcessor {
     }
 
     // rename attachment folder first
-    await this.renameFolder(oldAttachPath, newAttachPath, oldName, newName, attachRenameType);
+    await this.renameFolder(oldAttachPath, newAttachPath, attachRenameType);
 
     // rename attachment filename as needed
     if (
@@ -80,25 +80,30 @@ export default class RenameProcessor {
     }
   }
 
+  /**
+   * Renames attachment folder in the app's vault, this function only move the attachment files from
+   * one place to another, not rename the filename.
+   * @param {string} oldAttachPath - the original path of the folder
+   * @param {string} newAttachPath - the new path of the folder
+   * @param {ATTACHMENT_RENAME_TYPE} attachRenameType - the type of the attachment rename
+   */
   async renameFolder(
     oldAttachPath: string,
     newAttachPath: string,
-    oldName: string,
-    newName: string,
     attachRenameType: ATTACHMENT_RENAME_TYPE
   ) {
     const { stripedSrc, stripedDst } = stripPaths(oldAttachPath, newAttachPath);
 
-    debugLog("onRename - striped source:", stripedSrc);
-    debugLog("onRename - striped destination:", stripedDst);
+    debugLog("renameFolder - striped source:", stripedSrc);
+    debugLog("renameFolder - striped destination:", stripedDst);
 
     if (stripedSrc === stripedDst) {
-      debugLog("onRename - same striped path");
+      debugLog("renameFolder - same striped path");
       return;
     }
 
     if (attachRenameType === ATTACHMENT_RENAME_TYPE.FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH) {
-      const exitsDst = await this.app.vault.adapter.exists(stripedDst);
+      const exitsDst = await this.app.vault.adapter.exists(stripedDst, true);
       if (exitsDst) {
         debugLog("renameFolder - target folder exists:", stripedDst);
         // move the files in oldAttachPath to newAttachPath
@@ -110,16 +115,26 @@ export default class RenameProcessor {
         }
         return;
       } else {
-        const src = this.app.vault.getAbstractFileByPath(oldAttachPath);
+        const src = this.app.vault.getAbstractFileByPath(stripedSrc);
         if (src === null) {
-          debugLog("renameFolder - source file not exists:", oldAttachPath);
+          debugLog("renameFolder - source file not exists:", stripedSrc);
           return;
         }
-        await this.app.fileManager.renameFile(src, newAttachPath);
+        debugLog("renameFolder - :", src.path, stripedDst);
+        await this.app.fileManager.renameFile(src, stripedDst);
       }
     }
   }
 
+  /**
+   * Renames (or move) attachment files in the dstPath (or srcPath) directories. If the exists is true, it will
+   * move the file from @param srcPath to @param dstPath.
+   * @param {string} srcPath - The source directory path.
+   * @param {string} dstPath - The destination directory path.
+   * @param {boolean} exists - Determines whether to rename (or move) files.
+   * @param {string} oldName - The old name of the notes, should be "" if the ${notename} was not used.
+   * @param {string} newName - The new name of the notes, should be "" if the ${notename} was not used.
+   */
   async renameFiles(srcPath: string, dstPath: string, exists: boolean, oldName: string, newName: string) {
     let attachmentFiles: ListedFiles;
     if (exists) {
