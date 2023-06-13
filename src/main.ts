@@ -159,6 +159,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
 
         const type = attachRenameType(setting);
+        debugLog("rename - attachRenameType:", type);
         if (type === ATTACHMENT_RENAME_TYPE.NULL) {
           debugLog("rename - no variable use, skipped");
           return;
@@ -166,7 +167,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (file instanceof TFile) {
           // if the renamed file was a attachment, skip
-          const flag = await isAttachment(this.settings, oldPath);
+          const flag = await isAttachment(this.settings, file.path);
           if (flag) {
             debugLog("rename - not processing rename on attachment:", file.path);
             return;

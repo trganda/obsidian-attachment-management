@@ -38,7 +38,7 @@ export default class RenameProcessor {
     debugLog("onRename - old note path:", oldNotePath, ", name:", oldNoteName);
 
     const { parentPath, parentName } = getParentFolder(rf);
-    // old attachment path
+
     const oldAttachPath = getAttachmentPath(oldNoteName, oldNotePath, oldNoteParent, setting);
     const newAttachPath = getAttachmentPath(rf.basename, parentPath, parentName, setting);
 
@@ -47,12 +47,13 @@ export default class RenameProcessor {
 
     // if the old attachment folder does not exist, skip
     // this will happen when we have already rename the attachment file or folder in previous rename event
-    if (!(await this.app.vault.adapter.exists(oldAttachPath))) {
+    if (!(await this.app.vault.adapter.exists(oldAttachPath, true))) {
       debugLog("onRename - attachment path does not exist:", oldAttachPath);
       return;
     }
 
-    if (!(await this.app.vault.adapter.exists(newAttachPath))) {
+    if (!(await this.app.vault.adapter.exists(newAttachPath, true))) {
+      debugLog("onRename - mkdir:", newAttachPath);
       await this.app.vault.adapter.mkdir(newAttachPath);
     }
 
@@ -93,17 +94,15 @@ export default class RenameProcessor {
 
     if (stripedSrc === stripedDst) {
       debugLog("onRename - same striped path");
+      return;
     }
 
-    if (
-      stripedSrc !== stripedDst &&
-      (attachRenameType === ATTACHMENT_RENAME_TYPE.FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
-    ) {
+    if (attachRenameType === ATTACHMENT_RENAME_TYPE.FOLDER || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH) {
       const exitsDst = await this.app.vault.adapter.exists(stripedDst);
       if (exitsDst) {
         debugLog("renameFolder - target folder exists:", stripedDst);
         // move the files in oldAttachPath to newAttachPath
-        await this.renameFiles(oldAttachPath, newAttachPath, true, oldName, newName);
+        await this.renameFiles(oldAttachPath, newAttachPath, true, "", "");
         // rm the old folder if it's empty
         const old = await this.app.vault.adapter.list(oldAttachPath);
         if (old.files.length === 0 && old.folders.length === 0) {
@@ -144,6 +143,12 @@ export default class RenameProcessor {
       }
 
       fileName = fileName.replace(oldName, newName);
+      debugLog("renameFiles - fileName:", fileName);
+
+      if (filePath === normalizePath(path.join(dstPath, fileName))) {
+        debugLog("renameFiles - same src and dst:", filePath);
+        continue
+      }
 
       const dstFolder = this.app.vault.getAbstractFileByPath(dstPath) as TFolder,
         { name } = await deduplicateNewName(fileName, dstFolder),
