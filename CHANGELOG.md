@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.2](https://github.com/trganda/obsidian-attachment-management/compare/0.5.1...0.5.2) (2023-06-13)
+
+
+### Bug Fixes
+
+* "sensitive rename not work" ([1ed0a32](https://github.com/trganda/obsidian-attachment-management/commit/1ed0a3250879fc6b13e026c3753be65072596e8e))
+* multi-suffix when  rename note file ([3559725](https://github.com/trganda/obsidian-attachment-management/commit/35597251f46237d032c3fffef9686f5bc71bb0bb))
+
 ### [0.5.1](https://github.com/trganda/obsidian-attachment-management/compare/0.5.0...0.5.1) (2023-06-12)
 
 
