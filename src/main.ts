@@ -1,4 +1,4 @@
-import { ListedFiles, normalizePath, Notice, Plugin, TAbstractFile, TextFileView, TFile, TFolder } from "obsidian";
+import { Notice, Plugin, TAbstractFile, TFile, TFolder } from "obsidian";
 import {
   AttachmentManagementPluginSettings,
   AttachmentPathSettings,
@@ -22,21 +22,9 @@ import {
   updateOverrideSetting,
 } from "./utils";
 import { debugLog } from "./log";
-import {
-  RENAME_EVENT_TYPE_FILE,
-  RENAME_EVENT_TYPE_FOLDER,
-  RenameEventType,
-  SETTINGS_ROOT_INFOLDER,
-  SETTINGS_ROOT_NEXTTONOTE,
-  SETTINGS_VARIABLES_DATES,
-  SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_NOTEPARENT,
-  SETTINGS_VARIABLES_ORIGINALNAME,
-} from "./lib/constant";
+import { RENAME_EVENT_TYPE_FILE, RENAME_EVENT_TYPE_FOLDER, RenameEventType } from "./lib/constant";
 import { OverrideModal } from "./model/override";
 import { path } from "./lib/path";
-import { deduplicateNewName } from "./lib/deduplicate";
 import CreateProcessor from "./create";
 import RenameProcessor from "./rename";
 import { getActiveFile } from "./commons";
