@@ -266,8 +266,7 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
   let ret = ATTACHMENT_RENAME_TYPE.NULL;
 
   if (
-    setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) ||
-    setting.attachFormat.includes(SETTINGS_VARIABLES_DATES)
+    setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)
   ) {
     if (
       setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
