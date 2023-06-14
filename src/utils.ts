@@ -148,7 +148,7 @@ export async function getAttachmentsInVaultByLinks(
     for (const [mdFile, links] of Object.entries(resolvedLinks)) {
       const attachmentsSet: Set<string> = new Set();
       for (const [filePath, nr] of Object.entries(links)) {
-        if (await isAttachment(settings, filePath)) {
+        if (isAttachment(settings, filePath)) {
           addToSet(attachmentsSet, filePath);
         }
       }
@@ -174,7 +174,7 @@ export async function getAttachmentsInVaultByLinks(
             if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
               const fileName = frontmatter[k].match(bannerRegex)[1];
               const file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-              if (file && (await isAttachment(settings, file.path))) {
+              if (file && (isAttachment(settings, file.path))) {
                 addToSet(attachmentsSet, file.path);
               }
             }
@@ -184,7 +184,7 @@ export async function getAttachmentsInVaultByLinks(
       // Any Additional Link
       const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
       for (const linkMatch of linkMatches) {
-        if (await isAttachment(settings, linkMatch.linkText)) {
+        if (isAttachment(settings, linkMatch.linkText)) {
           addToSet(attachmentsSet, linkMatch.linkText);
         }
       }
@@ -197,13 +197,13 @@ export async function getAttachmentsInVaultByLinks(
         for (const node of canvasData.nodes) {
           // node.type: 'text' | 'file'
           if (node.type === "file") {
-            if (await isAttachment(settings, node.file)) {
+            if (isAttachment(settings, node.file)) {
               addToSet(attachmentsSet, node.file);
             }
           } else if (node.type == "text") {
             const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
             for (const linkMatch of linkMatches) {
-              if (await isAttachment(settings, linkMatch.linkText)) {
+              if (isAttachment(settings, linkMatch.linkText)) {
                 addToSet(attachmentsSet, linkMatch.linkText);
               }
             }
@@ -222,8 +222,14 @@ export async function getAttachmentsInVaultByLinks(
  * @param filePath file path
  * @returns true if the file is an attachment, false otherwise
  */
-export async function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string): Promise<boolean> {
-  const file = this.app.vault.getAbstractFileByPath(filePath);
+export function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string | TAbstractFile): boolean {
+  let file = null;
+  if (filePath instanceof TAbstractFile) {
+    file = filePath;
+  } else {
+    file = this.app.vault.getAbstractFileByPath(filePath);
+  }
+
   if (file === null || !(file instanceof TFile)) {
     return false;
   }

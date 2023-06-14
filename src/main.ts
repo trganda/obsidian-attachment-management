@@ -57,6 +57,9 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
+          if ((isAttachment(this.settings, file))) {
+            return true;
+          }
           if (!checking) {
             const { setting } = getOverrideSetting(this.settings, file);
             const fileSetting = Object.assign({}, setting);
@@ -74,6 +77,9 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
+          if ((isAttachment(this.settings, file))) {
+            return true;
+          }
           if (!checking) {
             delete this.settings.overridePath[file.path];
             this.saveSettings();
@@ -86,7 +92,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     });
 
     this.registerEvent(
-      this.app.workspace.on("file-menu", (menu, file) => {
+      this.app.workspace.on("file-menu", async (menu, file) => {
+        if ((isAttachment(this.settings, file))) {
+          return;
+        }
         menu.addItem((item) => {
           item
             .setTitle("Overriding attachment setting")
@@ -167,7 +176,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (file instanceof TFile) {
           // if the renamed file was a attachment, skip
-          const flag = await isAttachment(this.settings, file.path);
+          const flag = isAttachment(this.settings, file);
           if (flag) {
             debugLog("rename - not processing rename on attachment:", file.path);
             return;
@@ -193,6 +202,12 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
       })
     );
+
+    this.registerEvent(
+      this.app.vault.on("delete", async (file: TAbstractFile) => {
+        debugLog("on delete event - file path:", file.path);
+      })
+    )
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SettingTab(this.app, this));
