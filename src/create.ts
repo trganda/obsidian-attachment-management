@@ -42,8 +42,9 @@ export default class CreateProcessor {
     const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
 
     // make sure the path was created
-    if (!(await this.app.vault.adapter.exists(attachPath))) {
+    if (!(await this.app.vault.adapter.exists(attachPath, true))) {
       await this.app.vault.adapter.mkdir(attachPath);
+      debugLog("processAttach - create path:", attachPath);
     }
 
     const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
