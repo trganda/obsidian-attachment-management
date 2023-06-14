@@ -2,9 +2,10 @@ import { App, Notice, TFile, TFolder, TextFileView, normalizePath } from "obsidi
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
-import { getOverrideSetting, getParentFolder } from "./utils";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { getActiveFile, getActiveView, getAttachmentPath, getPastedImageFileName } from "./commons";
+import { getOverrideSetting } from "./override";
+import { getParentFolder } from "./utils";
 
 export default class CreateProcessor {
   readonly app: App;
@@ -38,7 +39,10 @@ export default class CreateProcessor {
 
     debugLog("processAttach - parent path:", parentPath);
 
-    const attachName = getPastedImageFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) + "." + file.extension;
+    const attachName =
+      getPastedImageFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) +
+      "." +
+      file.extension;
     const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
 
     // make sure the path was created

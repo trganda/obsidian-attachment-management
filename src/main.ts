@@ -6,21 +6,6 @@ import {
   SETTINGS_TYPES,
   SettingTab,
 } from "./settings/settings";
-import {
-  ATTACHMENT_RENAME_TYPE,
-  attachRenameType,
-  getOverrideSetting,
-  getParentFolder,
-  getRenameOverrideSetting,
-  isAttachment,
-  isCanvasFile,
-  isImage,
-  isMarkdownFile,
-  isPastedImage,
-  stripPaths,
-  testExcludeExtension,
-  updateOverrideSetting,
-} from "./utils";
 import { debugLog } from "./log";
 import { RENAME_EVENT_TYPE_FILE, RENAME_EVENT_TYPE_FOLDER, RenameEventType } from "./lib/constant";
 import { OverrideModal } from "./model/override";
@@ -28,6 +13,17 @@ import { path } from "./lib/path";
 import CreateProcessor from "./create";
 import RenameProcessor from "./rename";
 import { getActiveFile } from "./commons";
+import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
+import {
+  isAttachment,
+  isMarkdownFile,
+  isCanvasFile,
+  isImage,
+  isPastedImage,
+  testExcludeExtension,
+  attachRenameType,
+  ATTACHMENT_RENAME_TYPE,
+} from "./utils";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -57,7 +53,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
-          if ((isAttachment(this.settings, file))) {
+          if (isAttachment(this.settings, file)) {
             return true;
           }
           if (!checking) {
@@ -77,7 +73,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
-          if ((isAttachment(this.settings, file))) {
+          if (isAttachment(this.settings, file)) {
             return true;
           }
           if (!checking) {
@@ -93,7 +89,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.registerEvent(
       this.app.workspace.on("file-menu", async (menu, file) => {
-        if ((isAttachment(this.settings, file))) {
+        if (isAttachment(this.settings, file)) {
           return;
         }
         menu.addItem((item) => {
@@ -206,8 +202,11 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("delete", async (file: TAbstractFile) => {
         debugLog("on delete event - file path:", file.path);
+        if (deleteOverrideSetting(this.settings, file)) {
+          new Notice("Removed override setting of " + file.path);
+        }
       })
-    )
+    );
 
     // This adds a settings tab so the user can configure various aspects of the plugin
     this.addSettingTab(new SettingTab(this.app, this));

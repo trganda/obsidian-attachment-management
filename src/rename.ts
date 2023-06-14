@@ -87,11 +87,7 @@ export default class RenameProcessor {
    * @param {string} newAttachPath - the new path of the folder
    * @param {ATTACHMENT_RENAME_TYPE} attachRenameType - the type of the attachment rename
    */
-  async renameFolder(
-    oldAttachPath: string,
-    newAttachPath: string,
-    attachRenameType: ATTACHMENT_RENAME_TYPE
-  ) {
+  async renameFolder(oldAttachPath: string, newAttachPath: string, attachRenameType: ATTACHMENT_RENAME_TYPE) {
     const { stripedSrc, stripedDst } = stripPaths(oldAttachPath, newAttachPath);
 
     debugLog("renameFolder - striped source:", stripedSrc);
@@ -162,7 +158,7 @@ export default class RenameProcessor {
 
       if (filePath === normalizePath(path.join(dstPath, fileName))) {
         debugLog("renameFiles - same src and dst:", filePath);
-        continue
+        continue;
       }
 
       const dstFolder = this.app.vault.getAbstractFileByPath(dstPath) as TFolder,
