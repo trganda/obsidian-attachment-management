@@ -187,7 +187,6 @@ export function deleteOverrideSetting(settings: AttachmentManagementPluginSettin
     if (file.path === key) {
       delete settings.overridePath[key];
       return true;
-      break;
     }
   }
   return false;
