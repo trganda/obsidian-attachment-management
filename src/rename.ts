@@ -7,7 +7,7 @@ import { debugLog } from "./log";
 import { ATTACHMENT_RENAME_TYPE, getParentFolder, stripPaths, testExcludeExtension, isImage } from "./utils";
 import { getAttachmentPath } from "./commons";
 
-export default class RenameProcessor {
+export class RenameHandler {
   readonly app: App;
   readonly settings: AttachmentManagementPluginSettings;
 

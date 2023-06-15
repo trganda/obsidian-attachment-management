@@ -7,7 +7,7 @@ import { getActiveFile, getActiveView, getAttachmentPath, getPastedImageFileName
 import { getOverrideSetting } from "./override";
 import { getParentFolder } from "./utils";
 
-export default class CreateProcessor {
+export class CreateHandler {
   readonly app: App;
   readonly settings: AttachmentManagementPluginSettings;
 

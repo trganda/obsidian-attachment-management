@@ -1,14 +1,10 @@
-import { App, TAbstractFile, TFile, TFolder } from "obsidian";
-import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
+import { TAbstractFile, TFile } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings/settings";
 import {
-  SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
 } from "./lib/constant";
-import { path } from "./lib/path";
-import { debugLog } from "./log";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -23,7 +19,6 @@ export enum ATTACHMENT_RENAME_TYPE {
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
-const bannerRegex = /!\[\[(.*?)\]\]/i;
 
 export const blobToArrayBuffer = (blob: Blob) => {
   return new Promise((resolve) => {
@@ -111,111 +106,6 @@ export function testExcludeExtension(extension: string, pattern: string): boolea
   return new RegExp(pattern).test(extension);
 }
 
-export async function getAttachmentsInVault(
-  settings: AttachmentManagementPluginSettings,
-  app: App,
-  type: "all" | "links"
-): Promise<Record<string, Set<string>>> {
-  let attachmentsRecord: Record<string, Set<string>> = {};
-
-  // if (type === "links") {
-  attachmentsRecord = await getAttachmentsInVaultByLinks(settings, app);
-  // } else {
-  //   let allFiles = app.vault.getFiles();
-  //   let attachments: TFile[] = [];
-
-  //   for (let i = 0; i < allFiles.length; i++) {
-  //     if (!["md", "canvas"].includes(allFiles[i].extension)) {
-  //       continue;
-  //     }
-  //     if (type === "all") {
-  //       attachments.push(allFiles[i]);
-  // 			addToSet(attachmentsSet, allFiles[i].path);
-  //     }
-  //   }
-  // }
-  return attachmentsRecord;
-}
-
-// refer https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
-export async function getAttachmentsInVaultByLinks(
-  settings: AttachmentManagementPluginSettings,
-  app: App
-): Promise<Record<string, Set<string>>> {
-  const attachmentsRecord: Record<string, Set<string>> = {};
-  const resolvedLinks = app.metadataCache.resolvedLinks;
-  if (resolvedLinks) {
-    for (const [mdFile, links] of Object.entries(resolvedLinks)) {
-      const attachmentsSet: Set<string> = new Set();
-      for (const [filePath, nr] of Object.entries(links)) {
-        if (isAttachment(settings, filePath)) {
-          addToSet(attachmentsSet, filePath);
-        }
-      }
-      addToRecord(attachmentsRecord, mdFile, attachmentsSet);
-    }
-  }
-  // Loop Files and Check Frontmatter/Canvas
-  const allFiles = app.vault.getFiles();
-  for (let i = 0; i < allFiles.length; i++) {
-    const obsFile = allFiles[i];
-    const attachmentsSet: Set<string> = new Set();
-    // Check Frontmatter for md files and additional links that might be missed in resolved links
-    if (isMarkdownFile(obsFile.extension)) {
-      // Frontmatter
-      const fileCache = app.metadataCache.getFileCache(obsFile);
-      if (fileCache === null) {
-        continue;
-      }
-      if (fileCache.frontmatter) {
-        const frontmatter = fileCache.frontmatter;
-        for (const k of Object.keys(frontmatter)) {
-          if (typeof frontmatter[k] === "string") {
-            if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
-              const fileName = frontmatter[k].match(bannerRegex)[1];
-              const file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-              if (file && isAttachment(settings, file.path)) {
-                addToSet(attachmentsSet, file.path);
-              }
-            }
-          }
-        }
-      }
-      // Any Additional Link
-      const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
-      for (const linkMatch of linkMatches) {
-        if (isAttachment(settings, linkMatch.linkText)) {
-          addToSet(attachmentsSet, linkMatch.linkText);
-        }
-      }
-    } else if (isCanvasFile(obsFile.extension)) {
-      // check canvas for links
-      const fileRead = await app.vault.cachedRead(obsFile);
-      const canvasData = JSON.parse(fileRead);
-      // debugLog("canvasData", canvasData);
-      if (canvasData.nodes && canvasData.nodes.length > 0) {
-        for (const node of canvasData.nodes) {
-          // node.type: 'text' | 'file'
-          if (node.type === "file") {
-            if (isAttachment(settings, node.file)) {
-              addToSet(attachmentsSet, node.file);
-            }
-          } else if (node.type == "text") {
-            const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
-            for (const linkMatch of linkMatches) {
-              if (isAttachment(settings, linkMatch.linkText)) {
-                addToSet(attachmentsSet, linkMatch.linkText);
-              }
-            }
-          }
-        }
-      }
-    }
-    addToRecord(attachmentsRecord, obsFile.path, attachmentsSet);
-  }
-  return attachmentsRecord;
-}
-
 /**
  * Check whether the file is an attachment
  * @param settings plugins configuration
@@ -244,30 +134,16 @@ export function isAttachment(settings: AttachmentManagementPluginSettings, fileP
   );
 }
 
-export function addToRecord(record: Record<string, Set<string>>, key: string, value: Set<string>) {
-  if (record[key] === undefined) {
-    record[key] = value;
-    return;
-  }
-  const valueSet = record[key];
-
-  for (const val of value) {
-    addToSet(valueSet, val);
-  }
-
-  record[key] = valueSet;
-}
-
-export function addToSet(setObj: Set<string>, value: string) {
-  if (!setObj.has(value)) {
-    setObj.add(value);
-  }
-}
-
 export function pathIsAnImage(path: string) {
   return path.match(imageRegex);
 }
 
+/**
+ * Returns the attachment rename type based on the given attachment path settings.
+ *
+ * @param {AttachmentPathSettings} setting - The attachment path settings to examine.
+ * @return {ATTACHMENT_RENAME_TYPE} - The attachment rename type based on the given attachment path settings.
+ */
 export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
   let ret = ATTACHMENT_RENAME_TYPE.NULL;
 
@@ -291,38 +167,6 @@ export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RE
 
   return ret;
 }
-
-// export function needToRename(settings: AttachmentPathSettings, attachPath: string, attachName: string, noteName: string, link: string): boolean {
-//   const linkPath = path.posix.dirname(link);
-//   const linkName = path.posix.basename(link, path.posix.extname(link));
-
-//   if (linkName.length !== attachName.length) {
-//     return true;
-//   }
-
-//   if (attachPath !== linkPath) {
-//     return true;
-//   } else {
-//     if (settings.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME) && !linkName.includes(noteName)) {
-//       return true;
-//     }
-//     // suppose the ${notename} was in format
-//     const noNoteNameAttachFormat = settings.attachFormat.split(SETTINGS_VARIABLES_NOTENAME);
-//     if (settings.attachFormat.includes(SETTINGS_VARIABLES_DATES)) {
-//       for (const formatPart in noNoteNameAttachFormat) {
-//         // suppose the ${date} was in format, split each part and search in linkName
-//         const splited = formatPart.split(SETTINGS_VARIABLES_DATES);
-//         for (const part in splited) {
-//           if (!linkName.includes(part)) {
-//             return true;
-//           }
-//         }
-//       }
-//     }
-//   }
-
-//   return false;
-// }
 
 export function getParentFolder(rf: TFile) {
   const parent = rf.parent;
