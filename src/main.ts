@@ -39,14 +39,8 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.addCommand({
       id: "attachment-management-rearrange-links",
       name: "Rearrange Linked Attachments",
-      callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links");},
+      callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links"); new Notice("Arrange completed");},
     });
-
-    // this.addCommand({
-    //   id: "obsidian-attachment-rearrange-all",
-    //   name: "Rearrange All Attachments",
-    //   callback: () => this.rearrangeAttachment("all"),
-    // });
 
     this.addCommand({
       id: "override-setting",

@@ -23,9 +23,11 @@ class Metadata {
   /** extension of file */
   extension: string;
 
-  parentPath: string = "/";
+  /** parent path of file */
+  parentPath: string = "";
 
-  parentName: string = "/";
+  /** parent path basename of file */
+  parentName: string = "";
 
   constructor(path: string, name: string, basename: string, extension: string, parentPath: string, parentName: string) {
     this.path = path;
@@ -36,6 +38,15 @@ class Metadata {
     this.parentName = parentName;
   }
 
+  /**
+   * Returns a formatted attachment file name according to the provided settings.
+   *
+   * @param {AttachmentPathSettings} setting - attachment path settings object
+   * @param {string} dateFormat - format string for date and time
+   * @param {string} originalName - name of the original attachment
+   * @param {string} [linkName] - optional name for the attachment link
+   * @return {string} the formatted attachment file name
+   */
   getAttachFileName(setting: AttachmentPathSettings, dateFormat: string, originalName: string, linkName?: string) {
     const dateTime = window.moment().format(dateFormat);
     // we have no persistence of original name,  return current linking name
@@ -48,6 +59,12 @@ class Metadata {
       .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
   }
 
+  /**
+   * Returns the attachment path based on the given AttachmentPathSettings object.
+   *
+   * @param {AttachmentPathSettings} setting - An object containing the attachment path settings.
+   * @return {string} The normalized attachment path.
+   */
   getAttachmentPath(setting: AttachmentPathSettings): string {
     const root = getRootPath(this.parentPath, setting);
 
@@ -62,6 +79,12 @@ class Metadata {
   }
 }
 
+/**
+ * Returns a new instance of Metadata for the given file path.
+ *
+ * @param {string} file - The full path to the file.
+ * @return {Metadata} A new instance of Metadata containing information about the file.
+ */
 export function getMetadata(file: string): Metadata {
   const parentPath = path.dirname(file);
   const parentName = path.basename(parentPath);

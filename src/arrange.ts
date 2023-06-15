@@ -9,7 +9,6 @@ import {
   isCanvasFile,
   isMarkdownFile,
   pathIsAnImage,
-  getParentFolder,
 } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
@@ -105,22 +104,7 @@ export class ArrangeHandler {
   ): Promise<Record<string, Set<string>>> {
     let attachmentsRecord: Record<string, Set<string>> = {};
 
-    // if (type === "links") {
     attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, app);
-    // } else {
-    //   let allFiles = app.vault.getFiles();
-    //   let attachments: TFile[] = [];
-
-    //   for (let i = 0; i < allFiles.length; i++) {
-    //     if (!["md", "canvas"].includes(allFiles[i].extension)) {
-    //       continue;
-    //     }
-    //     if (type === "all") {
-    //       attachments.push(allFiles[i]);
-    // 			addToSet(attachmentsSet, allFiles[i].path);
-    //     }
-    //   }
-    // }
     return attachmentsRecord;
   }
 
