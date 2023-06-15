@@ -6,28 +6,25 @@ import {
   SETTINGS_TYPES,
   SettingTab,
 } from "./settings/settings";
-import {
-  ATTACHMENT_RENAME_TYPE,
-  attachRenameType,
-  getOverrideSetting,
-  getParentFolder,
-  getRenameOverrideSetting,
-  isAttachment,
-  isCanvasFile,
-  isImage,
-  isMarkdownFile,
-  isPastedImage,
-  stripPaths,
-  testExcludeExtension,
-  updateOverrideSetting,
-} from "./utils";
 import { debugLog } from "./log";
 import { RENAME_EVENT_TYPE_FILE, RENAME_EVENT_TYPE_FOLDER, RenameEventType } from "./lib/constant";
 import { OverrideModal } from "./model/override";
 import { path } from "./lib/path";
-import CreateProcessor from "./create";
-import RenameProcessor from "./rename";
 import { getActiveFile } from "./commons";
+import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
+import {
+  isAttachment,
+  isMarkdownFile,
+  isCanvasFile,
+  isImage,
+  isPastedImage,
+  testExcludeExtension,
+  attachRenameType,
+  ATTACHMENT_RENAME_TYPE,
+} from "./utils";
+import { ArrangeHandler } from "./arrange";
+import { CreateHandler } from "./create";
+import { RenameHandler } from "./rename";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -39,17 +36,11 @@ export default class AttachmentManagementPlugin extends Plugin {
     console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
     // this.backupConfigs();
 
-    // this.addCommand({
-    //   id: "attachment-management-rearrange-links",
-    //   name: "Rearrange Linked Attachments",
-    //   callback: () => this.rearrangeAttachment("links"),
-    // });
-
-    // this.addCommand({
-    //   id: "obsidian-attachment-rearrange-all",
-    //   name: "Rearrange All Attachments",
-    //   callback: () => this.rearrangeAttachment("all"),
-    // });
+    this.addCommand({
+      id: "attachment-management-rearrange-links",
+      name: "Rearrange Linked Attachments",
+      callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links"); new Notice("Arrange completed");},
+    });
 
     this.addCommand({
       id: "override-setting",
@@ -57,6 +48,9 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
+          if (isAttachment(this.settings, file)) {
+            return true;
+          }
           if (!checking) {
             const { setting } = getOverrideSetting(this.settings, file);
             const fileSetting = Object.assign({}, setting);
@@ -74,6 +68,9 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
+          if (isAttachment(this.settings, file)) {
+            return true;
+          }
           if (!checking) {
             delete this.settings.overridePath[file.path];
             this.saveSettings();
@@ -86,7 +83,10 @@ export default class AttachmentManagementPlugin extends Plugin {
     });
 
     this.registerEvent(
-      this.app.workspace.on("file-menu", (menu, file) => {
+      this.app.workspace.on("file-menu", async (menu, file) => {
+        if (isAttachment(this.settings, file)) {
+          return;
+        }
         menu.addItem((item) => {
           item
             .setTitle("Overriding attachment setting")
@@ -121,7 +121,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             return;
           }
 
-          const processor = new CreateProcessor(this.app, this.settings);
+          const processor = new CreateHandler(this.app, this.settings);
           if (isImage(file.extension) || isPastedImage(file)) {
             processor.processAttach(file);
           } else {
@@ -167,7 +167,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         if (file instanceof TFile) {
           // if the renamed file was a attachment, skip
-          const flag = await isAttachment(this.settings, file.path);
+          const flag = isAttachment(this.settings, file);
           if (flag) {
             debugLog("rename - not processing rename on attachment:", file.path);
             return;
@@ -184,12 +184,21 @@ export default class AttachmentManagementPlugin extends Plugin {
             debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FILE);
           }
 
-          const processor = new RenameProcessor(this.app, this.settings);
+          const processor = new RenameHandler(this.app, this.settings);
           await processor.onRename(file, oldPath, eventType, type, setting);
         } else if (file instanceof TFolder) {
           // ignore rename event of folder
           // debugLog("rename - ignore rename folder event:", file.name, oldPath);
           return;
+        }
+      })
+    );
+
+    this.registerEvent(
+      this.app.vault.on("delete", async (file: TAbstractFile) => {
+        debugLog("on delete event - file path:", file.path);
+        if (deleteOverrideSetting(this.settings, file)) {
+          new Notice("Removed override setting of " + file.path);
         }
       })
     );
@@ -202,75 +211,6 @@ export default class AttachmentManagementPlugin extends Plugin {
     new OverrideModal(this, file, setting).open();
     await this.loadSettings();
   }
-
-  // async rearrangeAttachment(type: "all" | "links") {
-  //   debugLog("On Rearrange Command");
-
-  //   if (!this.settings.autoRenameAttachment) {
-  //     debugLog("No Variable Use, Skip");
-  //     return;
-  //   }
-
-  //   // only rearrange attachment that linked by markdown or canvas
-  //   const attachments = await getAttachmentsInVault(this.settings, this.app, type);
-  //   debugLog("Attachments:", Object.keys(attachments).length, Object.entries(attachments));
-  //   for (const obsFile of Object.keys(attachments)) {
-  //     const innerFile = this.app.vault.getAbstractFileByPath(obsFile);
-  //     if (innerFile === null) {
-  //       debugLog(`${obsFile} not exists, skipped`);
-  //       continue;
-  //     }
-  //     const { setting } = getOverrideSetting(this.settings, innerFile);
-
-  //     const type = attachRenameType(setting);
-  //     if (type === ATTACHMENT_RENAME_TYPE.ATTACHMENT_RENAME_TYPE_NULL) {
-  //       debugLog("No variable use, skipped");
-  //       return;
-  //     }
-
-  //     for (let link of attachments[obsFile]) {
-  //       try {
-  //         link = decodeURI(link);
-  //       } catch (err) {
-  //         // new Notice(`Invalid link: ${link}, err: ${err}`);
-  //         console.log(`Invalid link: ${link}, err: ${err}`);
-  //         continue;
-  //       }
-  //       debugLog(`Article: ${obsFile} Links: ${link}`);
-  //       const noteExt = path.posix.extname(obsFile);
-  //       const noteName = path.posix.basename(obsFile, noteExt);
-  //       const notePath = path.posix.dirname(obsFile);
-
-  //       const attachPath = this.getAttachmentPath(noteName, notePath, setting);
-  //       const attachName = this.getPastedImageFileName(noteName, setting);
-  //       const dest = path.posix.join(attachPath, attachName + path.posix.extname(link));
-
-  //       // check if the link was already satisfy the attachment name config
-  //       if (!needToRename(setting, attachPath, attachName, noteName, link)) {
-  //         debugLog("No need to rename:", link);
-  //         continue;
-  //       }
-  //       const linkFile = this.app.vault.getAbstractFileByPath(link);
-  //       if (linkFile === null) {
-  //         debugLog(`${link} not exists, skipped`);
-  //         continue;
-  //       }
-
-  //       if (!(await this.app.vault.adapter.exists(attachPath))) {
-  //         this.app.vault.adapter.mkdir(attachPath);
-  //       }
-
-  //       // TODO: check if the file already exists
-  //       if (await this.app.vault.adapter.exists(dest)) {
-  //         new Notice(`${dest} already exists, skipped`);
-  //         console.log(`${dest} already exists, skipped`);
-  //         continue;
-  //       }
-
-  //       await this.app.fileManager.renameFile(linkFile, dest);
-  //     }
-  //   }
-  // }
 
   backupConfigs() {
     //@ts-ignore

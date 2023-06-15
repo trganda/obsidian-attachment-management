@@ -2,11 +2,12 @@ import { App, Notice, TFile, TFolder, TextFileView, normalizePath } from "obsidi
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
-import { getOverrideSetting, getParentFolder } from "./utils";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings/settings";
-import { getActiveFile, getActiveView, getAttachmentPath, getPastedImageFileName } from "./commons";
+import { getActiveFile, getActiveView } from "./commons";
+import { getOverrideSetting } from "./override";
+import { getMetadata } from "./metadata";
 
-export default class CreateProcessor {
+export class CreateHandler {
   readonly app: App;
   readonly settings: AttachmentManagementPluginSettings;
 
@@ -34,16 +35,21 @@ export default class CreateProcessor {
 
     debugLog("processAttach - active file path", activeFile.path);
 
-    const { parentPath, parentName } = getParentFolder(activeFile);
+    const metadata = getMetadata(activeFile.path);
+    debugLog("processAttach - metadata:", metadata);
 
-    debugLog("processAttach - parent path:", parentPath);
-
-    const attachName = getPastedImageFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) + "." + file.extension;
-    const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
+    // const attachName =
+    //   getAttachFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) +
+    //   "." +
+    //   file.extension;
+    // const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
+    const attachPath = metadata.getAttachmentPath(setting);
+    const attachName = metadata.getAttachFileName(setting, this.settings.dateFormat, file.basename) + "." + file.extension;
 
     // make sure the path was created
-    if (!(await this.app.vault.adapter.exists(attachPath))) {
+    if (!(await this.app.vault.adapter.exists(attachPath, true))) {
       await this.app.vault.adapter.mkdir(attachPath);
+      debugLog("processAttach - create path:", attachPath);
     }
 
     const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
