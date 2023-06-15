@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.5.3](https://github.com/trganda/obsidian-attachment-management/compare/0.5.2...0.5.3) (2023-06-15)
+
+
+### Features
+
+* "hide menu item of override for attachment" ([f274289](https://github.com/trganda/obsidian-attachment-management/commit/f274289cbe16b1fe30baddf8ade432a592ce60ed))
+* arrange all ([fa35399](https://github.com/trganda/obsidian-attachment-management/commit/fa353996050fd94355903933d5ba3626aa36b6f0))
+
+
+### Bug Fixes
+
+* "exists on case sensitive" ([fc23545](https://github.com/trganda/obsidian-attachment-management/commit/fc23545bcb9a498e21f87bce80652d7bded66dbc))
+* keep file name if used ([3f6f669](https://github.com/trganda/obsidian-attachment-management/commit/3f6f669b126f19c1c140ee319aa1fdb0b9b85582))
+
 ### [0.5.2](https://github.com/trganda/obsidian-attachment-management/compare/0.5.1...0.5.2) (2023-06-13)
 
 
