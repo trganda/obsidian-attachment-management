@@ -1,4 +1,4 @@
-import { App, Notice, TFile, TFolder } from "obsidian";
+import { App, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { getOverrideSetting } from "./override";
@@ -14,8 +14,8 @@ import {
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_ORIGINALNAME } from "./lib/constant";
-import { getAttachmentPath, getAttachFileName } from "./commons";
 import { deduplicateNewName } from "./lib/deduplicate";
+import { getMetadata } from "./metadata";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -59,6 +59,9 @@ export class ArrangeHandler {
         return;
       }
 
+      const metadata = getMetadata(obNote);
+      const attachPath = metadata.getAttachmentPath(setting);
+
       for (let link of attachments[obNote]) {
         try {
           link = decodeURI(link);
@@ -73,15 +76,10 @@ export class ArrangeHandler {
           continue;
         }
 
-        const noteExt = path.extname(obNote);
-        const noteName = path.basename(obNote, noteExt);
-        const { parentPath, parentName } = getParentFolder(innerFile);
-
-        const attachPath = getAttachmentPath(noteName, parentPath, parentName, setting);
-        let attachName = getAttachFileName(noteName, "", setting, this.settings.dateFormat, path.basename(link));
+        const attachName = metadata.getAttachFileName(setting, this.settings.dateFormat, "", path.basename(link, path.extname(link)));
         // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);
         // check if the link was already satisfy the attachment name config
-        if (!this.needToRename(setting, attachPath, attachName, noteName, link)) {
+        if (!this.needToRename(setting, attachPath, attachName, metadata.basename, link)) {
           debugLog("rearrangeAttachment - no need to rename:", link);
           continue;
         }

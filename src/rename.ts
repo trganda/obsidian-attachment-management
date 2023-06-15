@@ -4,8 +4,8 @@ import { RenameEventType, RENAME_EVENT_TYPE_FILE } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
-import { ATTACHMENT_RENAME_TYPE, getParentFolder, stripPaths, testExcludeExtension, isImage } from "./utils";
-import { getAttachmentPath } from "./commons";
+import { ATTACHMENT_RENAME_TYPE, stripPaths, testExcludeExtension, isImage } from "./utils";
+import { getMetadata } from "./metadata";
 
 export class RenameHandler {
   readonly app: App;
@@ -29,18 +29,14 @@ export class RenameHandler {
   ) {
     const rf = file as TFile;
 
-    // old note path and name
-    const oldNotePath = path.dirname(oldPath);
-    const oldNoteName = path.basename(oldPath, path.extname(oldPath));
-    // parent of oldNotePath
-    const oldNoteParent = path.basename(path.dirname(oldPath));
+    const oldMetadata = getMetadata(oldPath);
+    const newMetadata = getMetadata(file.path);
 
-    debugLog("onRename - old note path:", oldNotePath, ", name:", oldNoteName);
+    debugLog("onRename - old metadata:", oldMetadata);
+    debugLog("onRename - new metadata:", newMetadata);
 
-    const { parentPath, parentName } = getParentFolder(rf);
-
-    const oldAttachPath = getAttachmentPath(oldNoteName, oldNotePath, oldNoteParent, setting);
-    const newAttachPath = getAttachmentPath(rf.basename, parentPath, parentName, setting);
+    const oldAttachPath = oldMetadata.getAttachmentPath(setting);
+    const newAttachPath = newMetadata.getAttachmentPath(setting);
 
     debugLog("onRename - old attachment path:", oldAttachPath);
     debugLog("onRename - new attachment path:", newAttachPath);
@@ -63,7 +59,7 @@ export class RenameHandler {
       eventType === RENAME_EVENT_TYPE_FILE &&
       (attachRenameType === ATTACHMENT_RENAME_TYPE.FILE || attachRenameType === ATTACHMENT_RENAME_TYPE.BOTH)
     ) {
-      oldName = oldNoteName;
+      oldName = oldMetadata.basename;
       newName = rf.basename;
     }
 

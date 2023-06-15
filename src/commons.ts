@@ -1,13 +1,5 @@
 import { App, TFile, TextFileView, normalizePath } from "obsidian";
-import {
-  SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_NOTEPARENT,
-  SETTINGS_ROOT_INFOLDER,
-  SETTINGS_ROOT_NEXTTONOTE,
-  SETTINGS_VARIABLES_DATES,
-  SETTINGS_VARIABLES_ORIGINALNAME,
-} from "./lib/constant";
+import { SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE } from "./lib/constant";
 import { path } from "./lib/path";
 import { AttachmentPathSettings } from "./settings/settings";
 
@@ -26,32 +18,6 @@ export function getActiveFile(app: App): TFile | undefined {
  */
 export function getActiveView(app: App): TextFileView | null {
   return app.workspace.getActiveViewOfType(TextFileView);
-}
-
-/**
- * Generate the attachment path with specified variables
- * @param noteName - basename (without extension) of note
- * @param notePath - path of note
- * @param setting
- * @param parentFolderBasename
- * @returns attachment path
- */
-export function getAttachmentPath(
-  noteName: string,
-  notePath: string,
-  parentFolderBasename: string,
-  setting: AttachmentPathSettings
-): string {
-  const root = getRootPath(notePath, setting);
-
-  const attachPath = path.join(
-    root,
-    setting.attachmentPath
-      .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, notePath)
-      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
-      .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, parentFolderBasename)
-  );
-  return normalizePath(attachPath);
 }
 
 /**
@@ -90,22 +56,4 @@ export function getRootPath(notePath: string, setting: AttachmentPathSettings): 
   }
 
   return root === "/" ? root : normalizePath(root);
-}
-
-/**
- * Generate the image file name with specified variable
- * @param noteName - basename (without extension) of note
- * @param originalName - original name of attachment file
- * @param setting
- * @returns image file name
- */
-export function getAttachFileName(noteName: string, originalName: string, setting: AttachmentPathSettings, dateFormat: string, linkName?: string): string {
-  const dateTime = window.moment().format(dateFormat);
-  if (originalName === "" && linkName != undefined) {
-    return linkName;
-  }
-  return setting.attachFormat
-    .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-    .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
-    .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
 }

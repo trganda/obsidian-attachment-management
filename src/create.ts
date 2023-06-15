@@ -3,9 +3,9 @@ import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings/settings";
-import { getActiveFile, getActiveView, getAttachmentPath, getAttachFileName } from "./commons";
+import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";
-import { getParentFolder } from "./utils";
+import { getMetadata } from "./metadata";
 
 export class CreateHandler {
   readonly app: App;
@@ -35,15 +35,16 @@ export class CreateHandler {
 
     debugLog("processAttach - active file path", activeFile.path);
 
-    const { parentPath, parentName } = getParentFolder(activeFile);
+    const metadata = getMetadata(activeFile.path);
+    debugLog("processAttach - metadata:", metadata);
 
-    debugLog("processAttach - parent path:", parentPath);
-
-    const attachName =
-      getAttachFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) +
-      "." +
-      file.extension;
-    const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
+    // const attachName =
+    //   getAttachFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) +
+    //   "." +
+    //   file.extension;
+    // const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
+    const attachPath = metadata.getAttachmentPath(setting);
+    const attachName = metadata.getAttachFileName(setting, this.settings.dateFormat, file.basename) + "." + file.extension;
 
     // make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath, true))) {
