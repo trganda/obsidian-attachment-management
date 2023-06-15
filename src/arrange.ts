@@ -13,8 +13,8 @@ import {
 } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
-import { getAttachmentPath, getPastedImageFileName } from "./commons";
+import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_ORIGINALNAME } from "./lib/constant";
+import { getAttachmentPath, getAttachFileName } from "./commons";
 import { deduplicateNewName } from "./lib/deduplicate";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
@@ -67,22 +67,22 @@ export class ArrangeHandler {
           continue;
         }
         debugLog(`rearrangeAttachment - article: ${obNote} links: ${link}`);
+        const linkFile = this.app.vault.getAbstractFileByPath(link);
+        if (linkFile === null) {
+          debugLog(`${link} not exists, skipped`);
+          continue;
+        }
+
         const noteExt = path.extname(obNote);
         const noteName = path.basename(obNote, noteExt);
         const { parentPath, parentName } = getParentFolder(innerFile);
 
         const attachPath = getAttachmentPath(noteName, parentPath, parentName, setting);
-        const attachName = getPastedImageFileName(noteName, "", setting, this.settings.dateFormat);
+        let attachName = getAttachFileName(noteName, "", setting, this.settings.dateFormat, path.basename(link));
         // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);
         // check if the link was already satisfy the attachment name config
         if (!this.needToRename(setting, attachPath, attachName, noteName, link)) {
           debugLog("rearrangeAttachment - no need to rename:", link);
-          continue;
-        }
-
-        const linkFile = this.app.vault.getAbstractFileByPath(link);
-        if (linkFile === null) {
-          debugLog(`${link} not exists, skipped`);
           continue;
         }
 

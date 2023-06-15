@@ -3,7 +3,7 @@ import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings/settings";
-import { getActiveFile, getActiveView, getAttachmentPath, getPastedImageFileName } from "./commons";
+import { getActiveFile, getActiveView, getAttachmentPath, getAttachFileName } from "./commons";
 import { getOverrideSetting } from "./override";
 import { getParentFolder } from "./utils";
 
@@ -40,7 +40,7 @@ export class CreateHandler {
     debugLog("processAttach - parent path:", parentPath);
 
     const attachName =
-      getPastedImageFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) +
+      getAttachFileName(activeFile.basename, file.basename, setting, this.settings.dateFormat) +
       "." +
       file.extension;
     const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);

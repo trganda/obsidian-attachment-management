@@ -99,8 +99,11 @@ export function getRootPath(notePath: string, setting: AttachmentPathSettings): 
  * @param setting
  * @returns image file name
  */
-export function getPastedImageFileName(noteName: string, originalName: string, setting: AttachmentPathSettings, dateFormat: string): string {
+export function getAttachFileName(noteName: string, originalName: string, setting: AttachmentPathSettings, dateFormat: string, linkName?: string): string {
   const dateTime = window.moment().format(dateFormat);
+  if (originalName === "" && linkName != undefined) {
+    return linkName;
+  }
   return setting.attachFormat
     .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
     .replace(`${SETTINGS_VARIABLES_NOTENAME}`, noteName)
