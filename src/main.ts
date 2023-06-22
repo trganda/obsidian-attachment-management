@@ -38,13 +38,13 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-rearrange-links",
-      name: "Rearrange Linked Attachments",
+      name: "Rearrange linked attachments",
       callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links"); new Notice("Arrange completed");},
     });
 
     this.addCommand({
       id: "override-setting",
-      name: "Overriding Setting",
+      name: "Overriding setting",
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
@@ -64,7 +64,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "reset-override-setting",
-      name: "Reset Override Setting",
+      name: "Reset override setting",
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
