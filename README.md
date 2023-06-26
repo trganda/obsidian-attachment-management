@@ -40,6 +40,8 @@ And you can use the variables below to config:
 - `${originalname}`: The **filename** of the attachment file when first time it created in obsidian.
 - `${date}`: Date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
 
+> **Notice** before using `${originalname}`, there is soemthing you should know. This plugin will **not persist** the original name, it only use the filename to generate the attachment name on create event (first time added to obsidian). This means if you have used `${originalname}`, when you rearrange the attachemnt, there is no new name generated for the attachment, it just used the current name (i.e. change `Attachment format` from `asset-${originalname}` to `asset-1-${originalname}`, and use rearrange command, it's useless).
+
 ### Root Path to Save New Attachments
 
 You must select a root folder to save the associated attachment of a `markdown` or `canvas` file.
@@ -98,7 +100,7 @@ This plugin supports a command `Rearrange linked attachments/Rearrange all linke
 
 ![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
-**Notice** The `Rearrange linked attachments/Rearrange all linked attachments` was currently a experimental feature, if you want to try out, it's better to back up your files at first.
+**Notice**: The `Rearrange linked attachments/Rearrange all linked attachments` was currently a experimental feature, if you want to try out, it's better to back up your files at first.
 
 ### Overriding Setting
 
