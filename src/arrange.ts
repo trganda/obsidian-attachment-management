@@ -15,6 +15,7 @@ import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./se
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_ORIGINALNAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./metadata";
+import { getActiveFile } from "./commons";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -31,23 +32,23 @@ export class ArrangeHandler {
    * Rearranges attachments that are linked by markdown or canvas.
    * Only rearranges attachments if autoRenameAttachment is enabled in settings.
    *
-   * @param {"all" | "links"} type - specifies whether to rearrange all attachments or
+   * @param {"active" | "links"} type - specifies whether to rearrange the active file attachments or
    * only those that are linked by markdown or canvas.
    * @return {void} nothing is returned
    */
-  async rearrangeAttachment(type: "all" | "links") {
+  async rearrangeAttachment(type: "active" | "links") {
     if (!this.settings.autoRenameAttachment) {
       debugLog("rearrangeAttachment - autoRenameAttachment not enable");
       return;
     }
 
     // only rearrange attachment that linked by markdown or canvas
-    const attachments = await this.getAttachmentsInVault(this.settings, this.app, type);
+    const attachments = await this.getAttachmentsInVault(this.settings, type);
     debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
     for (const obNote of Object.keys(attachments)) {
       const innerFile = this.app.vault.getAbstractFileByPath(obNote);
       if (!(innerFile instanceof TFile) || isAttachment(this.settings, innerFile)) {
-        debugLog(`rearrangeAttachment - ${obNote} not exists, skipped`);
+        debugLog(`rearrangeAttachment - ${obNote} not exists or is attachment, skipped`);
         continue;
       }
       const { setting } = getOverrideSetting(this.settings, innerFile);
@@ -75,7 +76,12 @@ export class ArrangeHandler {
           continue;
         }
 
-        const attachName = metadata.getAttachFileName(setting, this.settings.dateFormat, "", path.basename(link, path.extname(link)));
+        const attachName = metadata.getAttachFileName(
+          setting,
+          this.settings.dateFormat,
+          "",
+          path.basename(link, path.extname(link))
+        );
         // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);
         // check if the link was already satisfy the attachment name config
         if (!this.needToRename(setting, attachPath, attachName, metadata.basename, link)) {
@@ -97,32 +103,55 @@ export class ArrangeHandler {
     }
   }
 
+  /**
+   * Retrieves the attachments in the specified vault of the given type.
+   *
+   * @param {AttachmentManagementPluginSettings} settings - the settings for the attachment management plugin
+   * @param {"active" | "links"} type - the type of attachments to retrieve, either "active" or "links"
+   * @return {Promise<Record<string, Set<string>>>} Returns a promise that resolves to a record containing sets of attachment names for each item ID in the specified vault.
+   */
   async getAttachmentsInVault(
     settings: AttachmentManagementPluginSettings,
-    app: App,
-    type: "all" | "links"
+    type: "active" | "links"
   ): Promise<Record<string, Set<string>>> {
     let attachmentsRecord: Record<string, Set<string>> = {};
 
-    attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, app);
+    attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, type);
+
     return attachmentsRecord;
   }
 
   /**
    * Modified from https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
-   * Returns a record of all attachments in the vault that are referenced in the vault's markdown or canvas files.
-   * This includes both attachments that are directly linked with markdown syntax or frontmatter.
+   * Retrieves a record of attachments in the vault based on the given settings and type.
    *
-   * @param {AttachmentManagementPluginSettings} settings - the settings for the plugin.
-   * @param {App} app - the App object representing the current Obsidian instance.
-   * @return {Promise<Record<string, Set<string>>>} A Promise that resolves to a record where the keys are the paths of the markdown/canvas files in the vault and the values are sets of attachment paths that are referenced in the markdown/canvas files.
+   * @param {AttachmentManagementPluginSettings} settings - The settings object used to filter attachments.
+   * @param {"active" | "links"} type - The type of attachments to retrieve. Can be "active" or "links".
+   * @return {Promise<Record<string, Set<string>>>} A record of attachments where the keys are the file paths and the values are sets of attachment paths.
    */
   async getAttachmentsInVaultByLinks(
     settings: AttachmentManagementPluginSettings,
-    app: App
+    type: "active" | "links"
   ): Promise<Record<string, Set<string>>> {
     const attachmentsRecord: Record<string, Set<string>> = {};
-    const resolvedLinks = app.metadataCache.resolvedLinks;
+    let resolvedLinks: Record<string, Record<string, number>> = {};
+    let allFiles: TFile[] = [];
+    if (type === "links") {
+      // resolvedLinks was not working for canvas file
+      resolvedLinks = this.app.metadataCache.resolvedLinks;
+      allFiles = this.app.vault.getFiles();
+    } else if (type === "active") {
+      const file = getActiveFile(this.app);
+      if (file) {
+        debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
+        allFiles = [file];
+        if (this.app.metadataCache.resolvedLinks[file.path]) {
+          resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
+        }
+        debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
+      }
+    }
+
     if (resolvedLinks) {
       for (const [mdFile, links] of Object.entries(resolvedLinks)) {
         const attachmentsSet: Set<string> = new Set();
@@ -135,14 +164,13 @@ export class ArrangeHandler {
       }
     }
     // Loop Files and Check Frontmatter/Canvas
-    const allFiles = app.vault.getFiles();
     for (let i = 0; i < allFiles.length; i++) {
       const obsFile = allFiles[i];
       const attachmentsSet: Set<string> = new Set();
       // Check Frontmatter for md files and additional links that might be missed in resolved links
       if (isMarkdownFile(obsFile.extension)) {
         // Frontmatter
-        const fileCache = app.metadataCache.getFileCache(obsFile);
+        const fileCache = this.app.metadataCache.getFileCache(obsFile);
         if (fileCache === null) {
           continue;
         }
@@ -152,7 +180,7 @@ export class ArrangeHandler {
             if (typeof frontmatter[k] === "string") {
               if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
                 const fileName = frontmatter[k].match(bannerRegex)[1];
-                const file = app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
+                const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
                 if (file && isAttachment(settings, file.path)) {
                   this.addToSet(attachmentsSet, file.path);
                 }
@@ -169,8 +197,17 @@ export class ArrangeHandler {
         }
       } else if (isCanvasFile(obsFile.extension)) {
         // check canvas for links
-        const fileRead = await app.vault.cachedRead(obsFile);
-        const canvasData = JSON.parse(fileRead);
+        const fileRead = await this.app.vault.cachedRead(obsFile);
+        if (!fileRead || fileRead.length === 0) {
+          continue;
+        }
+        let canvasData;
+        try {
+          canvasData = JSON.parse(fileRead);
+        } catch (e) {
+          debugLog("getAttachmentsInVaultByLinks - parse canvas data error", e);
+          continue;
+        }
         // debugLog("canvasData", canvasData);
         if (canvasData.nodes && canvasData.nodes.length > 0) {
           for (const node of canvasData.nodes) {

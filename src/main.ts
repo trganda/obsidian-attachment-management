@@ -37,9 +37,15 @@ export default class AttachmentManagementPlugin extends Plugin {
     // this.backupConfigs();
 
     this.addCommand({
-      id: "attachment-management-rearrange-links",
-      name: "Rearrange linked attachments",
+      id: "attachment-management-rearrange-all-links",
+      name: "Rearrange all linked attachments",
       callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links"); new Notice("Arrange completed");},
+    });
+
+    this.addCommand({
+      id: "attachment-management-rearrange-active-links",
+      name: "Rearrange linked attachments",
+      callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("active"); new Notice("Arrange completed");},
     });
 
     this.addCommand({
