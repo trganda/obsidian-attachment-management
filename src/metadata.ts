@@ -50,13 +50,19 @@ class Metadata {
   getAttachFileName(setting: AttachmentPathSettings, dateFormat: string, originalName: string, linkName?: string) {
     const dateTime = window.moment().format(dateFormat);
     // we have no persistence of original name,  return current linking name
-    if (originalName === "" && linkName != undefined) {
-      return linkName;
+    if (setting.attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
+      if (originalName === "" && linkName != undefined) {
+        return linkName;
+      } else {
+        return setting.attachFormat
+        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
+        .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+        .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
+      }
     }
     return setting.attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-      .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
+      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename);
   }
 
   /**
