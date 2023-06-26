@@ -145,7 +145,7 @@ export function pathIsAnImage(path: string) {
  * @return {ATTACHMENT_RENAME_TYPE} - The attachment rename type based on the given attachment path settings.
  */
 export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
-  let ret = ATTACHMENT_RENAME_TYPE.NULL;
+  let ret = ATTACHMENT_RENAME_TYPE.BOTH;
 
   if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
     if (
