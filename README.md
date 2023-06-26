@@ -10,7 +10,7 @@ This plugin currently supports:
 - [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
 - [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
-- [ ] ~~Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)~~
+- [ ] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)
 - [x] Processing duplicate attachment
   - [x] Processing duplicate attachment on craete (the first time, you paste or drop a attach in notes)
   - [x] Processing duplicate attachment on rename
@@ -94,11 +94,11 @@ Automatically rename the attachment folder/filename when you rename the folder/f
 
 Install and enable the plugin, after configure you can paste or drop attachment file as usually and it will be auto rename.
 
-~~This plugin supports a command `Rearrange Linked Attachments`. If you run this command, it will rename all attachment that has been linked in `markdown` or `canvas` file as you configured.~~
+This plugin supports a command `Rearrange linked attachments/Rearrange all linked attachments`. If you run this command, it will rename all attachment that has been linked in `markdown` or `canvas` file as you configured.
 
-~~![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)~~
+![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
-~~**Notice** The `Rearrange Linked Attachments` was currently a experimental feature, if you want to try out, it's better to back up your files at first.~~
+**Notice** The `Rearrange linked attachments/Rearrange all linked attachments` was currently a experimental feature, if you want to try out, it's better to back up your files at first.
 
 ### Overriding Setting
 
