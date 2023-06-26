@@ -48,7 +48,7 @@ export class ArrangeHandler {
     for (const obNote of Object.keys(attachments)) {
       const innerFile = this.app.vault.getAbstractFileByPath(obNote);
       if (!(innerFile instanceof TFile) || isAttachment(this.settings, innerFile)) {
-        debugLog(`rearrangeAttachment - ${obNote} not exists, skipped`);
+        debugLog(`rearrangeAttachment - ${obNote} not exists or is attachment, skipped`);
         continue;
       }
       const { setting } = getOverrideSetting(this.settings, innerFile);
@@ -134,7 +134,7 @@ export class ArrangeHandler {
     type: "active" | "links"
   ): Promise<Record<string, Set<string>>> {
     const attachmentsRecord: Record<string, Set<string>> = {};
-    let resolvedLinks;
+    let resolvedLinks: Record<string, Record<string, number>> = {};
     let allFiles: TFile[] = [];
     if (type === "links") {
       // resolvedLinks was not working for canvas file
@@ -145,7 +145,9 @@ export class ArrangeHandler {
       if (file) {
         debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
         allFiles = [file];
-        resolvedLinks = this.app.metadataCache.resolvedLinks[file.path];
+        if (this.app.metadataCache.resolvedLinks[file.path]) {
+          resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
+        }
         debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
       }
     }
