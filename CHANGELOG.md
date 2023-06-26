@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.6.1](https://github.com/trganda/obsidian-attachment-management/compare/0.6.0...0.6.1) (2023-06-26)
+
+
+### Bug Fixes
+
+* no rename on arrange and setting change ([1bf348f](https://github.com/trganda/obsidian-attachment-management/commit/1bf348f4ce2d6e3d5a62e7f743ac7dd663ae0a9c))
+
 ## [0.6.0](https://github.com/trganda/obsidian-attachment-management/compare/0.5.5...0.6.0) (2023-06-26)
 
 
