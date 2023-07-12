@@ -16,6 +16,7 @@ This plugin currently supports:
   - [x] Processing duplicate attachment on rename
 - [x] Override attachment configuration for specified notes or folder
 - [x] Exclude folder that your want to skip by this plugin
+  - [ ] Add Exclude folder by menu
 
 ## How to Install
 
