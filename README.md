@@ -2,7 +2,7 @@
 
 This plugin supports more flexibly to setting your attachment location with variable like `${notepath}`, `${notename}` and `${date}`.
 
-## Features
+## Roadmap of Features
 
 This plugin currently supports:
 
@@ -10,19 +10,21 @@ This plugin currently supports:
 - [x] Auto-rename the attachment when paste file to `markdown` or `canvas`
 - [x] Auto-rename the attachment file or folder while your rename the article (`markdown` or `canvas`) file
 - [x] Auto-rename the attachment when drop file to `markdown` or `canvas`
-- [ ] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)
+- [x] Re-Arrange the attachment file that linked by `markdown` or `canvas` to corresponding path as you configured (experimental)
 - [x] Processing duplicate attachment
   - [x] Processing duplicate attachment on craete (the first time, you paste or drop a attach in notes)
   - [x] Processing duplicate attachment on rename
 - [x] Override attachment configuration for specified notes or folder
+- [x] Exclude folder that your want to skip by this plugin
 
-## How to install
+## How to Install
 
 - Install from Obsidian community plugins.
 - Clone this repo
   - `npm i` to install dependencies
   - `npm run build` to start compilation in watch mode.
-  - Copy the `main.js` and `manifest.json` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
+  - Copy the `main.js`, `manifest.json` and `style.css` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
+- Downlaod the relaese file and unarchive the file to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
 
 ## Settings
 
@@ -92,6 +94,15 @@ This option is only useful when "Handle all attachments" is enabled. Write a Reg
 
 Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed.
 
+### Exclude Paths
+
+If you want some path to be skipp by this plugin, add them to textarea.
+If you have multi path, split them with semicolon ';'. 
+
+By default, the "Exclude paths" will only work on the folder you added, you can toggle "Exclude subpaths" to exclude subpaths also.
+
+> **The path is case sensitive and should not add leading slash '/' at begin.**
+
 ## Usage
 
 Install and enable the plugin, after configure you can paste or drop attachment file as usually and it will be auto rename.
@@ -118,3 +129,9 @@ If you want to reset the setting of files or folder to the global setting, use t
 - When drop a file in `canvas`, it's will delay to show the updated link/filename.
 
 ![Screen Recording](./images/canvas_drop_delay.gif)
+
+## FAQ
+
+Q: What if I add '/' to Exclude Paths?
+
+A: It will exclude the whole vault folder.
