@@ -67,12 +67,11 @@ export default class AttachmentManagementPlugin extends Plugin {
             return true;
           }
 
-          if (file.parent && isExcluded(file.parent.path, this.settings)) {
-            new Notice(`${file.path} was excluded, skipped`);
-            return true;
-          }
-
           if (!checking) {
+            if (file.parent && isExcluded(file.parent.path, this.settings)) {
+              new Notice(`${file.path} was excluded, skipped`);
+              return true;
+            }
             const { setting } = getOverrideSetting(this.settings, file);
             const fileSetting = Object.assign({}, setting);
             this.overrideConfiguration(file, fileSetting);
@@ -94,12 +93,11 @@ export default class AttachmentManagementPlugin extends Plugin {
             return true;
           }
 
-          if (file.parent && isExcluded(file.parent.path, this.settings)) {
-            new Notice(`${file.path} was excluded, skipped`);
-            return true;
-          }
-
           if (!checking) {
+            if (file.parent && isExcluded(file.parent.path, this.settings)) {
+              new Notice(`${file.path} was excluded, skipped`);
+              return true;
+            }
             delete this.settings.overridePath[file.path];
             this.saveSettings();
             new Notice(`Reset attachment setting of ${file.path}`);
