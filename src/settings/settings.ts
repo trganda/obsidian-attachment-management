@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, PluginSettingTab, Setting, TextAreaComponent } from "obsidian";
 import AttachmentManagementPlugin from "../main";
 import {
   SETTINGS_ROOT_OBSFOLDER,
@@ -42,8 +42,12 @@ export interface AttachmentManagementPluginSettings {
   excludeExtensionPattern: string;
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
-  // Auto-rename duplicate file
-  autoDuplicate: boolean;
+  // Exclude path not to rename
+  excludedPaths: string;
+  // Exclude path array
+  excludePathsArray: string[];
+  // Exclude subpath also
+  excludeSubpaths: boolean;
   // Path of notes that override global configuration
   overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -60,7 +64,9 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   handleAll: false,
   excludeExtensionPattern: "",
   autoRenameAttachment: true,
-  autoDuplicate: false,
+  excludedPaths: "",
+  excludePathsArray: [],
+  excludeSubpaths: false,
   overridePath: {},
 };
 
@@ -89,6 +95,11 @@ export class SettingTab extends PluginSettingTab {
         }
       }
     });
+  }
+
+  splitPath(path: string): { splittedPaths: string[] } {
+    const splitted = path.split(";");
+    return { splittedPaths: splitted };
   }
 
   display(): void {
@@ -224,19 +235,31 @@ export class SettingTab extends PluginSettingTab {
         })
       );
 
-    // new Setting(containerEl)
-    // 	.setName("Automatically add duplicate number for same name folder or file")
-    // 	.setDesc(
-    // 		`When automatically rename was enabled, add duplicate number for same name folder or file.`
-    // 	)
-    // 	.addToggle((toggle) =>
-    // 		toggle
-    // 			.setValue(this.plugin.settings.autoDuplicate)
-    // 			.onChange(async (value: boolean) => {
-    // 				this.plugin.settings.autoDuplicate = value;
-    // 				await this.plugin.saveSettings();
-    // 			})
-    // 	);
+    new Setting(containerEl)
+      .setName("Excluded paths")
+      .setDesc(
+        `Provide the full path of the folder names (Case Sensitive) divided by semicolon (;) to be excluded from renaming.`
+      )
+      .addTextArea((component: TextAreaComponent) => {
+        component.setValue(this.plugin.settings.excludedPaths).onChange(async (value) => {
+          this.plugin.settings.excludedPaths = value;
+          const { splittedPaths } = this.splitPath(value);
+          this.plugin.settings.excludePathsArray = splittedPaths;
+          debugLog("setting - excluded paths:" + value, splittedPaths);
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Exclude subpaths")
+      .setDesc("Turn on this option if you want to also exclude all subfolders of the folder paths provided above.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.excludeSubpaths).onChange(async (value) => {
+          debugLog("setting - excluded subpaths:" + value);
+          this.plugin.settings.excludeSubpaths = value;
+          await this.plugin.saveSettings();
+        })
+      );
 
     this.displaySw(containerEl);
   }

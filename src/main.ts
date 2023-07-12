@@ -25,6 +25,7 @@ import {
 import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { RenameHandler } from "./rename";
+import { isExcluded } from "./exclude";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
@@ -39,13 +40,19 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.addCommand({
       id: "attachment-management-rearrange-all-links",
       name: "Rearrange all linked attachments",
-      callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links"); new Notice("Arrange completed");},
+      callback: () => {
+        new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links");
+        new Notice("Arrange completed");
+      },
     });
 
     this.addCommand({
       id: "attachment-management-rearrange-active-links",
       name: "Rearrange linked attachments",
-      callback: () => {new ArrangeHandler(this.settings, this.app).rearrangeAttachment("active"); new Notice("Arrange completed");},
+      callback: () => {
+        new ArrangeHandler(this.settings, this.app).rearrangeAttachment("active");
+        new Notice("Arrange completed");
+      },
     });
 
     this.addCommand({
@@ -53,8 +60,9 @@ export default class AttachmentManagementPlugin extends Plugin {
       name: "Overriding setting",
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
+
         if (file) {
-          if (isAttachment(this.settings, file)) {
+          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
             return true;
           }
           if (!checking) {
@@ -74,7 +82,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
-          if (isAttachment(this.settings, file)) {
+          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
             return true;
           }
           if (!checking) {
@@ -90,7 +98,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.registerEvent(
       this.app.workspace.on("file-menu", async (menu, file) => {
-        if (isAttachment(this.settings, file)) {
+        if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
           return;
         }
         menu.addItem((item) => {
@@ -172,6 +180,10 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
 
         if (file instanceof TFile) {
+          if (file.parent && isExcluded(file.parent.path, this.settings)) {
+            debugLog("rename - exclude path:", file.parent.path);
+            return;
+          }
           // if the renamed file was a attachment, skip
           const flag = isAttachment(this.settings, file);
           if (flag) {
@@ -203,6 +215,12 @@ export default class AttachmentManagementPlugin extends Plugin {
     this.registerEvent(
       this.app.vault.on("delete", async (file: TAbstractFile) => {
         debugLog("on delete event - file path:", file.path);
+
+        if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          debugLog("rename - exclude path or the file is an attachment:", file.path);
+          return;
+        }
+
         if (deleteOverrideSetting(this.settings, file)) {
           new Notice("Removed override setting of " + file.path);
         }

@@ -16,6 +16,7 @@ import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABL
 import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./metadata";
 import { getActiveFile } from "./commons";
+import { isExcluded } from "./exclude";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -143,12 +144,16 @@ export class ArrangeHandler {
     } else if (type === "active") {
       const file = getActiveFile(this.app);
       if (file) {
-        debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
-        allFiles = [file];
-        if (this.app.metadataCache.resolvedLinks[file.path]) {
-          resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
+        if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          allFiles = [];
+        } else {
+          debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
+          allFiles = [file];
+          if (this.app.metadataCache.resolvedLinks[file.path]) {
+            resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
+          }
+          debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
         }
-        debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
       }
     }
 
@@ -167,6 +172,11 @@ export class ArrangeHandler {
     for (let i = 0; i < allFiles.length; i++) {
       const obsFile = allFiles[i];
       const attachmentsSet: Set<string> = new Set();
+
+      if ((obsFile.parent && isExcluded(obsFile.parent.path, this.settings))) {
+        continue;
+      }
+
       // Check Frontmatter for md files and additional links that might be missed in resolved links
       if (isMarkdownFile(obsFile.extension)) {
         // Frontmatter
