@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting, TextAreaComponent } from "obsidian";
+import { App, MomentFormatComponent, PluginSettingTab, Setting, TextAreaComponent } from "obsidian";
 import AttachmentManagementPlugin from "../main";
 import {
   SETTINGS_ROOT_OBSFOLDER,
@@ -181,21 +181,21 @@ export class SettingTab extends PluginSettingTab {
           });
         })
       )
-      .addText((text) =>
-        text
+      .addMomentFormat((component: MomentFormatComponent) => {
+        component
           .setPlaceholder(DEFAULT_SETTINGS.dateFormat)
           .setValue(this.plugin.settings.dateFormat)
           .onChange(async (value) => {
             debugLog("setting - date format:" + value);
             this.plugin.settings.dateFormat = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+      });
 
     new Setting(containerEl)
       .setName("Handle all attachments")
       .setDesc(
-        "By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically"
+        "By default, only auto-rename the image file, if enable this option, all created file (except 'md' or 'canvas') will be renamed automatically"
       )
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
@@ -212,6 +212,7 @@ export class SettingTab extends PluginSettingTab {
         `This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`
       )
       .setClass("exclude_extension_pattern")
+      .setClass("attach_management_sub_setting")
       .addText((text) =>
         text
           .setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")
@@ -238,7 +239,7 @@ export class SettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName("Excluded paths")
       .setDesc(
-        `Provide the full path of the folder names (Case Sensitive) divided by semicolon (;) to be excluded from renaming.`
+        `Provide the full path of the folder names (case sensitive and without leading slash '/') divided by semicolon (;) to be excluded from renaming.`
       )
       .addTextArea((component: TextAreaComponent) => {
         component.setValue(this.plugin.settings.excludedPaths).onChange(async (value) => {
