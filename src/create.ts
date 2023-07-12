@@ -6,6 +6,7 @@ import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings
 import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";
 import { getMetadata } from "./metadata";
+import { isExcluded } from "./exclude";
 
 export class CreateHandler {
   readonly app: App;
@@ -31,6 +32,14 @@ export class CreateHandler {
       new Notice("Error: no active file found.");
       return;
     }
+
+    debugLog("processAttach - parent:", activeFile.parent?.path);
+    if ((activeFile.parent && isExcluded(activeFile.parent.path, this.settings))) {
+      debugLog("processAttach - not a file or exclude path:", activeFile.path);
+      new Notice(`${activeFile.path} was excluded, skipped`);
+      return;
+    }
+
     const { setting } = getOverrideSetting(this.settings, activeFile);
 
     debugLog("processAttach - active file path", activeFile.path);

@@ -6,3 +6,10 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+.attach_management_sub_setting {
+  padding-left: 2em;
+}
+.attach_management_sub_setting + .attach_management_sub_setting {
+  padding-left: 0;
+  margin-left: 2em;
+}
