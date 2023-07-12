@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.7.0](https://github.com/trganda/obsidian-attachment-management/compare/0.6.1...0.7.0) (2023-07-12)
+
+
+### Features
+
+* exclude paths ([de7714f](https://github.com/trganda/obsidian-attachment-management/commit/de7714fbd088ad81254846beede5505dbe676f76))
+* notice for exclude paths ([50f4276](https://github.com/trganda/obsidian-attachment-management/commit/50f4276d3499fab9792e5f25f03d65c1ea402720))
+
 ### [0.6.1](https://github.com/trganda/obsidian-attachment-management/compare/0.6.0...0.6.1) (2023-06-26)
 
 
