@@ -62,9 +62,16 @@ export default class AttachmentManagementPlugin extends Plugin {
         const file = getActiveFile(this.app);
 
         if (file) {
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          if (isAttachment(this.settings, file)) {
+            new Notice(`${file.path} is an attachment, skipped`);
             return true;
           }
+
+          if (file.parent && isExcluded(file.parent.path, this.settings)) {
+            new Notice(`${file.path} was excluded, skipped`);
+            return true;
+          }
+
           if (!checking) {
             const { setting } = getOverrideSetting(this.settings, file);
             const fileSetting = Object.assign({}, setting);
@@ -82,9 +89,16 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          if (isAttachment(this.settings, file)) {
+            new Notice(`${file.path} is an attachment, skipped`);
             return true;
           }
+
+          if (file.parent && isExcluded(file.parent.path, this.settings)) {
+            new Notice(`${file.path} was excluded, skipped`);
+            return true;
+          }
+
           if (!checking) {
             delete this.settings.overridePath[file.path];
             this.saveSettings();
@@ -182,6 +196,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         if (file instanceof TFile) {
           if (file.parent && isExcluded(file.parent.path, this.settings)) {
             debugLog("rename - exclude path:", file.parent.path);
+            new Notice(`${file.path} was excluded, skipped`);
             return;
           }
           // if the renamed file was a attachment, skip

@@ -1,4 +1,4 @@
-import { App, TFile, TFolder } from "obsidian";
+import { App, Notice, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { getOverrideSetting } from "./override";
@@ -146,6 +146,7 @@ export class ArrangeHandler {
       if (file) {
         if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
           allFiles = [];
+          new Notice(`${file.path} was excluded, skipped`);
         } else {
           debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
           allFiles = [file];

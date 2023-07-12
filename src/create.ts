@@ -36,6 +36,7 @@ export class CreateHandler {
     debugLog("processAttach - parent:", activeFile.parent?.path);
     if ((activeFile.parent && isExcluded(activeFile.parent.path, this.settings))) {
       debugLog("processAttach - not a file or exclude path:", activeFile.path);
+      new Notice(`${activeFile.path} was excluded, skipped`);
       return;
     }
 
