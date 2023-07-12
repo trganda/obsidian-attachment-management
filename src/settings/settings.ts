@@ -99,7 +99,11 @@ export class SettingTab extends PluginSettingTab {
 
   splitPath(path: string): { splittedPaths: string[] } {
     const splitted = path.split(";");
-    return { splittedPaths: splitted };
+    const rets = [];
+    for (const s of splitted) {
+      rets.push(s.trim());
+    }
+    return { splittedPaths: rets };
   }
 
   display(): void {
