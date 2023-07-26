@@ -138,7 +138,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         this.app.workspace.onLayoutReady(() => {
           // if the file is created more than 1 second ago, the event is most likely be fired by copy file to
           // vault folder without using obsidian (e.g. file manager of op system), we should ignore it.
-          const timeGapMs = new Date().getTime() - file.stat.ctime;
+          const timeGapMs = new Date().getTime() - file.stat.mtime;
           if (timeGapMs > 1000) {
             return;
           }
