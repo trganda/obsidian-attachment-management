@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.3](https://github.com/trganda/obsidian-attachment-management/compare/0.7.2...0.7.3) (2023-07-26)
+
+
+### Bug Fixes
+
+* contiues paste error of tiem gap ([ca2a81c](https://github.com/trganda/obsidian-attachment-management/commit/ca2a81ca2ef6a9a4b6ae376f0b3f0f485dcfc9cd))
+
 ### [0.7.2](https://github.com/trganda/obsidian-attachment-management/compare/0.7.1...0.7.2) (2023-07-12)
 
 
