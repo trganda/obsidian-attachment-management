@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.2](https://github.com/trganda/obsidian-attachment-management/compare/0.7.1...0.7.2) (2023-07-12)
+
+
+### Bug Fixes
+
+* no trim on path ([b548481](https://github.com/trganda/obsidian-attachment-management/commit/b548481495caa2d47756a9df8cbc07834ce63d8d))
+
+### [0.7.2](https://github.com/trganda/obsidian-attachment-management/compare/0.7.1...0.7.2) (2023-07-12)
+
+
+### Bug Fixes
+
+* no trim on path ([b548481](https://github.com/trganda/obsidian-attachment-management/commit/b548481495caa2d47756a9df8cbc07834ce63d8d))
+
 ### [0.7.1](https://github.com/trganda/obsidian-attachment-management/compare/0.7.0...0.7.1) (2023-07-12)
 
 ## [0.7.0](https://github.com/trganda/obsidian-attachment-management/compare/0.6.1...0.7.0) (2023-07-12)
