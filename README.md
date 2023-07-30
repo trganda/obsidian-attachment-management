@@ -16,7 +16,7 @@ This plugin currently supports:
   - [x] Processing duplicate attachment on rename
 - [x] Override attachment configuration for specified notes or folder
 - [x] Exclude folder that your want to skip by this plugin
-  - [ ] Add Exclude folder by menu
+  - [x] Add Exclude folder by menu
 
 ## How to Install
 
@@ -106,9 +106,9 @@ By default, the "Exclude paths" will only work on the folder you added, you can 
 
 ## Usage
 
-Install and enable the plugin, after configure you can paste or drop attachment file as usually and it will be auto rename.
+Install and enable the plugin, after configuration you can paste or drop attachment file as usually and it will be auto renamed.
 
-This plugin supports a command `Rearrange linked attachments/Rearrange all linked attachments`. If you run this command, it will rename all attachment that has been linked in `markdown` or `canvas` file as you configured.
+This plugin supports a command `Rearrange linked attachments/Rearrange all linked attachments`. If you run this command, it will rename all attachment (image file default, to rename other type you need to enable [Handle All Attachements](#handle-all-attachments)) that has been linked in `markdown` or `canvas` file as you configured.
 
 ![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
 
