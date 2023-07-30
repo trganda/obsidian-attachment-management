@@ -5,6 +5,7 @@ import {
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
 } from "./lib/constant";
+import { debugLog } from "./log";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -128,9 +129,11 @@ export function isAttachment(settings: AttachmentManagementPluginSettings, fileP
     return false;
   }
 
+  // debugLog(`isAttachment - ${file.basename}: ${isImage(file.extension)}, ${settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern)}`);
+
   return (
     isImage(file.extension) ||
-    (settings.handleAll && testExcludeExtension(file.extension, settings.excludeExtensionPattern))
+    (settings.handleAll && !testExcludeExtension(file.extension, settings.excludeExtensionPattern))
   );
 }
 
