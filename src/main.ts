@@ -149,6 +149,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           const processor = new CreateHandler(this.app, this.settings);
           if (isImage(file.extension) || isPastedImage(file)) {
+            debugLog("create - image", file);
             processor.processAttach(file);
           } else {
             if (this.settings.handleAll) {
