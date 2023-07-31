@@ -8,11 +8,10 @@ import {
   isAttachment,
   isCanvasFile,
   isMarkdownFile,
-  pathIsAnImage,
 } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
-import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_ORIGINALNAME } from "./lib/constant";
+import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./metadata";
 import { getActiveFile } from "./commons";
@@ -163,7 +162,7 @@ export class ArrangeHandler {
     if (resolvedLinks) {
       for (const [mdFile, links] of Object.entries(resolvedLinks)) {
         const attachmentsSet: Set<string> = new Set();
-        for (const [filePath, nr] of Object.entries(links)) {
+        for (const [filePath] of Object.entries(links)) {
           if (isAttachment(settings, filePath)) {
             this.addToSet(attachmentsSet, filePath);
           }

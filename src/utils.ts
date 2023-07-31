@@ -1,11 +1,10 @@
 import { TAbstractFile, TFile } from "obsidian";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings/settings";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
 } from "./lib/constant";
-import { debugLog } from "./log";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -19,7 +18,7 @@ export enum ATTACHMENT_RENAME_TYPE {
 }
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
-const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)$/i;
+const ImageExtensionRegex = /^(jpe?g|png|gif|svg|bmp|eps|webp)$/i;
 
 export const blobToArrayBuffer = (blob: Blob) => {
   return new Promise((resolve) => {
@@ -47,7 +46,7 @@ export function isPastedImage(file: TAbstractFile): boolean {
 }
 
 export function isImage(extension: string): boolean {
-  const match = extension.match(imageRegex);
+  const match = extension.match(ImageExtensionRegex);
   if (match !== null) {
     return true;
   }
@@ -135,10 +134,6 @@ export function isAttachment(settings: AttachmentManagementPluginSettings, fileP
     isImage(file.extension) ||
     (settings.handleAll && !testExcludeExtension(file.extension, settings.excludeExtensionPattern))
   );
-}
-
-export function pathIsAnImage(path: string) {
-  return path.match(imageRegex);
 }
 
 /**

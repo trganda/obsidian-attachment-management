@@ -24,10 +24,10 @@ class Metadata {
   extension: string;
 
   /** parent path of file */
-  parentPath: string = "";
+  parentPath = "";
 
   /** parent path basename of file */
-  parentName: string = "";
+  parentName = "";
 
   constructor(path: string, name: string, basename: string, extension: string, parentPath: string, parentName: string) {
     this.path = path;
