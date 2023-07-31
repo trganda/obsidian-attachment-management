@@ -158,6 +158,8 @@ export class ArrangeHandler {
       }
     }
 
+    debugLog("getAttachmentsInVaultByLinks - allFiles:", allFiles.length, allFiles);
+
     if (resolvedLinks) {
       for (const [mdFile, links] of Object.entries(resolvedLinks)) {
         const attachmentsSet: Set<string> = new Set();
@@ -189,8 +191,9 @@ export class ArrangeHandler {
           const frontmatter = fileCache.frontmatter;
           for (const k of Object.keys(frontmatter)) {
             if (typeof frontmatter[k] === "string") {
-              if (frontmatter[k].match(bannerRegex) || pathIsAnImage(frontmatter[k])) {
-                const fileName = frontmatter[k].match(bannerRegex)[1];
+              const formatMatch = frontmatter[k].match(bannerRegex)
+              if (formatMatch && formatMatch[1]) {
+                const fileName = formatMatch[1];
                 const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
                 if (file && isAttachment(settings, file.path)) {
                   this.addToSet(attachmentsSet, file.path);
