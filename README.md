@@ -131,6 +131,11 @@ If you want to reset the setting of files or folder to the global setting, use t
 
 ![Screen Recording](./images/canvas_drop_delay.gif)
 
+- Suppose you have a structure below with default configuration:
+  - attach directory, "assets/notes/hello/1.png"
+  - article directory, "notes/Hello.md"
+  - If you run `Rearrange ***` command may leading a error, since the folder was alerady exists but with letter case name.
+
 ## FAQ
 
 Q: What if I add '/' to Exclude Paths?
