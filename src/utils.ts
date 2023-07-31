@@ -19,7 +19,7 @@ export enum ATTACHMENT_RENAME_TYPE {
 }
 
 const PASTED_IMAGE_PREFIX = "Pasted image ";
-const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)/i;
+const imageRegex = /.*(jpe?g|png|gif|svg|bmp|eps|webp)$/i;
 
 export const blobToArrayBuffer = (blob: Blob) => {
   return new Promise((resolve) => {
