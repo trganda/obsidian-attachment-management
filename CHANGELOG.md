@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [0.7.5](https://github.com/trganda/obsidian-attachment-management/compare/0.7.4...0.7.5) (2023-07-31)
 
+
+### Bug Fixes
+
+* ood exception while get fromatter link ([e608ee3](https://github.com/trganda/obsidian-attachment-management/commit/e608ee312b64a0a7b83500ae946e9fb98b7affee))
+
+### [0.7.5](https://github.com/trganda/obsidian-attachment-management/compare/0.7.4...0.7.5) (2023-07-31)
+
 ### [0.7.4](https://github.com/trganda/obsidian-attachment-management/compare/0.7.3...0.7.4) (2023-07-30)
 
 
