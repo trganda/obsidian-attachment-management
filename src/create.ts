@@ -86,14 +86,11 @@ export class CreateHandler {
     const oldPath = file.path;
     const oldName = file.name;
 
-    try {
-      // this api will not update the link automatically on `create` event
-      await this.app.fileManager.renameFile(file, dst);
-      new Notice(`Renamed ${oldName} to ${attachName}.`);
-    } catch (err) {
-      new Notice(`Failed to rename ${file.path} to ${dst}`);
-      throw err;
-    }
+    // this api will not update the link automatically on `create` event
+    // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
+    //   await this.app.fileManager.renameFile(file, dst);
+    await this.app.vault.adapter.rename(file.path, dst);
+    new Notice(`Renamed ${oldName} to ${attachName}.`);
 
     if (!updateLink) {
       return;
