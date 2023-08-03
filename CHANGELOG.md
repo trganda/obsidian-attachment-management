@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.7](https://github.com/trganda/obsidian-attachment-management/compare/0.7.6...0.7.7) (2023-08-03)
+
+
+### Bug Fixes
+
+* multi file created without update link ([6a7d6a5](https://github.com/trganda/obsidian-attachment-management/commit/6a7d6a5f209aa4c4658e11cf3ebc64f3e7ad9289))
+
 ### [0.7.6](https://github.com/trganda/obsidian-attachment-management/compare/0.7.5...0.7.6) (2023-07-31)
 
 
