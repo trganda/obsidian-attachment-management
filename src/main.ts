@@ -128,14 +128,14 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.registerEvent(
       // not working while drop file to text view
-      this.app.vault.on("create", (file: TAbstractFile) => {
+      this.app.vault.on("create", async (file: TAbstractFile) => {
         debugLog("on create event - file:", file.path);
         // only processing create of file, ignore folder creation
         if (!(file instanceof TFile)) {
           return;
         }
 
-        this.app.workspace.onLayoutReady(() => {
+        this.app.workspace.onLayoutReady(async () => {
           // if the file is created more than 1 second ago, the event is most likely be fired by copy file to
           // vault folder without using obsidian (e.g. file manager of op system), we should ignore it.
           const timeGapMs = new Date().getTime() - file.stat.mtime;
@@ -150,7 +150,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           const processor = new CreateHandler(this.app, this.settings);
           if (isImage(file.extension) || isPastedImage(file)) {
             debugLog("create - image", file);
-            processor.processAttach(file);
+            await processor.processAttach(file);
           } else {
             if (this.settings.handleAll) {
               debugLog("create - handleAll for file", file);
@@ -158,7 +158,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                 debugLog("create - excluded file by extension", file);
                 return;
               }
-              processor.processAttach(file);
+              await processor.processAttach(file);
             }
           }
         });
