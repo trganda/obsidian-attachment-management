@@ -143,7 +143,7 @@ export class RenameHandler {
       const fileExtension = path.extname(fileName);
       if (
         (this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) ||
-        !isImage(fileExtension)
+        (!this.settings.handleAll && !isImage(fileExtension))
       ) {
         debugLog("renameFiles - no handle extension:", fileExtension);
         continue;
