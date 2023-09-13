@@ -1,5 +1,5 @@
 import { Modal, Setting } from "obsidian";
-import {DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
+import { DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
 import {
   SETTINGS_ROOT_OBSFOLDER,
   SETTINGS_ROOT_INFOLDER,
@@ -13,50 +13,50 @@ import AttachmentManagementPlugin from "../main";
 
 
 export class OverrideExtensionModal extends Modal {
-    plugin: AttachmentManagementPlugin;
-    settings: ExtensionOverrideSettings;
-    onSubmit: (result: ExtensionOverrideSettings) => void;
+  plugin: AttachmentManagementPlugin;
+  settings: ExtensionOverrideSettings;
+  onSubmit: (result: ExtensionOverrideSettings) => void;
 
-    constructor(plugin: AttachmentManagementPlugin, settings: ExtensionOverrideSettings, onSubmit: (result: ExtensionOverrideSettings) => void) {
-      super(plugin.app);
-      this.plugin = plugin;
-      this.settings = settings;
-      this.onSubmit = onSubmit;
-    }
+  constructor(plugin: AttachmentManagementPlugin, settings: ExtensionOverrideSettings, onSubmit: (result: ExtensionOverrideSettings) => void) {
+    super(plugin.app);
+    this.plugin = plugin;
+    this.settings = settings;
+    this.onSubmit = onSubmit;
+  }
 
-    displaySw(cont: HTMLElement): void {
-      cont.findAll(".setting-item").forEach((el: HTMLElement) => {
-        if (el.getAttr("class")?.includes("override_root_folder_set")) {
-          if (this.settings.saveAttE === "obsFolder") {
-            el.hide();
-          } else {
-            el.show();
-          }
+  displaySw(cont: HTMLElement): void {
+    cont.findAll(".setting-item").forEach((el: HTMLElement) => {
+      if (el.getAttr("class")?.includes("override_root_folder_set")) {
+        if (this.settings.saveAttE === "obsFolder") {
+          el.hide();
+        } else {
+          el.show();
         }
-      });
-    }
+      }
+    });
+  }
 
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
 
     contentEl.createEl("h3", {
-    text: `Extension settings for ${this.settings.extension}`,
+      text: `Extension settings for ${this.settings.extension}`,
     });
-  
+
     new Setting(contentEl)
       .setName("Root path to save new attachments")
       .setDesc("Select root path for all new attachments")
       .addDropdown((text) =>
-          text
+        text
           .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
           .addOption(`${SETTINGS_ROOT_INFOLDER}`, "In the folder specified below")
           .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, "Next to note in folder specified below")
           .setValue(this.settings.saveAttE)
           .onChange(async (value) => {
-              this.settings.saveAttE = value;
-              this.displaySw(contentEl);
-              this.onOpen();
+            this.settings.saveAttE = value;
+            this.displaySw(contentEl);
+            this.onOpen();
           })
       );
     if (this.settings.saveAttE !== "obsFolder") {
@@ -64,11 +64,11 @@ export class OverrideExtensionModal extends Modal {
         .setName("Root folder")
         .setClass("override_root_folder_set")
         .addText((text) =>
-            text
+          text
             .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentRoot)
             .setValue(this.settings.attachmentRoot)
             .onChange(async (value) => {
-                this.settings.attachmentRoot = value;
+              this.settings.attachmentRoot = value;
             })
         );
     }
@@ -96,8 +96,8 @@ export class OverrideExtensionModal extends Modal {
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.settings.attachFormat)
           .onChange(async (value: string) => {
-              this.settings.attachFormat = value;
-        })
+            this.settings.attachFormat = value;
+          })
       );
 
     new Setting(contentEl)
@@ -105,8 +105,8 @@ export class OverrideExtensionModal extends Modal {
         button
           .setButtonText("Save")
           .onClick(async () => {
-              this.onSubmit(this.settings);
-              this.close();
+            this.onSubmit(this.settings);
+            this.close();
           })
       );
   }

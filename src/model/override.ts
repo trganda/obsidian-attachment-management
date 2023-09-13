@@ -38,7 +38,7 @@ export class OverrideModal extends Modal {
     });
   }
 
-  
+
 
   onOpen() {
     const { contentEl } = this;
@@ -125,7 +125,7 @@ export class OverrideModal extends Modal {
               this.onOpen();
             });
         });
-      
+
       if (this.setting.extensionOverride !== undefined) {
         this.setting.extensionOverride.forEach((ext) => {
 
@@ -140,7 +140,7 @@ export class OverrideModal extends Modal {
                 .onChange(async (value) => {
                   ext.extension = value;
                 }
-              )
+                )
             )
             .addButton((btn) => {
               btn
@@ -159,73 +159,12 @@ export class OverrideModal extends Modal {
                 .onClick(async () => {
                   new OverrideExtensionModal(this.plugin, ext, (result => {
                     ext = result;
-                })).open();
-            });
-          });
-        });
-      }
-    }
-
-    new Setting(contentEl)
-      .addButton((btn) => {
-        btn
-          .setButtonText("Add extension overrides")
-          .onClick(async () => {
-            if (this.setting.extensionOverride === undefined) {
-              this.setting.extensionOverride = [];
-            }
-            this.setting.extensionOverride.push({
-              extension: "",
-              saveAttE: this.setting.saveAttE,
-              attachmentRoot: this.setting.attachmentRoot,
-              attachmentPath: this.setting.attachmentPath,
-              attachFormat: this.setting.attachFormat,
-            });
-            console.log(this.setting.extensionOverride);
-            this.onOpen();
-          });
-      });
-    
-    if (this.setting.extensionOverride !== undefined) {
-      this.setting.extensionOverride.forEach((ext) => {
-
-          new Setting(contentEl)
-            .setName("Extension")
-            .setDesc("Extension to override")
-            .setClass("override_extension_set")
-            .addText((text) =>
-              text
-                .setPlaceholder("pdf")
-                .setValue(ext.extension)
-                .onChange(async (value) => {
-                  ext.extension = value;
-                }
-              )
-            )
-            .addButton((btn) => {
-              btn
-                .setIcon("trash")
-                .onClick(async () => {
-                  //get index of extension
-                  const index = this.setting.extensionOverride?.indexOf(ext) ?? -1;
-                  //remove extension from array
-                  this.setting.extensionOverride?.splice(index, 1);
-                  this.onOpen();
+                  })).open();
                 });
-            })
-            .addButton((btn) => {
-              btn
-                .setIcon("pencil")
-                .onClick(async () => {
-                  new OverrideExtensionModal(this.plugin, ext, (result => {
-                    ext = result;
-                })).open();
             });
-          });
         });
       }
     }
-
     new Setting(contentEl)
       .addButton((btn) => {
         btn.setButtonText("Reset").onClick(async () => {
