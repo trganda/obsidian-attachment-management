@@ -2,6 +2,141 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.7.8](https://github.com/trganda/obsidian-attachment-management/compare/0.7.7...0.7.8) (2023-08-21)
+
+
+### Bug Fixes
+
+* no rename for no image extension ([a3153fc](https://github.com/trganda/obsidian-attachment-management/commit/a3153fc11b7a943a035b69ff0146b033d14dfa01))
+
+### [0.7.7](https://github.com/trganda/obsidian-attachment-management/compare/0.7.6...0.7.7) (2023-08-03)
+
+
+### Bug Fixes
+
+* multi file created without update link ([6a7d6a5](https://github.com/trganda/obsidian-attachment-management/commit/6a7d6a5f209aa4c4658e11cf3ebc64f3e7ad9289))
+
+### [0.7.6](https://github.com/trganda/obsidian-attachment-management/compare/0.7.5...0.7.6) (2023-07-31)
+
+
+### Bug Fixes
+
+* ood exception while get fromatter link ([e608ee3](https://github.com/trganda/obsidian-attachment-management/commit/e608ee312b64a0a7b83500ae946e9fb98b7affee))
+* rename *.pcapng file without enable handle all ([230e70e](https://github.com/trganda/obsidian-attachment-management/commit/230e70eabce9bddc520cce4fe565967504d24b50))
+
+### [0.7.5](https://github.com/trganda/obsidian-attachment-management/compare/0.7.4...0.7.5) (2023-07-31)
+
+
+### Bug Fixes
+
+* ood exception while get fromatter link ([e608ee3](https://github.com/trganda/obsidian-attachment-management/commit/e608ee312b64a0a7b83500ae946e9fb98b7affee))
+
+### [0.7.5](https://github.com/trganda/obsidian-attachment-management/compare/0.7.4...0.7.5) (2023-07-31)
+
+### [0.7.4](https://github.com/trganda/obsidian-attachment-management/compare/0.7.3...0.7.4) (2023-07-30)
+
+
+### Bug Fixes
+
+* exclude on handle all not work ([828a4a2](https://github.com/trganda/obsidian-attachment-management/commit/828a4a29acc7ea0f576f66f45d291fa530e4c95b))
+
+### [0.7.3](https://github.com/trganda/obsidian-attachment-management/compare/0.7.2...0.7.3) (2023-07-26)
+
+
+### Bug Fixes
+
+* contiues paste error of tiem gap ([ca2a81c](https://github.com/trganda/obsidian-attachment-management/commit/ca2a81ca2ef6a9a4b6ae376f0b3f0f485dcfc9cd))
+
+### [0.7.2](https://github.com/trganda/obsidian-attachment-management/compare/0.7.1...0.7.2) (2023-07-12)
+
+
+### Bug Fixes
+
+* no trim on path ([b548481](https://github.com/trganda/obsidian-attachment-management/commit/b548481495caa2d47756a9df8cbc07834ce63d8d))
+
+### [0.7.2](https://github.com/trganda/obsidian-attachment-management/compare/0.7.1...0.7.2) (2023-07-12)
+
+
+### Bug Fixes
+
+* no trim on path ([b548481](https://github.com/trganda/obsidian-attachment-management/commit/b548481495caa2d47756a9df8cbc07834ce63d8d))
+
+### [0.7.1](https://github.com/trganda/obsidian-attachment-management/compare/0.7.0...0.7.1) (2023-07-12)
+
+## [0.7.0](https://github.com/trganda/obsidian-attachment-management/compare/0.6.1...0.7.0) (2023-07-12)
+
+
+### Features
+
+* exclude paths ([de7714f](https://github.com/trganda/obsidian-attachment-management/commit/de7714fbd088ad81254846beede5505dbe676f76))
+* notice for exclude paths ([50f4276](https://github.com/trganda/obsidian-attachment-management/commit/50f4276d3499fab9792e5f25f03d65c1ea402720))
+
+### [0.6.1](https://github.com/trganda/obsidian-attachment-management/compare/0.6.0...0.6.1) (2023-06-26)
+
+
+### Bug Fixes
+
+* no rename on arrange and setting change ([1bf348f](https://github.com/trganda/obsidian-attachment-management/commit/1bf348f4ce2d6e3d5a62e7f743ac7dd663ae0a9c))
+
+## [0.6.0](https://github.com/trganda/obsidian-attachment-management/compare/0.5.5...0.6.0) (2023-06-26)
+
+
+### Features
+
+* rearrange for active file ([70148e1](https://github.com/trganda/obsidian-attachment-management/commit/70148e1c707d91db86c194ce85657fbeefd0769d))
+
+
+### Bug Fixes
+
+* file not exists ([fab9c80](https://github.com/trganda/obsidian-attachment-management/commit/fab9c809b485c92329f22df2b4eeba9d0da7be50))
+
+### [0.5.5](https://github.com/trganda/obsidian-attachment-management/compare/0.5.4...0.5.5) (2023-06-22)
+
+### [0.5.4](https://github.com/trganda/obsidian-attachment-management/compare/0.5.3...0.5.4) (2023-06-22)
+
+### [0.5.3](https://github.com/trganda/obsidian-attachment-management/compare/0.5.2...0.5.3) (2023-06-15)
+
+
+### Features
+
+* "hide menu item of override for attachment" ([f274289](https://github.com/trganda/obsidian-attachment-management/commit/f274289cbe16b1fe30baddf8ade432a592ce60ed))
+* arrange all ([fa35399](https://github.com/trganda/obsidian-attachment-management/commit/fa353996050fd94355903933d5ba3626aa36b6f0))
+
+
+### Bug Fixes
+
+* "exists on case sensitive" ([fc23545](https://github.com/trganda/obsidian-attachment-management/commit/fc23545bcb9a498e21f87bce80652d7bded66dbc))
+* keep file name if used ([3f6f669](https://github.com/trganda/obsidian-attachment-management/commit/3f6f669b126f19c1c140ee319aa1fdb0b9b85582))
+
+### [0.5.2](https://github.com/trganda/obsidian-attachment-management/compare/0.5.1...0.5.2) (2023-06-13)
+
+
+### Bug Fixes
+
+* "sensitive rename not work" ([1ed0a32](https://github.com/trganda/obsidian-attachment-management/commit/1ed0a3250879fc6b13e026c3753be65072596e8e))
+* multi-suffix when  rename note file ([3559725](https://github.com/trganda/obsidian-attachment-management/commit/35597251f46237d032c3fffef9686f5bc71bb0bb))
+
+### [0.5.1](https://github.com/trganda/obsidian-attachment-management/compare/0.5.0...0.5.1) (2023-06-12)
+
+
+### Bug Fixes
+
+* typo error and redundant header of settings ([84c50c3](https://github.com/trganda/obsidian-attachment-management/commit/84c50c37d84af8b26db9f99cd1653aa13b5e6a54))
+
+## [0.5.0](https://github.com/trganda/obsidian-attachment-management/compare/0.4.1...0.5.0) (2023-05-25)
+
+
+### Features
+
+* add  variable ([be50df4](https://github.com/trganda/obsidian-attachment-management/commit/be50df4aa0eaa7030730988cbad750c1ce87cb16))
+* add changelog with action on release ([093b7c3](https://github.com/trganda/obsidian-attachment-management/commit/093b7c3b2058d8efa74d911832d905519327d446))
+* proposition for keeping original file name ([ffb4ac6](https://github.com/trganda/obsidian-attachment-management/commit/ffb4ac6e0a8ca6242adabce466830c87af297c0e))
+
+
+### Bug Fixes
+
+* remove unused variable ([dcf9c17](https://github.com/trganda/obsidian-attachment-management/commit/dcf9c177829a6fc7d3beb8cbae1e792d7e0a30b8))
+
 ### [0.4.1](https://github.com/trganda/obsidian-attachment-management/compare/0.4.0...0.4.1) (2023-05-23)
 
 

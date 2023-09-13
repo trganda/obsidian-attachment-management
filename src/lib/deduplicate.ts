@@ -1,6 +1,6 @@
 import { TFile, TFolder } from "obsidian";
-import { debugLog } from "./log";
-import { path } from "./lib/path";
+import { debugLog } from "../log";
+import { path } from "./path";
 
 export interface NameObj {
   name: string;
@@ -58,5 +58,5 @@ export async function deduplicateNewName(newName: string, file: TFolder): Promis
     name: newName,
     basename: newName.slice(0, newName.length - newNameExt.length - 1),
     extension: newNameExt,
-  };	
+  };
 }

@@ -7,7 +7,8 @@ import {
   SETTINGS_VARIABLES_NOTEPARENT,
   SETTINGS_VARIABLES_DATES,
   SETTINGS_ROOT_INFOLDER,
-  SETTINGS_ROOT_NEXTTONOTE, SETTINGS_VARIABLES_ORIGINALNAME
+  SETTINGS_ROOT_NEXTTONOTE,
+  SETTINGS_VARIABLES_ORIGINALNAME,
 } from "../lib/constant";
 import { debugLog } from "src/log";
 import { OverrideExtensionModal } from "src/model/extensionOverrides";
@@ -57,8 +58,12 @@ export interface AttachmentManagementPluginSettings {
   excludeExtensionPattern: string;
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
-  // Auto-rename duplicate file
-  autoDuplicate: boolean;
+  // Exclude path not to rename
+  excludedPaths: string;
+  // Exclude path array
+  excludePathsArray: string[];
+  // Exclude subpath also
+  excludeSubpaths: boolean;
   // Path of notes that override global configuration
   overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -75,7 +80,9 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   handleAll: false,
   excludeExtensionPattern: "",
   autoRenameAttachment: true,
-  autoDuplicate: false,
+  excludedPaths: "",
+  excludePathsArray: [],
+  excludeSubpaths: false,
   overridePath: {},
 };
 
@@ -106,14 +113,19 @@ export class SettingTab extends PluginSettingTab {
     });
   }
 
+  splitPath(path: string): { splittedPaths: string[] } {
+    const splitted = path.split(";");
+    const rets = [];
+    for (const s of splitted) {
+      rets.push(s.trim());
+    }
+    return { splittedPaths: rets };
+  }
+
   display(): void {
     const { containerEl } = this;
 
     containerEl.empty();
-
-    containerEl.createEl("h2", {
-      text: "Settings for Attachment Management.",
-    });
 
     new Setting(containerEl)
       .setName("Root path to save new attachments")
@@ -189,21 +201,21 @@ export class SettingTab extends PluginSettingTab {
           });
         })
       )
-      .addText((text) =>
-        text
+      .addMomentFormat((component: MomentFormatComponent) => {
+        component
           .setPlaceholder(DEFAULT_SETTINGS.dateFormat)
           .setValue(this.plugin.settings.dateFormat)
           .onChange(async (value) => {
             debugLog("setting - date format:" + value);
             this.plugin.settings.dateFormat = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+      });
 
     new Setting(containerEl)
       .setName("Handle all attachments")
       .setDesc(
-        "By default, only auto-rename the image file, if enable this option, all created file (except `md` or `canvas`) will be renamed automatically"
+        "By default, only auto-rename the image file, if enable this option, all created file (except 'md' or 'canvas') will be renamed automatically"
       )
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
@@ -220,6 +232,7 @@ export class SettingTab extends PluginSettingTab {
         `This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`
       )
       .setClass("exclude_extension_pattern")
+      .setClass("attach_management_sub_setting")
       .addText((text) =>
         text
           .setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")
@@ -339,19 +352,31 @@ export class SettingTab extends PluginSettingTab {
 
 
 
-    // new Setting(containerEl)
-    // 	.setName("Automatically add duplicate number for same name folder or file")
-    // 	.setDesc(
-    // 		`When automatically rename was enabled, add duplicate number for same name folder or file.`
-    // 	)
-    // 	.addToggle((toggle) =>
-    // 		toggle
-    // 			.setValue(this.plugin.settings.autoDuplicate)
-    // 			.onChange(async (value: boolean) => {
-    // 				this.plugin.settings.autoDuplicate = value;
-    // 				await this.plugin.saveSettings();
-    // 			})
-    // 	);
+    new Setting(containerEl)
+      .setName("Excluded paths")
+      .setDesc(
+        `Provide the full path of the folder names (case sensitive and without leading slash '/') divided by semicolon (;) to be excluded from renaming.`
+      )
+      .addTextArea((component: TextAreaComponent) => {
+        component.setValue(this.plugin.settings.excludedPaths).onChange(async (value) => {
+          this.plugin.settings.excludedPaths = value;
+          const { splittedPaths } = this.splitPath(value);
+          this.plugin.settings.excludePathsArray = splittedPaths;
+          debugLog("setting - excluded paths:" + value, splittedPaths);
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Exclude subpaths")
+      .setDesc("Turn on this option if you want to also exclude all subfolders of the folder paths provided above.")
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.excludeSubpaths).onChange(async (value) => {
+          debugLog("setting - excluded subpaths:" + value);
+          this.plugin.settings.excludeSubpaths = value;
+          await this.plugin.saveSettings();
+        })
+      );
 
     this.displaySw(containerEl);
   }
