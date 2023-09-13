@@ -11,6 +11,7 @@ import {
   SETTINGS_VARIABLES_NOTEPARENT,
 } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
+import { OverrideExtensionModal } from "./extensionOverrides";
 
 export class OverrideModal extends Modal {
   plugin: AttachmentManagementPlugin;
@@ -36,6 +37,28 @@ export class OverrideModal extends Modal {
     });
   }
 
+  validateExtensionEntry() {
+    const wrongIndex: {
+      "type" : "empty" | "duplicate",
+      "index" : number
+    }[] = [];
+    if (this.setting.extensionOverride !== undefined) {
+      const extOverride = this.setting.extensionOverride;
+      if (extOverride.some(ext => ext.extension === "")) {
+        wrongIndex.push({"type": "empty", "index": extOverride.findIndex(ext => ext.extension === "")});
+      }
+      const duplicate = extOverride
+        .map((ext) => ext.extension)
+        .filter((value, index, self) => self.indexOf(value) !== index);
+        if (duplicate.length > 0) {
+          duplicate.forEach((dupli) => {
+            wrongIndex.push({"type": "duplicate", "index": extOverride.findIndex(ext => dupli === ext.extension)});
+          });
+        }
+    }
+    return wrongIndex;
+  }
+
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
@@ -44,7 +67,7 @@ export class OverrideModal extends Modal {
       text: "Override Settings",
     });
 
-    new Setting(contentEl)
+      new Setting(contentEl)
       .setName("Root path to save new attachments")
       .setDesc("Select root path for all new attachments")
       .addDropdown((text) =>
@@ -104,6 +127,65 @@ export class OverrideModal extends Modal {
 
     new Setting(contentEl)
       .addButton((btn) => {
+        btn
+          .setButtonText("Add extension overrides")
+          .onClick(async () => {
+            if (this.setting.extensionOverride === undefined) {
+              this.setting.extensionOverride = [];
+            }
+            this.setting.extensionOverride.push({
+              extension: "",
+              saveAttE: this.setting.saveAttE,
+              attachmentRoot: this.setting.attachmentRoot,
+              attachmentPath: this.setting.attachmentPath,
+              attachFormat: this.setting.attachFormat,
+            });
+            console.log(this.setting.extensionOverride);
+            this.onOpen();
+          });
+      });
+    
+    if (this.setting.extensionOverride !== undefined) {
+      this.setting.extensionOverride.forEach((ext) => {
+
+        new Setting(contentEl)
+          .setName("Extension")
+          .setDesc("Extension to override")
+          .setClass("override_extension_set")
+          .addText((text) =>
+            text
+              .setPlaceholder("pdf")
+              .setValue(ext.extension)
+              .onChange(async (value) => {
+                ext.extension = value;
+              }
+            )
+          )
+          .addButton((btn) => {
+            btn
+              .setIcon("trash")
+              .onClick(async () => {
+                //get index of extension
+                const index = this.setting.extensionOverride?.indexOf(ext) ?? -1;
+                //remove extension from array
+                this.setting.extensionOverride?.splice(index, 1);
+                this.onOpen();
+              });
+          })
+          .addButton((btn) => {
+            btn
+              .setIcon("pencil")
+              .onClick(async () => {
+                new OverrideExtensionModal(this.plugin, ext, (result => {
+                  ext = result;
+              })).open();
+          });
+        });
+      });
+    }
+
+    new Setting(contentEl)
+      .addButton((btn) => {
         btn.setButtonText("Reset").onClick(async () => {
           this.setting = this.plugin.settings.attachPath;
           delete this.plugin.settings.overridePath[this.file.path];
@@ -123,6 +205,23 @@ export class OverrideModal extends Modal {
             } else if (this.file instanceof TFolder) {
               this.setting.type = SETTINGS_TYPES.FOLDER;
             }
+            const wrongIndex = this.validateExtensionEntry();
+            if (wrongIndex.length > 0) {
+              for (const index of wrongIndex) {
+                const resIndex = index.index < 0 ? 0 : index.index;
+                const setting = this.contentEl.getElementsByClassName("override_extension_set")[resIndex];
+                console.log(setting);
+                setting.getElementsByTagName('input')[0].style.border = "1px solid var(--color-red)";
+                if (index.type === "empty") {
+                  new Notice("Extension cannot be empty");
+                }
+                if (index.type === "duplicate") {
+                  new Notice("Extension cannot be duplicate");
+                }
+              }
+              return;
+            }
+            this.onOpen(); //reload
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             await this.plugin.saveSettings();
             debugLog("override - overriding settings:", this.file.path, this.setting);

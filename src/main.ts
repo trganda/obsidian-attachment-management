@@ -518,7 +518,7 @@ export default class AttachmentManagementPlugin extends Plugin {
    */
   getActiveFile(): TFile | undefined {
     const view = this.getActiveView();
-    return view?.file;
+    return view?.file ?? undefined;
   }
 
   /**

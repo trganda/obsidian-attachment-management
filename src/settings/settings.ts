@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from "obsidian";
+import { App, Notice, PluginSettingTab, Setting } from "obsidian";
 import AttachmentManagementPlugin from "../main";
 import {
   SETTINGS_ROOT_OBSFOLDER,
@@ -10,6 +10,7 @@ import {
   SETTINGS_ROOT_NEXTTONOTE, SETTINGS_VARIABLES_ORIGINALNAME
 } from "../lib/constant";
 import { debugLog } from "src/log";
+import { OverrideExtensionModal } from "src/model/extensionOverrides";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
@@ -28,6 +29,21 @@ export interface AttachmentPathSettings {
   attachFormat: string;
   // Override type
   type: SETTINGS_TYPES;
+  //extension override
+  extensionOverride?: ExtensionOverrideSettings[];
+}
+
+export interface ExtensionOverrideSettings {
+  // Extension
+  extension: string;
+  // Attachment root path
+  attachmentRoot: string;
+  // How to save attachment, in fixed folder, current folder or subfolder in current folder
+  saveAttE: string;
+  // Attachment path
+  attachmentPath: string;
+  // How to renamed the image file
+  attachFormat: string;
 }
 
 export interface AttachmentManagementPluginSettings {
@@ -226,6 +242,102 @@ export class SettingTab extends PluginSettingTab {
           await this.plugin.saveSettings();
         })
       );
+    
+    new Setting(containerEl)
+      .addButton((btn) => {
+        btn
+          .setButtonText("Add extension overrides")  
+          .onClick(async () => {
+            if (this.plugin.settings.attachPath.extensionOverride === undefined) {
+              this.plugin.settings.attachPath.extensionOverride = [];
+            }
+            this.plugin.settings.attachPath.extensionOverride.push({
+              extension: "",
+              attachmentRoot: this.plugin.settings.attachPath.attachmentRoot,
+              saveAttE: this.plugin.settings.attachPath.saveAttE,
+              attachmentPath: this.plugin.settings.attachPath.attachmentPath,
+              attachFormat: this.plugin.settings.attachPath.attachFormat,
+            });
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
+
+    if (this.plugin.settings.attachPath.extensionOverride !== undefined) {
+      this.plugin.settings.attachPath.extensionOverride.forEach((ext) => {
+        new Setting(containerEl)
+          .setName("Extension")
+          .setDesc("Extension to override")
+          .setClass("override_extension_set")
+          .addText((text) =>
+            text
+              .setPlaceholder("pdf")
+              .setValue(ext.extension)
+              .onChange(async (value) => {
+                ext.extension = value;
+              })
+          )
+          .addButton((btn) => {
+            btn
+              .setIcon("trash")
+              .setTooltip("Remove extension override")
+              .onClick(async () => {
+                //get index of extension
+                const index = this.plugin.settings.attachPath.extensionOverride?.indexOf(ext) ?? -1;
+                //remove extension from array
+                this.plugin.settings.attachPath.extensionOverride?.splice(index, 1);
+                await this.plugin.saveSettings();
+                this.display();
+              });
+          })
+          .addButton((btn) => {
+            btn
+              .setIcon("pencil")
+              .setTooltip("Edit extension override")
+              .onClick(async () => {
+                new OverrideExtensionModal(this.plugin, ext, (result => {
+                  ext = result;
+                }))
+                .open();
+              });
+          })
+          .addButton((btn) => {
+            btn
+              .setIcon("check")
+              .setTooltip("Save extension override")
+              .onClick(async () => {
+                //error is empty name or more than one same name extension
+
+                  while (ext.extension === "" || this.plugin.settings.attachPath.extensionOverride?.filter((e) => e.extension === ext.extension) && this.plugin.settings.attachPath.extensionOverride?.filter((e) => e.extension === ext.extension).length > 1) {
+                    console.log("extension override error")
+                    if (ext.extension === "") {
+                      //get index of extension
+                      const index = this.plugin.settings.attachPath.extensionOverride?.indexOf(ext) ?? -1;
+                      //add error class to extension
+                      containerEl.findAll(".override_extension_set")[index].getElementsByTagName('input')[0].style.border = "1px solid var(--color-red)";
+                      new Notice("Extension cannot be empty");
+                    } 
+                    const duplicate = this.plugin.settings.attachPath.extensionOverride?.filter((e) => e.extension === ext.extension);
+                    if (duplicate !== undefined && duplicate.length > 1) {
+                      //get index of extension
+                      const index = this.plugin.settings.attachPath.extensionOverride?.indexOf(ext) ?? -1;
+                      //add error class to extension
+                      containerEl.findAll(".override_extension_set")[index].getElementsByTagName('input')[0].style.border = "1px solid var(--color-red)";
+                      new Notice("Duplicate extension override");
+                    }
+                    return;
+                  } 
+                  await this.plugin.saveSettings();
+                  this.display();
+              });
+          })
+        });
+      }
+
+
+
+
+
 
     // new Setting(containerEl)
     // 	.setName("Automatically add duplicate number for same name folder or file")
