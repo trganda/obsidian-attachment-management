@@ -1,4 +1,4 @@
-import { normalizePath } from "obsidian";
+import { DataAdapter, TFile, normalizePath } from "obsidian";
 import { AttachmentPathSettings } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_DATES,
@@ -11,6 +11,7 @@ import {
 } from "./lib/constant";
 import { getRootPath } from "./commons";
 import { path } from "./lib/path";
+import { MD5 } from "./utils";
 
 /**
  * Metadata of notes file
@@ -34,13 +35,24 @@ class Metadata {
   /** parent path basename of file */
   parentName = "";
 
-  constructor(path: string, name: string, basename: string, extension: string, parentPath: string, parentName: string) {
+  attachmentFile: TFile;
+
+  constructor(
+    path: string,
+    name: string,
+    basename: string,
+    extension: string,
+    parentPath: string,
+    parentName: string,
+    attachmentFile: TFile
+  ) {
     this.path = path;
     this.name = name;
     this.basename = basename;
     this.extension = extension;
     this.parentPath = parentPath;
     this.parentName = parentName;
+    this.attachmentFile = attachmentFile;
   }
 
   /**
@@ -52,25 +64,32 @@ class Metadata {
    * @param {string} [linkName] - optional name for the attachment link
    * @return {string} the formatted attachment file name
    */
-  getAttachFileName(setting: AttachmentPathSettings, dateFormat: string, originalName: string, md5: string, extension: string, linkName?: string) {
+  async getAttachFileName(
+    setting: AttachmentPathSettings,
+    dateFormat: string,
+    originalName: string,
+    adapter: DataAdapter,
+    linkName?: string
+  ) {
     const dateTime = window.moment().format(dateFormat);
+    const md5 = await MD5(adapter, this.attachmentFile);
     // we have no persistence of original name,  return current linking name
     if (setting.attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
       if (originalName === "" && linkName != undefined) {
         return linkName;
       } else {
         return setting.attachFormat
-        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-        .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-        .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName)
-        .replace(`${SETTINGS_VARIABLES_EXTENSION}`, extension)
-        .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
+          .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
+          .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+          .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName)
+          .replace(`${SETTINGS_VARIABLES_EXTENSION}`, this.attachmentFile.extension)
+          .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
       }
     }
     return setting.attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
       .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-      .replace(`${SETTINGS_VARIABLES_EXTENSION}`, extension)
+      .replace(`${SETTINGS_VARIABLES_EXTENSION}`, this.attachmentFile.extension)
       .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
   }
 
@@ -99,12 +118,16 @@ class Metadata {
  * @param {string} file - The full path to the file.
  * @return {Metadata} A new instance of Metadata containing information about the file.
  */
-export function getMetadata(file: string): Metadata {
+export function getMetadata(file: string, attach?: TFile): Metadata {
   const parentPath = path.dirname(file);
   const parentName = path.basename(parentPath);
   const name = path.basename(file);
   const extension = path.extname(file);
   const basename = path.basename(file, extension);
 
-  return new Metadata(file, name, basename, extension, parentPath, parentName);
+  if (attach === undefined) {
+    attach = new TFile();
+  }
+
+  return new Metadata(file, name, basename, extension, parentPath, parentName, attach);
 }

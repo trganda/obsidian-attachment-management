@@ -45,7 +45,7 @@ export class CreateHandler {
 
     debugLog("processAttach - active file path", activeFile.path);
 
-    const metadata = getMetadata(activeFile.path);
+    const metadata = getMetadata(activeFile.path, file);
     debugLog("processAttach - metadata:", metadata);
 
     // const attachName =
@@ -55,7 +55,7 @@ export class CreateHandler {
     // const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
     const attachPath = metadata.getAttachmentPath(setting);
     const attachName =
-      metadata.getAttachFileName(setting, this.settings.dateFormat, file.basename, MD5(file), file.extension) + "." + file.extension;
+      await metadata.getAttachFileName(setting, this.settings.dateFormat, file.basename, this.app.vault.adapter) + "." + file.extension;
 
     // make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath, true))) {

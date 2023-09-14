@@ -1,4 +1,4 @@
-import { TAbstractFile, TFile } from "obsidian";
+import { DataAdapter, TAbstractFile, TFile } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_NOTENAME,
@@ -178,11 +178,15 @@ export function getParentFolder(rf: TFile) {
   return { parentPath, parentName };
 }
 
-export function MD5(file: TFile): string {
+export async function MD5(adapter:DataAdapter, file: TFile): Promise<string> {
   const md5 = new Md5();
-  const content = this.app.vault.readBinary(file)
-  md5.appendByteArray(new Uint8Array(content));
 
+  if (!(adapter.exists(file.path, true))) {
+    return "";
+  }
+
+  const content = await adapter.readBinary(file.path);
+  md5.appendByteArray(new Uint8Array(content));
   const ret = md5.end() as string;
 
   return ret.toUpperCase();

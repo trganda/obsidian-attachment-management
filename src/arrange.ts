@@ -60,9 +60,6 @@ export class ArrangeHandler {
         return;
       }
 
-      const metadata = getMetadata(obNote);
-      const attachPath = metadata.getAttachmentPath(setting);
-
       for (let link of attachments[obNote]) {
         try {
           link = decodeURI(link);
@@ -77,12 +74,14 @@ export class ArrangeHandler {
           continue;
         }
 
-        const attachName = metadata.getAttachFileName(
+        const metadata = getMetadata(obNote, linkFile);
+        const attachPath = metadata.getAttachmentPath(setting);
+
+        const attachName = await metadata.getAttachFileName(
           setting,
           this.settings.dateFormat,
           "",
-          MD5(linkFile),
-          linkFile.extension,
+          this.app.vault.adapter,
           path.basename(link, path.extname(link))
         );
         // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);
