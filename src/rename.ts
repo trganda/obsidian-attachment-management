@@ -21,7 +21,7 @@ export class RenameHandler {
   }
 
   async onRename(
-    file: TAbstractFile,
+    file: TFile,
     oldPath: string,
     eventType: RenameEventType,
     attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,

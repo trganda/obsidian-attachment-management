@@ -8,6 +8,7 @@ import {
   isAttachment,
   isCanvasFile,
   isMarkdownFile,
+  MD5,
 } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
@@ -71,7 +72,7 @@ export class ArrangeHandler {
         }
         debugLog(`rearrangeAttachment - article: ${obNote} links: ${link}`);
         const linkFile = this.app.vault.getAbstractFileByPath(link);
-        if (linkFile === null) {
+        if (linkFile === null || !(linkFile instanceof TFile)) {
           debugLog(`${link} not exists, skipped`);
           continue;
         }
@@ -80,6 +81,8 @@ export class ArrangeHandler {
           setting,
           this.settings.dateFormat,
           "",
+          MD5(linkFile),
+          linkFile.extension,
           path.basename(link, path.extname(link))
         );
         // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);

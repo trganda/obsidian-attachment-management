@@ -5,6 +5,7 @@ import {
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTEPARENT,
 } from "./lib/constant";
+import { Md5 } from "ts-md5";
 
 export enum ATTACHMENT_RENAME_TYPE {
   // need to rename the attachment folder and file name
@@ -175,4 +176,14 @@ export function getParentFolder(rf: TFile) {
     parentName = parent.name;
   }
   return { parentPath, parentName };
+}
+
+export function MD5(file: TFile): string {
+  const md5 = new Md5();
+  const content = this.app.vault.readBinary(file)
+  md5.appendByteArray(new Uint8Array(content));
+
+  const ret = md5.end() as string;
+
+  return ret.toUpperCase();
 }

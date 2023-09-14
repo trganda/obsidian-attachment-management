@@ -2,6 +2,8 @@ import { normalizePath } from "obsidian";
 import { AttachmentPathSettings } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_EXTENSION,
+  SETTINGS_VARIABLES_MD5,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPARENT,
   SETTINGS_VARIABLES_NOTEPATH,
@@ -10,6 +12,9 @@ import {
 import { getRootPath } from "./commons";
 import { path } from "./lib/path";
 
+/**
+ * Metadata of notes file
+ */
 class Metadata {
   /** path of file */
   path: string;
@@ -47,7 +52,7 @@ class Metadata {
    * @param {string} [linkName] - optional name for the attachment link
    * @return {string} the formatted attachment file name
    */
-  getAttachFileName(setting: AttachmentPathSettings, dateFormat: string, originalName: string, linkName?: string) {
+  getAttachFileName(setting: AttachmentPathSettings, dateFormat: string, originalName: string, md5: string, extension: string, linkName?: string) {
     const dateTime = window.moment().format(dateFormat);
     // we have no persistence of original name,  return current linking name
     if (setting.attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
@@ -57,12 +62,16 @@ class Metadata {
         return setting.attachFormat
         .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
         .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-        .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
+        .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName)
+        .replace(`${SETTINGS_VARIABLES_EXTENSION}`, extension)
+        .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
       }
     }
     return setting.attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename);
+      .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+      .replace(`${SETTINGS_VARIABLES_EXTENSION}`, extension)
+      .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
   }
 
   /**
@@ -73,7 +82,6 @@ class Metadata {
    */
   getAttachmentPath(setting: AttachmentPathSettings): string {
     const root = getRootPath(this.parentPath, setting);
-
     const attachPath = path.join(
       root,
       setting.attachmentPath

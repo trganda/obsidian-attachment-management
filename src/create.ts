@@ -1,4 +1,4 @@
-import { App, Notice, TFile, TFolder, TextFileView, normalizePath } from "obsidian";
+import { App, Notice, TFile, TFolder, normalizePath } from "obsidian";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
@@ -7,6 +7,7 @@ import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";
 import { getMetadata } from "./metadata";
 import { isExcluded } from "./exclude";
+import { MD5 } from "./utils";
 
 export class CreateHandler {
   readonly app: App;
@@ -34,7 +35,7 @@ export class CreateHandler {
     }
 
     debugLog("processAttach - parent:", activeFile.parent?.path);
-    if ((activeFile.parent && isExcluded(activeFile.parent.path, this.settings))) {
+    if (activeFile.parent && isExcluded(activeFile.parent.path, this.settings)) {
       debugLog("processAttach - not a file or exclude path:", activeFile.path);
       new Notice(`${activeFile.path} was excluded, skipped`);
       return;
@@ -53,7 +54,8 @@ export class CreateHandler {
     //   file.extension;
     // const attachPath = getAttachmentPath(activeFile.basename, parentPath, parentName, setting);
     const attachPath = metadata.getAttachmentPath(setting);
-    const attachName = metadata.getAttachFileName(setting, this.settings.dateFormat, file.basename) + "." + file.extension;
+    const attachName =
+      metadata.getAttachFileName(setting, this.settings.dateFormat, file.basename, MD5(file), file.extension) + "." + file.extension;
 
     // make sure the path was created
     if (!(await this.app.vault.adapter.exists(attachPath, true))) {
