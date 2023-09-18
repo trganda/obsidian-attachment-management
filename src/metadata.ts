@@ -12,6 +12,7 @@ import {
 import { getRootPath } from "./commons";
 import { path } from "./lib/path";
 import { MD5 } from "./utils";
+import { getExtensionOverrideSetting } from "./model/extensionOverride";
 
 /**
  * Metadata of notes file
@@ -100,14 +101,29 @@ class Metadata {
    * @return {string} The normalized attachment path.
    */
   getAttachmentPath(setting: AttachmentPathSettings): string {
-    const root = getRootPath(this.parentPath, setting);
-    const attachPath = path.join(
-      root,
-      setting.attachmentPath
-        .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
-        .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-    );
+    const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
+    let root = "";
+    let attachPath = "";
+    if (extSetting !== undefined) {
+      root = getRootPath(this.parentPath, setting);
+      attachPath = path.join(
+        root,
+        extSetting.attachmentPath
+          .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
+          .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+          .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
+      );
+    } else {
+      root = getRootPath(this.parentPath, setting);
+      attachPath = path.join(
+        root,
+        setting.attachmentPath
+          .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
+          .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+          .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
+      );
+    }
+
     return normalizePath(attachPath);
   }
 }

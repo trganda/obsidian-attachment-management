@@ -148,18 +148,12 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           const processor = new CreateHandler(this.app, this.settings);
-          if (isImage(file.extension) || isPastedImage(file)) {
+          if (!testExcludeExtension(file.extension, this.settings.excludeExtensionPattern) || isImage(file.extension) || isPastedImage(file)) {
             debugLog("create - image", file);
             await processor.processAttach(file);
           } else {
-            if (this.settings.handleAll) {
-              debugLog("create - handleAll for file", file);
-              if (testExcludeExtension(file.extension, this.settings.excludeExtensionPattern)) {
-                debugLog("create - excluded file by extension", file);
-                return;
-              }
-              await processor.processAttach(file);
-            }
+            debugLog("create - excluded file by extension", file);
+            return;
           }
         });
       })
