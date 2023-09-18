@@ -4,9 +4,7 @@
   "env": {
     "node": true
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
+  "plugins": ["@typescript-eslint", "import", "unused-imports"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/eslint-recommended",
@@ -17,8 +15,8 @@
     "sourceType": "module"
   },
   "rules": {
-    "no-unused-vars": "off",
     "@typescript-eslint/no-unused-vars": "error",
+    "unused-imports/no-unused-imports": "error",
     "no-prototype-builtins": "off",
     "no-useless-escape": "off",
     "no-duplicate-imports": "error",

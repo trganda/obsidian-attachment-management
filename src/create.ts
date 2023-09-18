@@ -7,7 +7,6 @@ import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";
 import { getMetadata } from "./metadata";
 import { isExcluded } from "./exclude";
-import { MD5 } from "./utils";
 
 export class CreateHandler {
   readonly app: App;

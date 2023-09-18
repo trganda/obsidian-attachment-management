@@ -8,7 +8,6 @@ import {
   isAttachment,
   isCanvasFile,
   isMarkdownFile,
-  MD5,
 } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";

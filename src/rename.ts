@@ -1,4 +1,4 @@
-import { App, ListedFiles, TAbstractFile, TFile, TFolder, normalizePath } from "obsidian";
+import { App, ListedFiles, TFile, TFolder, normalizePath } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { RenameEventType, RENAME_EVENT_TYPE_FILE } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
