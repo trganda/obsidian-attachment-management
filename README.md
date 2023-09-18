@@ -86,7 +86,7 @@ Use [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/
 
 This option is useful if you want to ignore some file type. Write a Regex pattern to exclude certain extensions from being handled.
 
-![SCR-20230511-roat](./images/SCR-20230511-roat.png)
+![SCR-20230918-pkys](./images/SCR-20230918-pkys.png)
 
 ### Automatically Rename Attachment
 
@@ -96,7 +96,7 @@ Automatically rename the attachment folder/filename when you rename the folder/f
 
 This feature allow you to specify the setting for a serials extension. You can use a regex pattern here, and override the global setting.
 
-![](images/SCR-20230918-pihr.png)
+![SCR-20230918-pihr](images/SCR-20230918-pihr.png)
 
 ### Exclude Paths
 
