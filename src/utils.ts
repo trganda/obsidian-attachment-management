@@ -1,4 +1,4 @@
-import { DataAdapter, TAbstractFile, TFile } from "obsidian";
+import { DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_NOTENAME,
@@ -190,4 +190,54 @@ export async function MD5(adapter:DataAdapter, file: TFile): Promise<string> {
   const ret = md5.end() as string;
 
   return ret.toUpperCase();
+}
+
+export function validateExtensionEntry(setting: AttachmentPathSettings, plugin: AttachmentManagementPluginSettings) {
+	const wrongIndex: {
+      "type" : "empty" | "duplicate" | "md" | "canvas" | "excluded",
+      "index" : number
+    }[] = [];
+	if (setting.extensionOverride !== undefined) {
+		const extOverride = setting.extensionOverride;
+		if (extOverride.some(ext => ext.extension === "")) {
+			wrongIndex.push({"type": "empty", "index": extOverride.findIndex(ext => ext.extension === "")});
+		}
+		const duplicate = extOverride
+			.map((ext) => ext.extension)
+			.filter((value, index, self) => self.indexOf(value) !== index);
+		if (duplicate.length > 0) {
+			duplicate.forEach((dupli) => {
+				wrongIndex.push({"type": "duplicate", "index": extOverride.findIndex(ext => dupli === ext.extension)});
+			});
+		}
+		const markdown = extOverride.filter((ext) => ext.extension === "md");
+		if (markdown.length > 0) {
+			wrongIndex.push({"type": "md", "index": extOverride.findIndex(ext => ext.extension === "md")});
+		}
+		const canvas = extOverride.filter((ext) => ext.extension === "canvas");
+		if (canvas.length > 0) {
+			wrongIndex.push({"type": "canvas", "index": extOverride.findIndex(ext => ext.extension === "canvas")});
+		}
+		const excludedFromSettings = plugin.excludeExtensionPattern.split("|");
+		const excluded = extOverride.filter((ext) => excludedFromSettings.includes(ext.extension));
+		if (excluded.length > 0) {
+			wrongIndex.push({"type": "excluded", "index": extOverride.findIndex(ext => excludedFromSettings.includes(ext.extension))});
+		}
+	}
+	return wrongIndex;
+}
+
+export function generateErrorExtensionMessage(type: "md" | "canvas" | "empty" | "duplicate" | "excluded") {
+	if (type === "canvas") {
+		new Notice("Canvas is not supported as an extension override.");
+	} else if (type === "md") {
+		new Notice("Markdown is not supported as an extension override.");
+	}
+	else if (type === "empty") {
+		new Notice("Extension override cannot be empty.");
+	} else if (type === "duplicate") {
+		new Notice("Duplicate extension override.");
+	} else if (type === "excluded") {
+		new Notice("Extension override cannot be an excluded extension.");
+	}
 }

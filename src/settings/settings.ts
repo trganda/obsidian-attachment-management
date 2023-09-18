@@ -11,6 +11,8 @@ import {
   SETTINGS_VARIABLES_ORIGINALNAME,
 } from "../lib/constant";
 import { debugLog } from "src/log";
+import { OverrideExtensionModal } from "src/model/extensionOverride";
+import { validateExtensionEntry, generateErrorExtensionMessage } from "src/utils";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
@@ -25,10 +27,25 @@ export interface AttachmentPathSettings {
   saveAttE: string;
   // Attachment path
   attachmentPath: string;
-  // How to renamed the image file
+  // How to renamed the attachment file
   attachFormat: string;
   // Override type
   type: SETTINGS_TYPES;
+  //extension override
+  extensionOverride?: ExtensionOverrideSettings[];
+}
+
+export interface ExtensionOverrideSettings {
+  // Extension
+  extension: string;
+  // Attachment root path
+  attachmentRoot: string;
+  // How to save attachment, in fixed folder, current folder or subfolder in current folder
+  saveAttE: string;
+  // Attachment path
+  attachmentPath: string;
+  // How to renamed the attachment file
+  attachFormat: string;
 }
 
 export interface AttachmentManagementPluginSettings {
@@ -196,37 +213,19 @@ export class SettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(containerEl)
-      .setName("Handle all attachments")
-      .setDesc(
-        "By default, only auto-rename the image file, if enable this option, all created file (except 'md' or 'canvas') will be renamed automatically"
-      )
-      .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
-          debugLog("setting - handle all attachment:" + value);
-          this.plugin.settings.handleAll = value;
-          this.displaySw(containerEl);
-          await this.plugin.saveSettings();
-        })
-      );
-
-    new Setting(containerEl)
-      .setName("Exclude extension pattern")
-      .setDesc(
-        `This option is only useful when "Handle all attachments" is enabled.	Write a Regex pattern to exclude certain extensions from being handled.`
-      )
-      .setClass("exclude_extension_pattern")
-      .setClass("attach_management_sub_setting")
-      .addText((text) =>
-        text
-          .setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")
-          .setValue(this.plugin.settings.excludeExtensionPattern)
-          .onChange(async (value) => {
-            this.plugin.settings.excludeExtensionPattern = value;
-            await this.plugin.saveSettings();
-          })
-      );
-
+    // new Setting(containerEl)
+    //   .setName("Handle all attachments")
+    //   .setDesc(
+    //     "By default, only auto-rename the image file, if enable this option, all created file (except 'md' or 'canvas') will be renamed automatically"
+    //   )
+    //   .addToggle((toggle) =>
+    //     toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
+    //       debugLog("setting - handle all attachment:" + value);
+    //       this.plugin.settings.handleAll = value;
+    //       this.displaySw(containerEl);
+    //       await this.plugin.saveSettings();
+    //     })
+    //   );
     new Setting(containerEl)
       .setName("Automatically rename attachment")
       .setDesc(
@@ -238,6 +237,101 @@ export class SettingTab extends PluginSettingTab {
           this.plugin.settings.autoRenameAttachment = value;
           await this.plugin.saveSettings();
         })
+      );
+
+    new Setting(containerEl)
+      .addButton((btn) => {
+        btn
+          .setButtonText("Add extension overrides")
+          .onClick(async () => {
+            if (this.plugin.settings.attachPath.extensionOverride === undefined) {
+              this.plugin.settings.attachPath.extensionOverride = [];
+            }
+            this.plugin.settings.attachPath.extensionOverride.push({
+              extension: "",
+              attachmentRoot: this.plugin.settings.attachPath.attachmentRoot,
+              saveAttE: this.plugin.settings.attachPath.saveAttE,
+              attachmentPath: this.plugin.settings.attachPath.attachmentPath,
+              attachFormat: this.plugin.settings.attachPath.attachFormat,
+            });
+            await this.plugin.saveSettings();
+            this.display();
+          });
+      });
+
+    if (this.plugin.settings.attachPath.extensionOverride !== undefined) {
+      this.plugin.settings.attachPath.extensionOverride.forEach((ext) => {
+        new Setting(containerEl)
+          .setName("Extension")
+          .setDesc("Extension to override")
+          .setClass("override_extension_set")
+          .addText((text) =>
+            text
+              .setPlaceholder("pdf")
+              .setValue(ext.extension)
+              .onChange(async (value) => {
+                ext.extension = value;
+              })
+          )
+          .addButton((btn) => {
+            btn
+              .setIcon("trash")
+              .setTooltip("Remove extension override")
+              .onClick(async () => {
+                //get index of extension
+                const index = this.plugin.settings.attachPath.extensionOverride?.indexOf(ext) ?? -1;
+                //remove extension from array
+                this.plugin.settings.attachPath.extensionOverride?.splice(index, 1);
+                await this.plugin.saveSettings();
+                this.display();
+              });
+          })
+          .addButton((btn) => {
+            btn
+              .setIcon("pencil")
+              .setTooltip("Edit extension override")
+              .onClick(async () => {
+                new OverrideExtensionModal(this.plugin, ext, (result => {
+                  ext = result;
+                }))
+                  .open();
+              });
+          })
+          .addButton((btn) => {
+            btn
+              .setIcon("check")
+              .setTooltip("Save extension override")
+              .onClick(async () => {
+                const wrongIndex = validateExtensionEntry(this.plugin.settings.attachPath, this.plugin.settings);
+                if (wrongIndex.length > 0) {
+                  for (const i of wrongIndex) {
+                    const resIndex = i.index < 0 ? 0 : i.index;
+                    const wrongSetting = containerEl.getElementsByClassName("override_extension_set")[resIndex];
+                    wrongSetting.getElementsByTagName("input")[0].style.border = "1px solid var(--color-red)";
+                    generateErrorExtensionMessage(i.type);
+                  }
+                  return;
+                }
+                await this.plugin.saveSettings();
+                this.display();
+              });
+          });
+      });
+    }
+
+    new Setting(containerEl)
+      .setName("Exclude extension pattern")
+      .setDesc(
+        `Regex pattern to exclude certain extensions from being handled.`
+      )
+      .addText((text) =>
+        text
+          .setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")
+          .setValue(this.plugin.settings.excludeExtensionPattern)
+          .onChange(async (value) => {
+            this.plugin.settings.excludeExtensionPattern = value;
+            await this.plugin.saveSettings();
+          })
       );
 
     new Setting(containerEl)
