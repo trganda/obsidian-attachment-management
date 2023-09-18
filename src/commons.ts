@@ -9,7 +9,10 @@ import { AttachmentPathSettings, ExtensionOverrideSettings } from "./settings/se
  */
 export function getActiveFile(app: App): TFile | undefined {
   const view = getActiveView(app);
-  return view?.file;
+  if (view == null) {
+    return undefined;
+  }
+  return view.file;
 }
 
 /**
