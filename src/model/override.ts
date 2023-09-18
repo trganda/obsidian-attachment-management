@@ -103,25 +103,22 @@ export class OverrideModal extends Modal {
           })
       );
 
-    new Setting(contentEl)
-      .addButton((btn) => {
-        btn
-          .setButtonText("Add extension overrides")
-          .onClick(async () => {
-            if (this.setting.extensionOverride === undefined) {
-              this.setting.extensionOverride = [];
-            }
-            this.setting.extensionOverride.push({
-              extension: "",
-              saveAttE: this.setting.saveAttE,
-              attachmentRoot: this.setting.attachmentRoot,
-              attachmentPath: this.setting.attachmentPath,
-              attachFormat: this.setting.attachFormat,
-            });
-            console.log(this.setting.extensionOverride);
-            this.onOpen();
-          });
+    new Setting(contentEl).addButton((btn) => {
+      btn.setButtonText("Add extension overrides").onClick(async () => {
+        if (this.setting.extensionOverride === undefined) {
+          this.setting.extensionOverride = [];
+        }
+        this.setting.extensionOverride.push({
+          extension: "",
+          saveAttE: this.setting.saveAttE,
+          attachmentRoot: this.setting.attachmentRoot,
+          attachmentPath: this.setting.attachmentPath,
+          attachFormat: this.setting.attachFormat,
+        });
+        console.log(this.setting.extensionOverride);
+        this.onOpen();
       });
+    });
 
     if (this.setting.extensionOverride !== undefined) {
       this.setting.extensionOverride.forEach((ext) => {
@@ -135,28 +132,23 @@ export class OverrideModal extends Modal {
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
-              }
-              )
+              })
           )
           .addButton((btn) => {
-            btn
-              .setIcon("trash")
-              .onClick(async () => {
-                //get index of extension
-                const index = this.setting.extensionOverride?.indexOf(ext) ?? -1;
-                //remove extension from array
-                this.setting.extensionOverride?.splice(index, 1);
-                this.onOpen();
-              });
+            btn.setIcon("trash").onClick(async () => {
+              //get index of extension
+              const index = this.setting.extensionOverride?.indexOf(ext) ?? -1;
+              //remove extension from array
+              this.setting.extensionOverride?.splice(index, 1);
+              this.onOpen();
+            });
           })
           .addButton((btn) => {
-            btn
-              .setIcon("pencil")
-              .onClick(async () => {
-                new OverrideExtensionModal(this.plugin, ext, (result => {
-                  ext = result;
-                })).open();
-              });
+            btn.setIcon("pencil").onClick(async () => {
+              new OverrideExtensionModal(this.plugin, ext, (result) => {
+                ext = result;
+              }).open();
+            });
           });
       });
     }
@@ -185,6 +177,7 @@ export class OverrideModal extends Modal {
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             await this.plugin.saveSettings();
             debugLog("override - overriding settings:", this.file.path, this.setting);
+            new Notice(`Overridden attachment setting of ${this.file.path}`);
             this.close();
           })
       );

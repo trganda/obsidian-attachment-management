@@ -1,4 +1,4 @@
-import { App, MomentFormatComponent, PluginSettingTab, Setting, TextAreaComponent } from "obsidian";
+import { App, MomentFormatComponent, Notice, PluginSettingTab, Setting, TextAreaComponent } from "obsidian";
 import AttachmentManagementPlugin from "../main";
 import {
   SETTINGS_ROOT_OBSFOLDER,
@@ -239,25 +239,22 @@ export class SettingTab extends PluginSettingTab {
         })
       );
 
-    new Setting(containerEl)
-      .addButton((btn) => {
-        btn
-          .setButtonText("Add extension overrides")
-          .onClick(async () => {
-            if (this.plugin.settings.attachPath.extensionOverride === undefined) {
-              this.plugin.settings.attachPath.extensionOverride = [];
-            }
-            this.plugin.settings.attachPath.extensionOverride.push({
-              extension: "",
-              attachmentRoot: this.plugin.settings.attachPath.attachmentRoot,
-              saveAttE: this.plugin.settings.attachPath.saveAttE,
-              attachmentPath: this.plugin.settings.attachPath.attachmentPath,
-              attachFormat: this.plugin.settings.attachPath.attachFormat,
-            });
-            await this.plugin.saveSettings();
-            this.display();
-          });
+    new Setting(containerEl).addButton((btn) => {
+      btn.setButtonText("Add extension overrides").onClick(async () => {
+        if (this.plugin.settings.attachPath.extensionOverride === undefined) {
+          this.plugin.settings.attachPath.extensionOverride = [];
+        }
+        this.plugin.settings.attachPath.extensionOverride.push({
+          extension: "",
+          attachmentRoot: this.plugin.settings.attachPath.attachmentRoot,
+          saveAttE: this.plugin.settings.attachPath.saveAttE,
+          attachmentPath: this.plugin.settings.attachPath.attachmentPath,
+          attachFormat: this.plugin.settings.attachPath.attachFormat,
+        });
+        await this.plugin.saveSettings();
+        this.display();
       });
+    });
 
     if (this.plugin.settings.attachPath.extensionOverride !== undefined) {
       this.plugin.settings.attachPath.extensionOverride.forEach((ext) => {
@@ -291,10 +288,9 @@ export class SettingTab extends PluginSettingTab {
               .setIcon("pencil")
               .setTooltip("Edit extension override")
               .onClick(async () => {
-                new OverrideExtensionModal(this.plugin, ext, (result => {
+                new OverrideExtensionModal(this.plugin, ext, (result) => {
                   ext = result;
-                }))
-                  .open();
+                }).open();
               });
           })
           .addButton((btn) => {
@@ -314,6 +310,7 @@ export class SettingTab extends PluginSettingTab {
                 }
                 await this.plugin.saveSettings();
                 this.display();
+                new Notice("Saved extension override");
               });
           });
       });
@@ -321,9 +318,7 @@ export class SettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("Exclude extension pattern")
-      .setDesc(
-        `Regex pattern to exclude certain extensions from being handled.`
-      )
+      .setDesc(`Regex pattern to exclude certain extensions from being handled.`)
       .addText((text) =>
         text
           .setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")

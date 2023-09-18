@@ -2,7 +2,6 @@ import { DataAdapter, TFile, normalizePath } from "obsidian";
 import { AttachmentPathSettings } from "./settings/settings";
 import {
   SETTINGS_VARIABLES_DATES,
-  SETTINGS_VARIABLES_EXTENSION,
   SETTINGS_VARIABLES_MD5,
   SETTINGS_VARIABLES_NOTENAME,
   SETTINGS_VARIABLES_NOTEPARENT,
@@ -36,7 +35,7 @@ class Metadata {
   /** parent path basename of file */
   parentName = "";
 
-  attachmentFile: TFile;
+  attachmentFile?: TFile;
 
   constructor(
     path: string,
@@ -45,7 +44,7 @@ class Metadata {
     extension: string,
     parentPath: string,
     parentName: string,
-    attachmentFile: TFile
+    attachmentFile?: TFile
   ) {
     this.path = path;
     this.name = name;
@@ -73,24 +72,34 @@ class Metadata {
     linkName?: string
   ) {
     const dateTime = window.moment().format(dateFormat);
-    const md5 = await MD5(adapter, this.attachmentFile);
+
+    let md5 = "";
+    let attachFormat = "";
+    if (this.attachmentFile !== undefined) {
+      md5 = await MD5(adapter, this.attachmentFile);
+      const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
+      if (extSetting !== undefined) {
+        attachFormat = extSetting.attachFormat;
+      } else {
+        attachFormat = setting.attachFormat;
+      }
+    }
+
     // we have no persistence of original name,  return current linking name
-    if (setting.attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
+    if (attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
       if (originalName === "" && linkName != undefined) {
         return linkName;
       } else {
-        return setting.attachFormat
+        return attachFormat
           .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
           .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
           .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName)
-          .replace(`${SETTINGS_VARIABLES_EXTENSION}`, this.attachmentFile.extension)
           .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
       }
     }
-    return setting.attachFormat
+    return attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
       .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-      .replace(`${SETTINGS_VARIABLES_EXTENSION}`, this.attachmentFile.extension)
       .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
   }
 
@@ -101,28 +110,33 @@ class Metadata {
    * @return {string} The normalized attachment path.
    */
   getAttachmentPath(setting: AttachmentPathSettings): string {
-    const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
     let root = "";
     let attachPath = "";
-    if (extSetting !== undefined) {
-      root = getRootPath(this.parentPath, setting);
-      attachPath = path.join(
-        root,
-        extSetting.attachmentPath
-          .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
-          .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-          .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-      );
-    } else {
-      root = getRootPath(this.parentPath, setting);
-      attachPath = path.join(
-        root,
-        setting.attachmentPath
-          .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
-          .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-          .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-      );
+
+    if (this.attachmentFile !== undefined) {
+      const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
+      if (extSetting !== undefined) {
+        root = getRootPath(this.parentPath, extSetting);
+        attachPath = path.join(
+          root,
+          extSetting.attachmentPath
+            .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
+            .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+            .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
+        );
+
+        return normalizePath(attachPath);
+      }
     }
+
+    root = getRootPath(this.parentPath, setting);
+    attachPath = path.join(
+      root,
+      setting.attachmentPath
+        .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
+        .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
+        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
+    );
 
     return normalizePath(attachPath);
   }
@@ -140,10 +154,6 @@ export function getMetadata(file: string, attach?: TFile): Metadata {
   const name = path.basename(file);
   const extension = path.extname(file);
   const basename = path.basename(file, extension);
-
-  if (attach === undefined) {
-    attach = new TFile();
-  }
 
   return new Metadata(file, name, basename, extension, parentPath, parentName, attach);
 }

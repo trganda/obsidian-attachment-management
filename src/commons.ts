@@ -1,7 +1,7 @@
 import { App, TFile, TextFileView, normalizePath } from "obsidian";
 import { SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE } from "./lib/constant";
 import { path } from "./lib/path";
-import { AttachmentPathSettings } from "./settings/settings";
+import { AttachmentPathSettings, ExtensionOverrideSettings } from "./settings/settings";
 
 /**
  * Return the active text file, `md` or `canvas`
@@ -26,7 +26,7 @@ export function getActiveView(app: App): TextFileView | null {
  * @param setting
  * @returns root path to save attachment file
  */
-export function getRootPath(notePath: string, setting: AttachmentPathSettings): string {
+export function getRootPath(notePath: string, setting: AttachmentPathSettings | ExtensionOverrideSettings): string {
   let root: string;
 
   //@ts-ignore
