@@ -53,9 +53,7 @@ export interface AttachmentManagementPluginSettings {
   attachPath: AttachmentPathSettings;
   // Date format
   dateFormat: string;
-  // Handle all file
-  handleAll: boolean;
-  // Exclude extension not to rename (work if enabled handleAll)
+  // Exclude extension not to rename
   excludeExtensionPattern: string;
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
@@ -78,7 +76,6 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
     type: SETTINGS_TYPES.GLOBAL,
   },
   dateFormat: "YYYYMMDDHHmmssSSS",
-  handleAll: false,
   excludeExtensionPattern: "",
   autoRenameAttachment: true,
   excludedPaths: "",
@@ -99,13 +96,6 @@ export class SettingTab extends PluginSettingTab {
     cont.findAll(".setting-item").forEach((el: HTMLElement) => {
       if (el.getAttr("class")?.includes("root_folder_set")) {
         if (this.plugin.settings.attachPath.saveAttE === "obsFolder") {
-          el.hide();
-        } else {
-          el.show();
-        }
-      }
-      if (el.getAttr("class")?.includes("exclude_extension_pattern")) {
-        if (!this.plugin.settings.handleAll) {
           el.hide();
         } else {
           el.show();
