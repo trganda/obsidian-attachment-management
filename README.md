@@ -1,6 +1,6 @@
 # Obsidian Attachment Management
 
-This plugin supports more flexibly to setting your attachment location with variable like `${notepath}`, `${notename}` and `${date}`.
+This plugin supports more flexibly to setting your attachment location with variable like `${notepath}`, `${notename}`, `${date}` and `${md5}`. And a override setting feature can be use for change the global setting of a folder, file or extension.
 
 ## Roadmap of Features
 
@@ -74,6 +74,7 @@ Set how to rename the attachment, available variables:
 - `${notename}`: The **filename** of the `markdown` or `canvas` file (without file extension).
 - `${originalname}`: The **filename** of the attachment file when first time it created.
 - `${date}`: Date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
+- `${md5}`: MD5 hash of the attachment file (only calculate when the attachment file was first created in vault).
 
 default value `IMG-{date}`.
 
@@ -81,13 +82,9 @@ default value `IMG-{date}`.
 
 Use [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format) to set the `${date}`, default value `YYYYMMDDHHmmssSSS`. You should always use the `${date}` variable to prevent the same file name.
 
-### Handle All Attachments
-
-By default, only auto-rename the image file (see [Accepted file formats](https://help.obsidian.md/Advanced+topics/Accepted+file+formats)), if enable this option, all created file (except `md` or `canvas`) will be renamed automatically
-
 #### Exclude Extension Pattern
 
-This option is only useful when "Handle all attachments" is enabled. Write a Regex pattern to exclude certain extensions from being handled.
+This option is useful if you want to ignore some file type. Write a Regex pattern to exclude certain extensions from being handled.
 
 ![SCR-20230511-roat](./images/SCR-20230511-roat.png)
 
@@ -95,10 +92,16 @@ This option is only useful when "Handle all attachments" is enabled. Write a Reg
 
 Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed.
 
+### Extension Override Setting
+
+This feature allow you to specify the setting for a serials extension. You can use a regex pattern here, and override the global setting.
+
+![](images/SCR-20230918-pihr.png)
+
 ### Exclude Paths
 
 If you want some path to be skipp by this plugin, add them to textarea.
-If you have multi path, split them with semicolon ';'. 
+If you have multi path, split them with semicolon ';'.
 
 By default, the "Exclude paths" will only work on the folder you added, you can toggle "Exclude subpaths" to exclude subpaths also.
 
