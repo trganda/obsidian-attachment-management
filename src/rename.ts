@@ -48,6 +48,7 @@ export class RenameHandler {
       return;
     }
 
+    // create the new attachment folder
     if (!(await this.app.vault.adapter.exists(newAttachPath, true))) {
       debugLog("onRename - mkdir:", newAttachPath);
       await this.app.vault.adapter.mkdir(newAttachPath);
