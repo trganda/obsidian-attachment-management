@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.1](https://github.com/trganda/obsidian-attachment-management/compare/0.7.8...0.8.1) (2023-09-18)
+
+
+### Features
+
+* add model of extension override ([a307f9b](https://github.com/trganda/obsidian-attachment-management/commit/a307f9ba4adaccc336b29858a328d0740a59d835))
+* add model of extension override ([967338f](https://github.com/trganda/obsidian-attachment-management/commit/967338f23dde27e227561acc48f09e886ed2cbc7))
+* add notice of extension override ([dc374ec](https://github.com/trganda/obsidian-attachment-management/commit/dc374ec15396d68172fc9686004590eb14fff1eb))
+* remove handle all setting ([bfa7293](https://github.com/trganda/obsidian-attachment-management/commit/bfa72934ca7ee5aaf13f0654836cd5407ce88df2))
+* support variable ([72c1da7](https://github.com/trganda/obsidian-attachment-management/commit/72c1da72996b16f1c83841c8c02df5e9b3423c70))
+* support variable ([e782ede](https://github.com/trganda/obsidian-attachment-management/commit/e782ede0ce92b7f65f0e85a260eb6ba831e7c290))
+
+
+### Bug Fixes
+
+* eslint config ([287528e](https://github.com/trganda/obsidian-attachment-management/commit/287528ec24772baf382ff0bee2cf6ca7fcf6e022))
+* remove override setting ([9487c25](https://github.com/trganda/obsidian-attachment-management/commit/9487c2543cd6e7cafd79e425314c398440e50064))
+* type convert error ([4837bd6](https://github.com/trganda/obsidian-attachment-management/commit/4837bd6d716b36cdac90bd33b8badb35663a5be0))
+
 ## [0.8.0](https://github.com/trganda/obsidian-attachment-management/compare/0.7.8...0.8.0) (2023-09-18)
 
 
