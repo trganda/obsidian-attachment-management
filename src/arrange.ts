@@ -59,9 +59,6 @@ export class ArrangeHandler {
         return;
       }
 
-      const metadata = getMetadata(obNote);
-      const attachPath = metadata.getAttachmentPath(setting);
-
       for (let link of attachments[obNote]) {
         try {
           link = decodeURI(link);
@@ -71,15 +68,19 @@ export class ArrangeHandler {
         }
         debugLog(`rearrangeAttachment - article: ${obNote} links: ${link}`);
         const linkFile = this.app.vault.getAbstractFileByPath(link);
-        if (linkFile === null) {
+        if (linkFile === null || !(linkFile instanceof TFile)) {
           debugLog(`${link} not exists, skipped`);
           continue;
         }
 
-        const attachName = metadata.getAttachFileName(
+        const metadata = getMetadata(obNote, linkFile);
+        const attachPath = metadata.getAttachmentPath(setting);
+
+        const attachName = await metadata.getAttachFileName(
           setting,
           this.settings.dateFormat,
           "",
+          this.app.vault.adapter,
           path.basename(link, path.extname(link))
         );
         // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);

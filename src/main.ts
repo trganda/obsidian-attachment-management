@@ -148,18 +148,16 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           const processor = new CreateHandler(this.app, this.settings);
-          if (isImage(file.extension) || isPastedImage(file)) {
+          if (
+            !testExcludeExtension(file.extension, this.settings.excludeExtensionPattern) ||
+            isImage(file.extension) ||
+            isPastedImage(file)
+          ) {
             debugLog("create - image", file);
             await processor.processAttach(file);
           } else {
-            if (this.settings.handleAll) {
-              debugLog("create - handleAll for file", file);
-              if (testExcludeExtension(file.extension, this.settings.excludeExtensionPattern)) {
-                debugLog("create - excluded file by extension", file);
-                return;
-              }
-              await processor.processAttach(file);
-            }
+            debugLog("create - excluded file by extension", file);
+            return;
           }
         });
       })
@@ -171,7 +169,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         debugLog("on rename event - new path and old path:", file.path, oldPath);
 
         const { setting } = getRenameOverrideSetting(this.settings, file, oldPath);
-
+        // update the override setting
         debugLog("rename - using settings:", setting);
         if (setting.type === SETTINGS_TYPES.FOLDER || setting.type === SETTINGS_TYPES.FILE) {
           updateOverrideSetting(this.settings, file, oldPath);
@@ -199,8 +197,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             return;
           }
           // if the renamed file was a attachment, skip
-          const flag = isAttachment(this.settings, file);
-          if (flag) {
+          if (isAttachment(this.settings, file)) {
             debugLog("rename - not processing rename on attachment:", file.path);
             return;
           }
@@ -236,6 +233,8 @@ export default class AttachmentManagementPlugin extends Plugin {
         }
 
         if (deleteOverrideSetting(this.settings, file)) {
+          await this.saveSettings();
+          await this.loadSettings();
           new Notice("Removed override setting of " + file.path);
         }
       })

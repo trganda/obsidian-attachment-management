@@ -1,4 +1,4 @@
-import { TFile, TFolder } from "obsidian";
+import { TFolder } from "obsidian";
 import { debugLog } from "../log";
 import { path } from "./path";
 

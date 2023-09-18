@@ -1,4 +1,4 @@
-import { App, ListedFiles, TAbstractFile, TFile, TFolder, normalizePath } from "obsidian";
+import { App, ListedFiles, TFile, TFolder, normalizePath } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { RenameEventType, RENAME_EVENT_TYPE_FILE } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
@@ -21,7 +21,7 @@ export class RenameHandler {
   }
 
   async onRename(
-    file: TAbstractFile,
+    file: TFile,
     oldPath: string,
     eventType: RenameEventType,
     attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
@@ -48,6 +48,7 @@ export class RenameHandler {
       return;
     }
 
+    // create the new attachment folder
     if (!(await this.app.vault.adapter.exists(newAttachPath, true))) {
       debugLog("onRename - mkdir:", newAttachPath);
       await this.app.vault.adapter.mkdir(newAttachPath);
@@ -141,10 +142,7 @@ export class RenameHandler {
     for (const filePath of attachmentFiles.files) {
       let fileName = path.basename(filePath);
       const fileExtension = path.extname(fileName);
-      if (
-        (this.settings.handleAll && testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern)) ||
-        (!this.settings.handleAll && !isImage(fileExtension))
-      ) {
+      if (testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern) || !isImage(fileExtension)) {
         debugLog("renameFiles - no handle extension:", fileExtension);
         continue;
       }
