@@ -11,8 +11,11 @@ export function getActiveFile(app: App): TFile | undefined {
   const view = getActiveView(app);
   if (view == null) {
     return undefined;
+  } else if (view.file == null) {
+    return undefined;
+  } else {
+    return view.file;
   }
-  return view.file;
 }
 
 /**
