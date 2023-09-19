@@ -4,7 +4,7 @@ import { RenameEventType, RENAME_EVENT_TYPE_FILE, SETTINGS_VARIABLES_NOTENAME } 
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
-import { ATTACHMENT_RENAME_TYPE, stripPaths, testExcludeExtension, isImage } from "./utils";
+import { ATTACHMENT_RENAME_TYPE, stripPaths, matchExtension, isImage } from "./utils";
 import { getMetadata } from "./metadata";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 
@@ -150,7 +150,7 @@ export class RenameHandler {
             const fileExtension = path.extname(fileName);
             const { extSetting } = getExtensionOverrideSetting(fileExtension, this.overrideSetting);
             if (
-                testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern) ||
+                matchExtension(fileExtension, this.settings.excludeExtensionPattern) ||
                 extSetting === undefined ||
                 !isImage(fileExtension)
             ) {

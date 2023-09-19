@@ -18,7 +18,7 @@ import {
     isCanvasFile,
     isImage,
     isPastedImage,
-    testExcludeExtension,
+    matchExtension,
     attachRenameType,
     ATTACHMENT_RENAME_TYPE,
 } from "./utils";
@@ -148,7 +148,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                     const processor = new CreateHandler(this.app, this.settings);
                     if (
-                        !testExcludeExtension(file.extension, this.settings.excludeExtensionPattern) &&
+                        !matchExtension(file.extension, this.settings.excludeExtensionPattern) &&
                         (isImage(file.extension) || isPastedImage(file))
                     ) {
                         debugLog("create - image", file);

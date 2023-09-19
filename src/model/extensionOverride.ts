@@ -11,15 +11,25 @@ import {
 } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
-import { testExcludeExtension } from "src/utils";
+import { matchExtension } from "src/utils";
 
-export function getExtensionOverrideSetting(extension: string, settings: AttachmentPathSettings): { extSetting: ExtensionOverrideSettings | undefined } {
+/**
+ * Retrieves the override setting for a specific extension.
+ *
+ * @param {string} extension - The extension to retrieve the override setting for.
+ * @param {AttachmentPathSettings} settings - The attachment path settings object.
+ * @return {{ extSetting: ExtensionOverrideSettings | undefined }} - The override setting for the extension.
+ */
+export function getExtensionOverrideSetting(
+    extension: string,
+    settings: AttachmentPathSettings
+): { extSetting: ExtensionOverrideSettings | undefined } {
     if (settings.extensionOverride === undefined || Object.keys(settings.extensionOverride).length === 0) {
         return { extSetting: undefined };
     }
 
     for (let i = 0; i < settings.extensionOverride.length; i++) {
-        if (testExcludeExtension(extension, settings.extensionOverride[i].extension)) {
+        if (matchExtension(extension, settings.extensionOverride[i].extension)) {
             return { extSetting: settings.extensionOverride[i] };
         }
     }
@@ -32,7 +42,11 @@ export class OverrideExtensionModal extends Modal {
     settings: ExtensionOverrideSettings;
     onSubmit: (result: ExtensionOverrideSettings) => void;
 
-    constructor(plugin: AttachmentManagementPlugin, settings: ExtensionOverrideSettings, onSubmit: (result: ExtensionOverrideSettings) => void) {
+    constructor(
+        plugin: AttachmentManagementPlugin,
+        settings: ExtensionOverrideSettings,
+        onSubmit: (result: ExtensionOverrideSettings) => void
+    ) {
         super(plugin.app);
         this.plugin = plugin;
         this.settings = settings;
@@ -103,7 +117,9 @@ export class OverrideExtensionModal extends Modal {
 
         new Setting(contentEl)
             .setName("Attachment format")
-            .setDesc(`Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`)
+            .setDesc(
+                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
+            )
             .addText((text) =>
                 text
                     .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)

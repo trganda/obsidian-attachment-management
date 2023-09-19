@@ -102,7 +102,7 @@ export function stripPaths(src: string, dst: string): { stripedSrc: string; stri
  * @param pattern patterns for match extension
  * @returns true if matched, false otherwise
  */
-export function testExcludeExtension(extension: string, pattern: string): boolean {
+export function matchExtension(extension: string, pattern: string): boolean {
     if (!pattern || pattern === "") return false;
     return new RegExp(pattern).test(extension);
 }
@@ -129,7 +129,7 @@ export function isAttachment(settings: AttachmentManagementPluginSettings, fileP
         return false;
     }
 
-    return !testExcludeExtension(file.extension, settings.excludeExtensionPattern) || isImage(file.extension);
+    return !matchExtension(file.extension, settings.excludeExtensionPattern) || isImage(file.extension);
 }
 
 /**
