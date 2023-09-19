@@ -1,9 +1,9 @@
 // copy from https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/linkDetector.ts
-import { TFile, App } from 'obsidian';
+import { TFile, App } from "obsidian";
 
 /* -------------------- LINK DETECTOR -------------------- */
 
-type LinkType = 'markdown' | 'wiki' | 'wikiTransclusion' | 'mdTransclusion';
+type LinkType = "markdown" | "wiki" | "wikiTransclusion" | "mdTransclusion";
 
 export interface LinkMatch {
     type: LinkType;
@@ -36,9 +36,9 @@ export const getAllLinkMatchesInFile = async (mdFile: TFile, app: App, fileText?
             if (matchIsWikiTransclusion(wikiMatch)) {
                 const fileName = getTransclusionFileName(wikiMatch);
                 const file = app.metadataCache.getFirstLinkpathDest(fileName, mdFile.path);
-                if (fileName !== '') {
+                if (fileName !== "") {
                     const linkMatch: LinkMatch = {
-                        type: 'wikiTransclusion',
+                        type: "wikiTransclusion",
                         match: wikiMatch,
                         linkText: file ? file.path : fileName,
                         sourceFilePath: mdFile.path,
@@ -51,10 +51,10 @@ export const getAllLinkMatchesInFile = async (mdFile: TFile, app: App, fileText?
             const fileMatch = wikiMatch.match(fileRegex);
             if (fileMatch) {
                 // Web links are to be skipped
-                if (fileMatch[0].startsWith('http')) continue;
+                if (fileMatch[0].startsWith("http")) continue;
                 const file = app.metadataCache.getFirstLinkpathDest(fileMatch[0], mdFile.path);
                 const linkMatch: LinkMatch = {
-                    type: 'wiki',
+                    type: "wiki",
                     match: wikiMatch,
                     linkText: file ? file.path : fileMatch[0],
                     sourceFilePath: mdFile.path,
@@ -74,9 +74,9 @@ export const getAllLinkMatchesInFile = async (mdFile: TFile, app: App, fileText?
             if (matchIsMdTransclusion(markdownMatch)) {
                 const fileName = getTransclusionFileName(markdownMatch);
                 const file = app.metadataCache.getFirstLinkpathDest(fileName, mdFile.path);
-                if (fileName !== '') {
+                if (fileName !== "") {
                     const linkMatch: LinkMatch = {
-                        type: 'mdTransclusion',
+                        type: "mdTransclusion",
                         match: markdownMatch,
                         linkText: file ? file.path : fileName,
                         sourceFilePath: mdFile.path,
@@ -89,10 +89,10 @@ export const getAllLinkMatchesInFile = async (mdFile: TFile, app: App, fileText?
             const fileMatch = markdownMatch.match(fileRegex);
             if (fileMatch) {
                 // Web links are to be skipped
-                if (fileMatch[0].startsWith('http')) continue;
+                if (fileMatch[0].startsWith("http")) continue;
                 const file = app.metadataCache.getFirstLinkpathDest(fileMatch[0], mdFile.path);
                 const linkMatch: LinkMatch = {
-                    type: 'markdown',
+                    type: "markdown",
                     match: markdownMatch,
                     linkText: file ? file.path : fileMatch[0],
                     sourceFilePath: mdFile.path,
@@ -131,5 +131,5 @@ const getTransclusionFileName = (match: string): string => {
         const fileNameMatch = match.match(isWiki ? wikiTransclusionFileNameRegex : mdTransclusionFileNameRegex);
         if (fileNameMatch) return fileNameMatch[0];
     }
-    return '';
+    return "";
 };
