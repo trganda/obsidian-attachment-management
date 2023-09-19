@@ -120,7 +120,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                             await this.overrideConfiguration(file, fileSetting);
                         });
                 });
-            })
+            }),
         );
 
         this.registerEvent(
@@ -153,7 +153,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     debugLog("create - image", file);
                     await processor.processAttach(file);
                 });
-            })
+            }),
         );
 
         this.registerEvent(
@@ -176,12 +176,12 @@ export default class AttachmentManagementPlugin extends Plugin {
                     return;
                 }
 
-                const type = attachRenameType(setting);
+                const type = ATTACHMENT_RENAME_TYPE.BOTH;
                 debugLog("rename - attachRenameType:", type);
-                if (type === ATTACHMENT_RENAME_TYPE.NULL) {
-                    debugLog("rename - no variable use, skipped");
-                    return;
-                }
+                // if (type === ATTACHMENT_RENAME_TYPE.NULL) {
+                //     debugLog("rename - no variable use, skipped");
+                //     return;
+                // }
 
                 if (file instanceof TFile) {
                     if (file.parent && isExcluded(file.parent.path, this.settings)) {
@@ -216,7 +216,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     // debugLog("rename - ignore rename folder event:", file.name, oldPath);
                     return;
                 }
-            })
+            }),
         );
 
         this.registerEvent(
@@ -233,7 +233,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     await this.loadSettings();
                     new Notice("Removed override setting of " + file.path);
                 }
-            })
+            }),
         );
 
         // This adds a settings tab so the user can configure various aspects of the plugin

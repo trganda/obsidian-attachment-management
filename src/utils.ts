@@ -129,7 +129,7 @@ export function isAttachment(settings: AttachmentManagementPluginSettings, fileP
         return false;
     }
 
-    return !matchExtension(file.extension, settings.excludeExtensionPattern) || isImage(file.extension);
+    return !matchExtension(file.extension, settings.excludeExtensionPattern);
 }
 
 /**

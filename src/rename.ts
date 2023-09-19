@@ -31,7 +31,7 @@ export class RenameHandler {
         file: TFile,
         oldPath: string,
         eventType: RenameEventType,
-        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL
+        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
     ) {
         const rf = file as TFile;
 
@@ -149,24 +149,25 @@ export class RenameHandler {
             let fileName = path.basename(filePath);
             const fileExtension = path.extname(fileName);
             const { extSetting } = getExtensionOverrideSetting(fileExtension, this.overrideSetting);
+
             if (
                 matchExtension(fileExtension, this.settings.excludeExtensionPattern) ||
-                extSetting === undefined ||
-                !isImage(fileExtension)
+                (extSetting === undefined && !isImage(fileExtension))
             ) {
-                debugLog("renameFiles - no handle extension:", fileExtension);
+                debugLog("renameFiles - excluded file by extension:", fileExtension);
                 continue;
             }
 
             // no ${notename} used, continue;
-            if (
-                (extSetting !== undefined && !extSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) ||
-                !this.overrideSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)
-            ) {
-                debugLog("renameFiles - no handle variable:", fileExtension, this.overrideSetting);
-                continue;
-            }
+            // if ((extSetting !== undefined && !extSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME))) {
+            //     debugLog(`renameFiles - no ${SETTINGS_VARIABLES_NOTENAME} used:`, this.overrideSetting);
+            //     continue;
+            // } else if (extSetting === undefined && !this.overrideSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
+            //     debugLog(`renameFiles - no ${SETTINGS_VARIABLES_NOTENAME} used global:`, this.overrideSetting);
+            //     continue;
+            // }
 
+            debugLog("renameFiles - fileName:", oldName, newName);
             fileName = fileName.replace(oldName, newName);
             debugLog("renameFiles - fileName:", fileName);
 

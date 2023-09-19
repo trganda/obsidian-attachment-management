@@ -12,6 +12,7 @@ import {
 import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
 import { matchExtension } from "src/utils";
+import { debugLog } from "src/log";
 
 /**
  * Retrieves the override setting for a specific extension.
@@ -24,12 +25,13 @@ export function getExtensionOverrideSetting(
     extension: string,
     settings: AttachmentPathSettings
 ): { extSetting: ExtensionOverrideSettings | undefined } {
-    if (settings.extensionOverride === undefined || Object.keys(settings.extensionOverride).length === 0) {
+    if (settings.extensionOverride === undefined || settings.extensionOverride.length === 0) {
         return { extSetting: undefined };
     }
 
     for (let i = 0; i < settings.extensionOverride.length; i++) {
         if (matchExtension(extension, settings.extensionOverride[i].extension)) {
+            debugLog("getExtensionOverrideSetting - ", settings.extensionOverride[i].extension, settings.extensionOverride[i])
             return { extSetting: settings.extensionOverride[i] };
         }
     }
