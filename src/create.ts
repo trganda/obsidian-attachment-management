@@ -7,6 +7,8 @@ import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";
 import { getMetadata } from "./metadata";
 import { isExcluded } from "./exclude";
+import { getExtensionOverrideSetting } from "./model/extensionOverride";
+import { isImage, isPastedImage, matchExtension } from "./utils";
 
 export class CreateHandler {
     readonly app: App;
@@ -41,6 +43,17 @@ export class CreateHandler {
         }
 
         const { setting } = getOverrideSetting(this.settings, activeFile);
+        const { extSetting } = getExtensionOverrideSetting(file.extension, setting);
+
+        if (
+            matchExtension(file.extension, this.settings.excludeExtensionPattern) ||
+            extSetting === undefined ||
+            !isImage(file.extension) ||
+            !isPastedImage(file)
+        ) {
+            debugLog("renameFiles - no handle extension:", file.extension);
+            return;
+        }
 
         debugLog("processAttach - active file path", activeFile.path);
 
@@ -58,7 +71,7 @@ export class CreateHandler {
                 setting,
                 this.settings.dateFormat,
                 file.basename,
-                this.app.vault.adapter,
+                this.app.vault.adapter
             )) +
             "." +
             file.extension;
@@ -91,7 +104,7 @@ export class CreateHandler {
         attachPath: string,
         attachName: string,
         activeFile: TFile,
-        updateLink?: boolean,
+        updateLink?: boolean
     ) {
         const dst = normalizePath(path.join(attachPath, attachName));
         debugLog("renameFile - ", file.path, " to ", dst);

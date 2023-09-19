@@ -16,8 +16,6 @@ import {
     isAttachment,
     isMarkdownFile,
     isCanvasFile,
-    isImage,
-    isPastedImage,
     matchExtension,
     attachRenameType,
     ATTACHMENT_RENAME_TYPE,
@@ -147,16 +145,13 @@ export default class AttachmentManagementPlugin extends Plugin {
                     }
 
                     const processor = new CreateHandler(this.app, this.settings);
-                    if (
-                        !matchExtension(file.extension, this.settings.excludeExtensionPattern) &&
-                        (isImage(file.extension) || isPastedImage(file))
-                    ) {
-                        debugLog("create - image", file);
-                        await processor.processAttach(file);
-                    } else {
+                    if (matchExtension(file.extension, this.settings.excludeExtensionPattern)) {
                         debugLog("create - excluded file by extension", file);
                         return;
                     }
+
+                    debugLog("create - image", file);
+                    await processor.processAttach(file);
                 });
             })
         );
