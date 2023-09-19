@@ -1,22 +1,29 @@
 import { App, ListedFiles, TFile, TFolder, normalizePath } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings/settings";
-import { RenameEventType, RENAME_EVENT_TYPE_FILE } from "./lib/constant";
+import { RenameEventType, RENAME_EVENT_TYPE_FILE, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { ATTACHMENT_RENAME_TYPE, stripPaths, testExcludeExtension, isImage } from "./utils";
 import { getMetadata } from "./metadata";
+import { getExtensionOverrideSetting } from "./model/extensionOverride";
 
 export class RenameHandler {
     readonly app: App;
     readonly settings: AttachmentManagementPluginSettings;
+    readonly overrideSetting: AttachmentPathSettings;
 
-    constructor(app: App, settings?: AttachmentManagementPluginSettings) {
+    constructor(app: App, settings?: AttachmentManagementPluginSettings, overrideSetting?: AttachmentPathSettings) {
         this.app = app;
         if (settings === undefined) {
             this.settings = DEFAULT_SETTINGS;
         } else {
             this.settings = settings;
+        }
+        if (overrideSetting === undefined) {
+            this.overrideSetting = DEFAULT_SETTINGS.attachPath;
+        } else {
+            this.overrideSetting = overrideSetting;
         }
     }
 
@@ -24,8 +31,7 @@ export class RenameHandler {
         file: TFile,
         oldPath: string,
         eventType: RenameEventType,
-        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
-        setting: AttachmentPathSettings,
+        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL
     ) {
         const rf = file as TFile;
 
@@ -35,8 +41,8 @@ export class RenameHandler {
         debugLog("onRename - old metadata:", oldMetadata);
         debugLog("onRename - new metadata:", newMetadata);
 
-        const oldAttachPath = oldMetadata.getAttachmentPath(setting);
-        const newAttachPath = newMetadata.getAttachmentPath(setting);
+        const oldAttachPath = oldMetadata.getAttachmentPath(this.overrideSetting);
+        const newAttachPath = newMetadata.getAttachmentPath(this.overrideSetting);
 
         debugLog("onRename - old attachment path:", oldAttachPath);
         debugLog("onRename - new attachment path:", newAttachPath);
@@ -142,8 +148,22 @@ export class RenameHandler {
         for (const filePath of attachmentFiles.files) {
             let fileName = path.basename(filePath);
             const fileExtension = path.extname(fileName);
-            if (testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern) || !isImage(fileExtension)) {
+            const { extSetting } = getExtensionOverrideSetting(fileExtension, this.overrideSetting);
+            if (
+                testExcludeExtension(fileExtension, this.settings.excludeExtensionPattern) ||
+                extSetting === undefined ||
+                !isImage(fileExtension)
+            ) {
                 debugLog("renameFiles - no handle extension:", fileExtension);
+                continue;
+            }
+
+            // no ${notename} used, continue;
+            if (
+                (extSetting !== undefined && !extSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) ||
+                !this.overrideSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)
+            ) {
+                debugLog("renameFiles - no handle variable:", fileExtension, this.overrideSetting);
                 continue;
             }
 
