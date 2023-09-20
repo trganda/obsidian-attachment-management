@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.8.3](https://github.com/trganda/obsidian-attachment-management/compare/0.8.2...0.8.3) (2023-09-20)
+
+
+### Bug Fixes
+
+* prevent handle all by default ([d5b3f54](https://github.com/trganda/obsidian-attachment-management/commit/d5b3f54b9372b43a0f83fcc6244269ba2f300da7))
+* rename no working with extension override ([ae7ae5b](https://github.com/trganda/obsidian-attachment-management/commit/ae7ae5ba887ccc77b25ec25852ad739859beb4a7))
+* rename the extension ([a6bdffc](https://github.com/trganda/obsidian-attachment-management/commit/a6bdffc82ffec16cdae834a9584981e1e14970bc))
+
 ### [0.8.2](https://github.com/trganda/obsidian-attachment-management/compare/0.8.1...0.8.2) (2023-09-18)
 
 
