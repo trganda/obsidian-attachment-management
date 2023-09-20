@@ -12,14 +12,7 @@ import { OverrideModal } from "./model/override";
 import { path } from "./lib/path";
 import { getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import {
-    isAttachment,
-    isMarkdownFile,
-    isCanvasFile,
-    matchExtension,
-    attachRenameType,
-    ATTACHMENT_RENAME_TYPE,
-} from "./utils";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, ATTACHMENT_RENAME_TYPE } from "./utils";
 import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { RenameHandler } from "./rename";
@@ -120,7 +113,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                             await this.overrideConfiguration(file, fileSetting);
                         });
                 });
-            }),
+            })
         );
 
         this.registerEvent(
@@ -153,7 +146,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     debugLog("create - image", file);
                     await processor.processAttach(file);
                 });
-            }),
+            })
         );
 
         this.registerEvent(
@@ -209,6 +202,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                         debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FILE);
                     }
 
+                    // debugLog("rename - overrideSetting:", setting);
                     const processor = new RenameHandler(this.app, this.settings, setting);
                     await processor.onRename(file, oldPath, eventType, type);
                 } else if (file instanceof TFolder) {
@@ -216,7 +210,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     // debugLog("rename - ignore rename folder event:", file.name, oldPath);
                     return;
                 }
-            }),
+            })
         );
 
         this.registerEvent(
@@ -233,7 +227,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     await this.loadSettings();
                     new Notice("Removed override setting of " + file.path);
                 }
-            }),
+            })
         );
 
         // This adds a settings tab so the user can configure various aspects of the plugin

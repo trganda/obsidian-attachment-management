@@ -1,6 +1,6 @@
 import { App, ListedFiles, TFile, TFolder, normalizePath } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings/settings";
-import { RenameEventType, RENAME_EVENT_TYPE_FILE, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
+import { RenameEventType, RENAME_EVENT_TYPE_FILE } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
@@ -31,7 +31,7 @@ export class RenameHandler {
         file: TFile,
         oldPath: string,
         eventType: RenameEventType,
-        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
+        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL
     ) {
         const rf = file as TFile;
 
@@ -146,10 +146,12 @@ export class RenameHandler {
 
         // rename all attachment files that the filename content the ${notename} in attachment path
         for (const filePath of attachmentFiles.files) {
-            let fileName = path.basename(filePath);
+            const fileName = path.basename(filePath);
             const fileExtension = path.extname(fileName);
-            const { extSetting } = getExtensionOverrideSetting(fileExtension, this.overrideSetting);
 
+            let baseName = path.basename(fileName, fileExtension);
+
+            const { extSetting } = getExtensionOverrideSetting(fileExtension, this.overrideSetting);
             if (
                 matchExtension(fileExtension, this.settings.excludeExtensionPattern) ||
                 (extSetting === undefined && !isImage(fileExtension))
@@ -168,16 +170,16 @@ export class RenameHandler {
             // }
 
             debugLog("renameFiles - fileName:", oldName, newName);
-            fileName = fileName.replace(oldName, newName);
-            debugLog("renameFiles - fileName:", fileName);
+            baseName = baseName.replace(oldName, newName) + "." + fileExtension;
+            debugLog("renameFiles - fileName:", baseName);
 
-            if (filePath === normalizePath(path.join(dstPath, fileName))) {
+            if (filePath === normalizePath(path.join(dstPath, baseName))) {
                 debugLog("renameFiles - same src and dst:", filePath);
                 continue;
             }
 
             const dstFolder = this.app.vault.getAbstractFileByPath(dstPath) as TFolder,
-                { name } = await deduplicateNewName(fileName, dstFolder),
+                { name } = await deduplicateNewName(baseName, dstFolder),
                 newFilePath = normalizePath(path.join(dstPath, name)),
                 src = this.app.vault.getAbstractFileByPath(filePath);
 
