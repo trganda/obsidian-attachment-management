@@ -15,7 +15,7 @@ import { stripPaths } from "./utils";
 export function getOverrideSetting(
     settings: AttachmentManagementPluginSettings,
     file: TAbstractFile,
-    oldPath = ""
+    oldPath = "",
 ): { settingPath: string; setting: AttachmentPathSettings } {
     if (Object.keys(settings.overridePath).length === 0) {
         return { settingPath: "", setting: settings.attachPath };
@@ -69,7 +69,7 @@ export function getOverrideSetting(
 
     // sort by splitted path length, descending
     const sortedK = Object.keys(candidates).sort((a, b) =>
-        a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0
+        a.split("/").length > b.split("/").length ? -1 : a.split("/").length < b.split("/").length ? 1 : 0,
     );
     debugLog("getOverrideSetting - sortedK:", sortedK);
     for (const k of sortedK) {
@@ -97,7 +97,7 @@ export function getOverrideSetting(
 export function getRenameOverrideSetting(
     settings: AttachmentManagementPluginSettings,
     file: TAbstractFile,
-    oldPath: string
+    oldPath: string,
 ): { settingPath: string; setting: AttachmentPathSettings } {
     if (Object.keys(settings.overridePath).length === 0) {
         return { settingPath: "", setting: settings.attachPath };
@@ -153,7 +153,7 @@ export function getRenameOverrideSetting(
 export function updateOverrideSetting(
     settings: AttachmentManagementPluginSettings,
     file: TAbstractFile,
-    oldPath: string
+    oldPath: string,
 ) {
     const keys = Object.keys(settings.overridePath);
     if (keys.length === 0 || file.path === oldPath) {

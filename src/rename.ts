@@ -31,7 +31,7 @@ export class RenameHandler {
         file: TFile,
         oldPath: string,
         eventType: RenameEventType,
-        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL
+        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
     ) {
         const rf = file as TFile;
 

@@ -66,7 +66,7 @@ export class CreateHandler {
                 setting,
                 this.settings.dateFormat,
                 file.basename,
-                this.app.vault.adapter
+                this.app.vault.adapter,
             )) +
             "." +
             file.extension;
@@ -99,7 +99,7 @@ export class CreateHandler {
         attachPath: string,
         attachName: string,
         activeFile: TFile,
-        updateLink?: boolean
+        updateLink?: boolean,
     ) {
         const dst = normalizePath(path.join(attachPath, attachName));
         debugLog("renameFile - ", file.path, " to ", dst);

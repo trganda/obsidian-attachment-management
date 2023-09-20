@@ -113,7 +113,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                             await this.overrideConfiguration(file, fileSetting);
                         });
                 });
-            })
+            }),
         );
 
         this.registerEvent(
@@ -146,7 +146,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     debugLog("create - image", file);
                     await processor.processAttach(file);
                 });
-            })
+            }),
         );
 
         this.registerEvent(
@@ -210,7 +210,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     // debugLog("rename - ignore rename folder event:", file.name, oldPath);
                     return;
                 }
-            })
+            }),
         );
 
         this.registerEvent(
@@ -227,7 +227,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     await this.loadSettings();
                     new Notice("Removed override setting of " + file.path);
                 }
-            })
+            }),
         );
 
         // This adds a settings tab so the user can configure various aspects of the plugin
