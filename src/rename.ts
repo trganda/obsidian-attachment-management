@@ -1,6 +1,6 @@
 import { App, ListedFiles, TFile, TFolder, normalizePath } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings/settings";
-import { RenameEventType, RENAME_EVENT_TYPE_FILE } from "./lib/constant";
+import { RenameEventType, RENAME_EVENT_TYPE_FILE, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
@@ -161,13 +161,17 @@ export class RenameHandler {
             }
 
             // no ${notename} used, continue;
-            // if ((extSetting !== undefined && !extSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME))) {
-            //     debugLog(`renameFiles - no ${SETTINGS_VARIABLES_NOTENAME} used:`, this.overrideSetting);
-            //     continue;
-            // } else if (extSetting === undefined && !this.overrideSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
-            //     debugLog(`renameFiles - no ${SETTINGS_VARIABLES_NOTENAME} used global:`, this.overrideSetting);
-            //     continue;
-            // }
+            if (!exists && extSetting !== undefined && !extSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
+                debugLog(`renameFiles - no ${SETTINGS_VARIABLES_NOTENAME} used:`, this.overrideSetting);
+                continue;
+            } else if (
+                !exists &&
+                extSetting === undefined &&
+                !this.overrideSetting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)
+            ) {
+                debugLog(`renameFiles - no ${SETTINGS_VARIABLES_NOTENAME} used global:`, this.overrideSetting);
+                continue;
+            }
 
             debugLog("renameFiles - fileName:", oldName, newName);
             baseName = baseName.replace(oldName, newName) + "." + fileExtension;
