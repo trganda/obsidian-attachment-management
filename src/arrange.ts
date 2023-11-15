@@ -26,18 +26,17 @@ export class ArrangeHandler {
      * Rearranges attachments that are linked by markdown or canvas.
      * Only rearranges attachments if autoRenameAttachment is enabled in settings.
      *
-     * @param {"active" | "links"} type - specifies whether to rearrange the active file attachments or
-     * only those that are linked by markdown or canvas.
-     * @return {void} nothing is returned
+     * @param {"active" | "links" | "file"} type - The type of attachments to rearrange.
+     * @param {TFile} file - The file to which the attachments are linked (optional), if the type was "file", thi should be provided.
      */
-    async rearrangeAttachment(type: "active" | "links") {
+    async rearrangeAttachment(type: "active" | "links" | "file", file?: TFile) {
         if (!this.settings.autoRenameAttachment) {
             debugLog("rearrangeAttachment - autoRenameAttachment not enable");
             return;
         }
 
         // only rearrange attachment that linked by markdown or canvas
-        const attachments = await this.getAttachmentsInVault(this.settings, type);
+        const attachments = await this.getAttachmentsInVault(this.settings, type, file);
         debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
         for (const obNote of Object.keys(attachments)) {
             const innerFile = this.app.vault.getAbstractFileByPath(obNote);
@@ -99,19 +98,22 @@ export class ArrangeHandler {
     }
 
     /**
-     * Retrieves the attachments in the specified vault of the given type.
+     * Retrieves the attachments in the vault based on the specified settings and type.
+     * If a file is provided, only attachments related to that file will be returned.
      *
-     * @param {AttachmentManagementPluginSettings} settings - the settings for the attachment management plugin
-     * @param {"active" | "links"} type - the type of attachments to retrieve, either "active" or "links"
-     * @return {Promise<Record<string, Set<string>>>} Returns a promise that resolves to a record containing sets of attachment names for each item ID in the specified vault.
+     * @param {AttachmentManagementPluginSettings} settings - The settings for the attachment management plugin.
+     * @param {"active" | "links" | "file"} type - The type of attachments to retrieve.
+     * @param {TFile} [file] - The file to filter attachments by. Optional.
+     * @return {Promise<Record<string, Set<string>>>} - A promise that resolves to a record of attachments, where each key is a file name and each value is a set of attachment names.
      */
     async getAttachmentsInVault(
         settings: AttachmentManagementPluginSettings,
-        type: "active" | "links",
+        type: "active" | "links" | "file",
+        file?: TFile,
     ): Promise<Record<string, Set<string>>> {
         let attachmentsRecord: Record<string, Set<string>> = {};
 
-        attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, type);
+        attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, type, file);
 
         return attachmentsRecord;
     }
@@ -120,13 +122,15 @@ export class ArrangeHandler {
      * Modified from https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/util.ts#LL48C21-L48C21
      * Retrieves a record of attachments in the vault based on the given settings and type.
      *
-     * @param {AttachmentManagementPluginSettings} settings - The settings object used to filter attachments.
-     * @param {"active" | "links"} type - The type of attachments to retrieve. Can be "active" or "links".
-     * @return {Promise<Record<string, Set<string>>>} A record of attachments where the keys are the file paths and the values are sets of attachment paths.
+     * @param {AttachmentManagementPluginSettings} settings - The settings for the attachment management plugin.
+     * @param {"active" | "links" | "file"} type - The type of attachments to retrieve.
+     * @param {TFile} file - The file to retrieve attachments for (optional).
+     * @return {Promise<Record<string, Set<string>>>} - A promise that resolves to a record of attachments.
      */
     async getAttachmentsInVaultByLinks(
         settings: AttachmentManagementPluginSettings,
-        type: "active" | "links",
+        type: "active" | "links" | "file",
+        file?: TFile,
     ): Promise<Record<string, Set<string>>> {
         const attachmentsRecord: Record<string, Set<string>> = {};
         let resolvedLinks: Record<string, Record<string, number>> = {};
@@ -149,6 +153,18 @@ export class ArrangeHandler {
                     }
                     debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
                 }
+            }
+        } else if (type === "file" && file != undefined) {
+            if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+                allFiles = [];
+                new Notice(`${file.path} was excluded, skipped`);
+            } else {
+                debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
+                allFiles = [file];
+                if (this.app.metadataCache.resolvedLinks[file.path]) {
+                    resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
+                }
+                debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
             }
         }
 

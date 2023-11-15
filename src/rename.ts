@@ -8,6 +8,9 @@ import { ATTACHMENT_RENAME_TYPE, stripPaths, matchExtension, isImage } from "./u
 import { getMetadata } from "./metadata";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 
+/**
+ * @deprecated Use {@link ArrangeHandler} instead.
+ */
 export class RenameHandler {
     readonly app: App;
     readonly settings: AttachmentManagementPluginSettings;
@@ -31,7 +34,7 @@ export class RenameHandler {
         file: TFile,
         oldPath: string,
         eventType: RenameEventType,
-        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL,
+        attachRenameType: ATTACHMENT_RENAME_TYPE = ATTACHMENT_RENAME_TYPE.NULL
     ) {
         const rf = file as TFile;
 

@@ -7,16 +7,14 @@ import {
     SettingTab,
 } from "./settings/settings";
 import { debugLog } from "./log";
-import { RENAME_EVENT_TYPE_FILE, RENAME_EVENT_TYPE_FOLDER, RenameEventType } from "./lib/constant";
 import { OverrideModal } from "./model/override";
-import { path } from "./lib/path";
 import { getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
 import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, ATTACHMENT_RENAME_TYPE } from "./utils";
 import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
-import { RenameHandler } from "./rename";
 import { isExcluded } from "./exclude";
+import { getMetadata } from "./metadata";
 
 export default class AttachmentManagementPlugin extends Plugin {
     settings: AttachmentManagementPluginSettings;
@@ -150,7 +148,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         );
 
         this.registerEvent(
-            // while trigger rename event on rename a folder, for each file/folder in this renamed folder (include itself) will trigger this event
+            // when trigger a rename event on folder, for each file/folder in this renamed folder (include itself) will trigger this event
             this.app.vault.on("rename", async (file: TAbstractFile, oldPath: string) => {
                 debugLog("on rename event - new path and old path:", file.path, oldPath);
 
@@ -188,23 +186,34 @@ export default class AttachmentManagementPlugin extends Plugin {
                         return;
                     }
 
-                    let eventType: RenameEventType;
-                    if (
-                        path.basename(oldPath, path.extname(oldPath)) ===
-                        path.basename(file.path, path.extname(file.path))
-                    ) {
-                        // rename event of folder
-                        eventType = RENAME_EVENT_TYPE_FOLDER;
-                        debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FOLDER);
-                    } else {
-                        // rename event of file
-                        eventType = RENAME_EVENT_TYPE_FILE;
-                        debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FILE);
-                    }
+                    // let eventType: RenameEventType;
+                    // if (
+                    //     path.basename(oldPath, path.extname(oldPath)) ===
+                    //     path.basename(file.path, path.extname(file.path))
+                    // ) {
+                    //     // rename event of folder
+                    //     eventType = RENAME_EVENT_TYPE_FOLDER;
+                    //     debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FOLDER);
+                    // } else {
+                    //     // rename event of file
+                    //     eventType = RENAME_EVENT_TYPE_FILE;
+                    //     debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FILE);
+                    // }
 
                     // debugLog("rename - overrideSetting:", setting);
-                    const processor = new RenameHandler(this.app, this.settings, setting);
-                    await processor.onRename(file, oldPath, eventType, type);
+                    await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file);
+
+                    // remove old attachment path if it's empty
+                    const oldMetadata = getMetadata(oldPath);
+                    debugLog("onRename - old metadata:", oldMetadata);
+                    const oldAttachPath = oldMetadata.getAttachmentPath(setting);
+                    debugLog("onRename - old attachment path:", oldAttachPath);
+                    const old = await this.app.vault.adapter.list(oldAttachPath);
+                    if (old.files.length === 0 && old.folders.length === 0) {
+                        await this.app.vault.adapter.rmdir(oldAttachPath, true);
+                    }
+                    // const processor = new RenameHandler(this.app, this.settings, setting);
+                    // await processor.onRename(file, oldPath, eventType, type);
                 } else if (file instanceof TFolder) {
                     // ignore rename event of folder
                     // debugLog("rename - ignore rename folder event:", file.name, oldPath);
