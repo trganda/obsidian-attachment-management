@@ -204,6 +204,9 @@ export default class AttachmentManagementPlugin extends Plugin {
                     await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file);
 
                     // remove old attachment path if it's empty
+                    if (!(await this.app.vault.adapter.exists(oldPath, true))) {
+                        return;
+                    }
                     const oldMetadata = getMetadata(oldPath);
                     debugLog("onRename - old metadata:", oldMetadata);
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting);
