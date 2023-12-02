@@ -103,7 +103,7 @@ This feature allow you to specify the setting for a serials extension. You can u
 If you want some path to be skipp by this plugin, add them to textarea.
 If you have multi path, split them with semicolon ';'.
 
-By default, the "Exclude paths" will only work on the folder you added, you can toggle "Exclude subpaths" to exclude subpaths also.
+By default, the "Exclude paths" will only work on the folder you added and that folder contain at least one markdown file, you can toggle "Exclude subpaths" to exclude subpaths also.
 
 > **The path is case sensitive and should not add leading slash '/' at begin.**
 
