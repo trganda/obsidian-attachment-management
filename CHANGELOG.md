@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.9.0](https://github.com/trganda/obsidian-attachment-management/compare/0.8.5...0.9.0) (2023-12-07)
+
+
+### Bug Fixes
+
+* catch undefined case ([c35f65a](https://github.com/trganda/obsidian-attachment-management/commit/c35f65a1a7d5e1856e47ac32e80fefb835fa65ca))
+* no update in metadataCache for rename event ([7e4d02b](https://github.com/trganda/obsidian-attachment-management/commit/7e4d02b2ca1e26aaefa7f17c4dc9b90140c9e743))
+* rename no relate attachment when sync file ([59240e0](https://github.com/trganda/obsidian-attachment-management/commit/59240e05a9052b0623ff4bbafe03136978e234f6))
+* warning for no exists folder ([cfc788a](https://github.com/trganda/obsidian-attachment-management/commit/cfc788ad8b26671ea80c40ca07c0d159b852ab10))
+
 ### [0.8.5](https://github.com/trganda/obsidian-attachment-management/compare/0.8.4...0.8.5) (2023-11-15)
 
 
