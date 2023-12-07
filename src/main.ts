@@ -124,10 +124,12 @@ export default class AttachmentManagementPlugin extends Plugin {
                 }
 
                 this.app.workspace.onLayoutReady(async () => {
-                    // if the file is created more than 1 second ago, the event is most likely be fired by copy file to
-                    // vault folder without using obsidian (e.g. file manager of op system), we should ignore it.
-                    const timeGapMs = new Date().getTime() - file.stat.mtime;
-                    if (timeGapMs > 1000) {
+                    // if the file is modified/create more than 1 second ago, the event is most likely be fired by copy file to
+                    // vault folder without using obsidian or sync file from remote (e.g. file manager of op system), we should ignore it.
+                    const curentTime = new Date().getTime();
+                    const timeGapMs = curentTime - file.stat.mtime;
+                    const timeGapCs = curentTime - file.stat.ctime;
+                    if (timeGapMs > 1000 || timeGapCs > 1000) {
                         return;
                     }
                     // ignore markdown and canvas file.
