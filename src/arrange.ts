@@ -2,7 +2,7 @@ import { App, Notice, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { getOverrideSetting } from "./override";
-import { attachRenameType, ATTACHMENT_RENAME_TYPE, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { ATTACHMENT_RENAME_TYPE, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
@@ -148,7 +148,7 @@ export class ArrangeHandler {
                 } else {
                     debugLog("getAttachmentsInVaultByLinks - active:", file.path);
                     allFiles = [file];
-                    if (this.app.metadataCache.resolvedLinks[file.path].length > 0) {
+                    if (this.app.metadataCache.resolvedLinks[file.path]) {
                         resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
                     }
                     debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
@@ -161,9 +161,12 @@ export class ArrangeHandler {
             } else {
                 debugLog("getAttachmentsInVaultByLinks - file:", file.path);
                 allFiles = [file];
-                if (this.app.metadataCache.resolvedLinks[file.path].length > 0) {
-                    resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
-                } else if (oldPath != undefined) {
+                const rlinks = this.app.metadataCache.resolvedLinks[file.path];
+                if (rlinks) {
+                    debugLog("getAttachmentsInVaultByLinks - rlinks:", rlinks);
+                    resolvedLinks[file.path] = rlinks;
+                } else if (oldPath) {
+                    debugLog("getAttachmentsInVaultByLinks - oldPath:", oldPath);
                     // in some cases, this.app.metadataCache.resolvedLinks[file.path] will be empty since the cache is not updated
                     resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[oldPath];
                 }
