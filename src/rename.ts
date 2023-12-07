@@ -44,8 +44,8 @@ export class RenameHandler {
         debugLog("onRename - old metadata:", oldMetadata);
         debugLog("onRename - new metadata:", newMetadata);
 
-        const oldAttachPath = oldMetadata.getAttachmentPath(this.overrideSetting);
-        const newAttachPath = newMetadata.getAttachmentPath(this.overrideSetting);
+        const oldAttachPath = oldMetadata.getAttachmentPath(this.overrideSetting, this.settings.dateFormat);
+        const newAttachPath = newMetadata.getAttachmentPath(this.overrideSetting, this.settings.dateFormat);
 
         debugLog("onRename - old attachment path:", oldAttachPath);
         debugLog("onRename - new attachment path:", newAttachPath);

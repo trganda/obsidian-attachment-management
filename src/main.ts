@@ -167,8 +167,8 @@ export default class AttachmentManagementPlugin extends Plugin {
                     return;
                 }
 
-                const type = ATTACHMENT_RENAME_TYPE.BOTH;
-                debugLog("rename - attachRenameType:", type);
+                // const type = ATTACHMENT_RENAME_TYPE.BOTH;
+                // debugLog("rename - attachRenameType:", type);
                 // if (type === ATTACHMENT_RENAME_TYPE.NULL) {
                 //     debugLog("rename - no variable use, skipped");
                 //     return;
@@ -201,7 +201,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     // }
 
                     // debugLog("rename - overrideSetting:", setting);
-                    await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file);
+                    await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file, oldPath);
 
                     // remove old attachment path if it's empty
                     if (!(await this.app.vault.adapter.exists(oldPath, true))) {
@@ -209,7 +209,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     }
                     const oldMetadata = getMetadata(oldPath);
                     debugLog("onRename - old metadata:", oldMetadata);
-                    const oldAttachPath = oldMetadata.getAttachmentPath(setting);
+                    const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
                     debugLog("onRename - old attachment path:", oldAttachPath);
                     const old = await this.app.vault.adapter.list(oldAttachPath);
                     if (old.files.length === 0 && old.folders.length === 0) {
