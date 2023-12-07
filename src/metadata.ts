@@ -109,11 +109,13 @@ class Metadata {
      * @param {AttachmentPathSettings} setting - An object containing the attachment path settings.
      * @return {string} The normalized attachment path.
      */
-    getAttachmentPath(setting: AttachmentPathSettings): string {
+    getAttachmentPath(setting: AttachmentPathSettings, dateFormat: string): string {
+        const dateTime = window.moment().format(dateFormat);
         let root = "";
         let attachPath = "";
 
         if (this.attachmentFile !== undefined) {
+            // using extension override setting first
             const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
             if (extSetting !== undefined) {
                 root = getRootPath(this.parentPath, extSetting);
@@ -122,7 +124,8 @@ class Metadata {
                     extSetting.attachmentPath
                         .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
                         .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-                        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName),
+                        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
+                        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
                 );
 
                 return normalizePath(attachPath);
@@ -135,7 +138,8 @@ class Metadata {
             setting.attachmentPath
                 .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
                 .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-                .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName),
+                .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
+                .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
         );
 
         return normalizePath(attachPath);

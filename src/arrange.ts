@@ -2,7 +2,7 @@ import { App, Notice, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { getOverrideSetting } from "./override";
-import { attachRenameType, ATTACHMENT_RENAME_TYPE, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { ATTACHMENT_RENAME_TYPE, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
@@ -29,14 +29,14 @@ export class ArrangeHandler {
      * @param {"active" | "links" | "file"} type - The type of attachments to rearrange.
      * @param {TFile} file - The file to which the attachments are linked (optional), if the type was "file", thi should be provided.
      */
-    async rearrangeAttachment(type: "active" | "links" | "file", file?: TFile) {
+    async rearrangeAttachment(type: "active" | "links" | "file", file?: TFile, oldPath?: string) {
         if (!this.settings.autoRenameAttachment) {
             debugLog("rearrangeAttachment - autoRenameAttachment not enable");
             return;
         }
 
         // only rearrange attachment that linked by markdown or canvas
-        const attachments = await this.getAttachmentsInVault(this.settings, type, file);
+        const attachments = await this.getAttachmentsInVault(this.settings, type, file, oldPath);
         debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
         for (const obNote of Object.keys(attachments)) {
             const innerFile = this.app.vault.getAbstractFileByPath(obNote);
@@ -67,7 +67,7 @@ export class ArrangeHandler {
                 }
 
                 const metadata = getMetadata(obNote, linkFile);
-                const attachPath = metadata.getAttachmentPath(setting);
+                const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
 
                 const attachName = await metadata.getAttachFileName(
                     setting,
@@ -109,11 +109,11 @@ export class ArrangeHandler {
     async getAttachmentsInVault(
         settings: AttachmentManagementPluginSettings,
         type: "active" | "links" | "file",
-        file?: TFile,
+        file?: TFile, oldPath?: string
     ): Promise<Record<string, Set<string>>> {
         let attachmentsRecord: Record<string, Set<string>> = {};
 
-        attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, type, file);
+        attachmentsRecord = await this.getAttachmentsInVaultByLinks(settings, type, file, oldPath);
 
         return attachmentsRecord;
     }
@@ -130,7 +130,7 @@ export class ArrangeHandler {
     async getAttachmentsInVaultByLinks(
         settings: AttachmentManagementPluginSettings,
         type: "active" | "links" | "file",
-        file?: TFile,
+        file?: TFile, oldPath?: string
     ): Promise<Record<string, Set<string>>> {
         const attachmentsRecord: Record<string, Set<string>> = {};
         let resolvedLinks: Record<string, Record<string, number>> = {};
@@ -146,7 +146,7 @@ export class ArrangeHandler {
                     allFiles = [];
                     new Notice(`${file.path} was excluded, skipped`);
                 } else {
-                    debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
+                    debugLog("getAttachmentsInVaultByLinks - active:", file.path);
                     allFiles = [file];
                     if (this.app.metadataCache.resolvedLinks[file.path]) {
                         resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
@@ -159,10 +159,16 @@ export class ArrangeHandler {
                 allFiles = [];
                 new Notice(`${file.path} was excluded, skipped`);
             } else {
-                debugLog("getAttachmentsInVaultByLinks - active file:", file.path);
+                debugLog("getAttachmentsInVaultByLinks - file:", file.path);
                 allFiles = [file];
-                if (this.app.metadataCache.resolvedLinks[file.path]) {
-                    resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[file.path];
+                const rlinks = this.app.metadataCache.resolvedLinks[file.path];
+                if (rlinks) {
+                    debugLog("getAttachmentsInVaultByLinks - rlinks:", rlinks);
+                    resolvedLinks[file.path] = rlinks;
+                } else if (oldPath) {
+                    debugLog("getAttachmentsInVaultByLinks - oldPath:", oldPath);
+                    // in some cases, this.app.metadataCache.resolvedLinks[file.path] will be empty since the cache is not updated
+                    resolvedLinks[file.path] = this.app.metadataCache.resolvedLinks[oldPath];
                 }
                 debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
             }

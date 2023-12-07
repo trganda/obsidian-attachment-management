@@ -10,7 +10,7 @@ import { debugLog } from "./log";
 import { OverrideModal } from "./model/override";
 import { getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, ATTACHMENT_RENAME_TYPE } from "./utils";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension } from "./utils";
 import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
@@ -124,10 +124,12 @@ export default class AttachmentManagementPlugin extends Plugin {
                 }
 
                 this.app.workspace.onLayoutReady(async () => {
-                    // if the file is created more than 1 second ago, the event is most likely be fired by copy file to
-                    // vault folder without using obsidian (e.g. file manager of op system), we should ignore it.
-                    const timeGapMs = new Date().getTime() - file.stat.mtime;
-                    if (timeGapMs > 1000) {
+                    // if the file is modified/create more than 1 second ago, the event is most likely be fired by copy file to
+                    // vault folder without using obsidian or sync file from remote (e.g. file manager of op system), we should ignore it.
+                    const curentTime = new Date().getTime();
+                    const timeGapMs = curentTime - file.stat.mtime;
+                    const timeGapCs = curentTime - file.stat.ctime;
+                    if (timeGapMs > 1000 || timeGapCs > 1000) {
                         return;
                     }
                     // ignore markdown and canvas file.
@@ -167,56 +169,36 @@ export default class AttachmentManagementPlugin extends Plugin {
                     return;
                 }
 
-                const type = ATTACHMENT_RENAME_TYPE.BOTH;
-                debugLog("rename - attachRenameType:", type);
-                // if (type === ATTACHMENT_RENAME_TYPE.NULL) {
-                //     debugLog("rename - no variable use, skipped");
-                //     return;
-                // }
-
                 if (file instanceof TFile) {
                     if (file.parent && isExcluded(file.parent.path, this.settings)) {
                         debugLog("rename - exclude path:", file.parent.path);
                         new Notice(`${file.path} was excluded, skipped`);
                         return;
                     }
-                    // if the renamed file was a attachment, skip
+
+                    // ignore attachment
                     if (isAttachment(this.settings, file)) {
                         debugLog("rename - not processing rename on attachment:", file.path);
                         return;
                     }
 
-                    // let eventType: RenameEventType;
-                    // if (
-                    //     path.basename(oldPath, path.extname(oldPath)) ===
-                    //     path.basename(file.path, path.extname(file.path))
-                    // ) {
-                    //     // rename event of folder
-                    //     eventType = RENAME_EVENT_TYPE_FOLDER;
-                    //     debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FOLDER);
-                    // } else {
-                    //     // rename event of file
-                    //     eventType = RENAME_EVENT_TYPE_FILE;
-                    //     debugLog("rename - RENAME_EVENT_TYPE:", RENAME_EVENT_TYPE_FILE);
-                    // }
-
                     // debugLog("rename - overrideSetting:", setting);
-                    await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file);
+                    await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file, oldPath);
 
                     // remove old attachment path if it's empty
+                    if (!(await this.app.vault.adapter.exists(oldPath, true))) {
+                        return;
+                    }
                     const oldMetadata = getMetadata(oldPath);
                     debugLog("onRename - old metadata:", oldMetadata);
-                    const oldAttachPath = oldMetadata.getAttachmentPath(setting);
+                    const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
                     debugLog("onRename - old attachment path:", oldAttachPath);
                     const old = await this.app.vault.adapter.list(oldAttachPath);
                     if (old.files.length === 0 && old.folders.length === 0) {
                         await this.app.vault.adapter.rmdir(oldAttachPath, true);
                     }
-                    // const processor = new RenameHandler(this.app, this.settings, setting);
-                    // await processor.onRename(file, oldPath, eventType, type);
                 } else if (file instanceof TFolder) {
                     // ignore rename event of folder
-                    // debugLog("rename - ignore rename folder event:", file.name, oldPath);
                     return;
                 }
             }),
