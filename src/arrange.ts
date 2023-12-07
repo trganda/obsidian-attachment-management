@@ -87,7 +87,11 @@ export class ArrangeHandler {
                     await this.app.vault.adapter.mkdir(attachPath);
                 }
 
-                const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
+                const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath);
+                if (attachPathFile === null || !(attachPathFile instanceof TFolder)) {
+                    debugLog(`${attachPath} not exists, skipped`);
+                    continue;
+                }
                 const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFile);
                 debugLog("rearrangeAttachment - deduplicated name:", name);
                 const dest = path.join(attachPath, name);
