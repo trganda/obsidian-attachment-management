@@ -9,6 +9,7 @@ import {
     SETTINGS_ROOT_INFOLDER,
     SETTINGS_ROOT_NEXTTONOTE,
     SETTINGS_VARIABLES_ORIGINALNAME,
+    SETTINGS_VARIABLES_MD5,
 } from "../lib/constant";
 import { debugLog } from "src/log";
 import { OverrideExtensionModal } from "src/model/extensionOverride";
@@ -119,8 +120,8 @@ export class SettingTab extends PluginSettingTab {
         containerEl.empty();
 
         new Setting(containerEl)
-            .setName("Root path to save new attachments")
-            .setDesc("Select root path for all new attachments")
+            .setName("Root path to save attachment")
+            .setDesc("Select root path of attachment")
             .addDropdown((text) =>
                 text
                     .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
@@ -152,7 +153,7 @@ export class SettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Attachment path")
             .setDesc(
-                `Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`
+                `Path of attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`
             )
             .addText((text) =>
                 text
@@ -168,7 +169,7 @@ export class SettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Attachment format")
             .setDesc(
-                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
+                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
             )
             .addText((text) =>
                 text

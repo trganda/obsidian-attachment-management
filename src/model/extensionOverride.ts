@@ -5,9 +5,11 @@ import {
     SETTINGS_ROOT_NEXTTONOTE,
     SETTINGS_ROOT_OBSFOLDER,
     SETTINGS_VARIABLES_DATES,
+    SETTINGS_VARIABLES_MD5,
     SETTINGS_VARIABLES_NOTENAME,
     SETTINGS_VARIABLES_NOTEPARENT,
     SETTINGS_VARIABLES_NOTEPATH,
+    SETTINGS_VARIABLES_ORIGINALNAME,
 } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
@@ -76,8 +78,8 @@ export class OverrideExtensionModal extends Modal {
         });
 
         new Setting(contentEl)
-            .setName("Root path to save new attachments")
-            .setDesc("Select root path for all new attachments")
+            .setName("Root path to save attachment")
+            .setDesc("Select root path of attachment")
             .addDropdown((text) =>
                 text
                     .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
@@ -106,7 +108,7 @@ export class OverrideExtensionModal extends Modal {
         new Setting(contentEl)
             .setName("Attachment path")
             .setDesc(
-                `Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`
+                `Path of attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`
             )
             .addText((text) =>
                 text
@@ -120,7 +122,7 @@ export class OverrideExtensionModal extends Modal {
         new Setting(contentEl)
             .setName("Attachment format")
             .setDesc(
-                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES} and ${SETTINGS_VARIABLES_NOTENAME}`
+                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
             )
             .addText((text) =>
                 text
