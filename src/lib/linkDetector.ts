@@ -1,4 +1,4 @@
-// copy from https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/linkDetector.ts
+// modified from https://github.com/ozntel/oz-clear-unused-images-obsidian/blob/master/src/linkDetector.ts
 import { TFile, App } from "obsidian";
 
 /* -------------------- LINK DETECTOR -------------------- */

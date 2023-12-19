@@ -66,7 +66,16 @@ export class CreateHandler {
             )) +
             "." +
             file.extension;
-
+    
+        const view = getActiveView(this.app);
+        const content = view?.getViewData();
+        const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
+        debugLog("processAttach - oldLinkText:", oldLinkText);
+        // if we have not fould old link in content, the create event should be ignored.
+        if (content != null && content?.indexOf(oldLinkText) < 0) {
+            debugLog("processAttach - not found ${oldLinkText} in contetn, skipped");
+            return;
+        }
 
         // make sure the path was created
         if (!(await this.app.vault.adapter.exists(attachPath, true))) {

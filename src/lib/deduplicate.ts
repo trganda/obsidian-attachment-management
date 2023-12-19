@@ -17,7 +17,7 @@ export async function deduplicateNewName(newName: string, file: TFolder): Promis
     // list files in dir
     const dir = file.path;
     const listed = await this.app.vault.adapter.list(dir);
-    debugLog("sibling files", listed);
+    debugLog("deduplicateNewName - sibling files", listed);
 
     // parse newName
     const newNameExt = path.extname(newName),

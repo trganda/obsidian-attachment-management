@@ -70,7 +70,7 @@ class Metadata {
         originalName: string,
         adapter: DataAdapter,
         linkName?: string,
-    ) {
+    ): Promise<string> {
         const dateTime = window.moment().format(dateFormat);
 
         let md5 = "";
