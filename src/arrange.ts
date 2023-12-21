@@ -7,7 +7,7 @@ import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
 

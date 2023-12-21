@@ -1,5 +1,5 @@
 import { DataAdapter, TFile, normalizePath } from "obsidian";
-import { AttachmentPathSettings } from "./settings/settings";
+import { AttachmentPathSettings } from "./settings";
 import {
     SETTINGS_VARIABLES_DATES,
     SETTINGS_VARIABLES_MD5,
@@ -7,11 +7,11 @@ import {
     SETTINGS_VARIABLES_NOTEPARENT,
     SETTINGS_VARIABLES_NOTEPATH,
     SETTINGS_VARIABLES_ORIGINALNAME,
-} from "./lib/constant";
-import { getRootPath } from "./commons";
-import { path } from "./lib/path";
-import { MD5 } from "./utils";
-import { getExtensionOverrideSetting } from "./model/extensionOverride";
+} from "../lib/constant";
+import { getRootPath } from "../commons";
+import { path } from "../lib/path";
+import { MD5 } from "../utils";
+import { getExtensionOverrideSetting } from "../model/extensionOverride";
 
 /**
  * Metadata of notes file
@@ -85,8 +85,8 @@ class Metadata {
             }
         }
 
-        // we have no persistence of original name,  return current linking name
         if (attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
+            // we have no persistence of original name,  return current linking name
             if (originalName === "" && linkName != undefined) {
                 return linkName;
             } else {

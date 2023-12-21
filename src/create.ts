@@ -5,7 +5,7 @@ import { debugLog } from "./log";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { isImage, isPastedImage } from "./utils";

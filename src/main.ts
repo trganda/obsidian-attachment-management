@@ -14,7 +14,7 @@ import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension } from "./ut
 import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./settings/metadata";
 
 export default class AttachmentManagementPlugin extends Plugin {
     settings: AttachmentManagementPluginSettings;
