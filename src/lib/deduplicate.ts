@@ -26,7 +26,9 @@ export async function deduplicateNewName(newName: string, file: TFolder): Promis
         delimiter = "-",
         delimiterEscaped = escapeRegExp(delimiter);
 
-    const dupNameRegex = new RegExp(`^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d+)\\.${newNameExt}$`);
+    const dupNameRegex = new RegExp(
+        `^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d+)\\.${newNameExt}$`
+    );
 
     debugLog("dupNameRegex", dupNameRegex);
 

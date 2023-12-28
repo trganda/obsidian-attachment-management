@@ -33,7 +33,11 @@ export function getExtensionOverrideSetting(
 
     for (let i = 0; i < settings.extensionOverride.length; i++) {
         if (matchExtension(extension, settings.extensionOverride[i].extension)) {
-            debugLog("getExtensionOverrideSetting - ", settings.extensionOverride[i].extension, settings.extensionOverride[i])
+            debugLog(
+                "getExtensionOverrideSetting - ",
+                settings.extensionOverride[i].extension,
+                settings.extensionOverride[i]
+            );
             return { extSetting: settings.extensionOverride[i] };
         }
     }

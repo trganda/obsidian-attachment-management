@@ -44,7 +44,7 @@ class Metadata {
         extension: string,
         parentPath: string,
         parentName: string,
-        attachmentFile?: TFile,
+        attachmentFile?: TFile
     ) {
         this.path = path;
         this.name = name;
@@ -69,7 +69,7 @@ class Metadata {
         dateFormat: string,
         originalName: string,
         adapter: DataAdapter,
-        linkName?: string,
+        linkName?: string
     ): Promise<string> {
         const dateTime = window.moment().format(dateFormat);
 
@@ -125,7 +125,7 @@ class Metadata {
                         .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
                         .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
                         .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-                        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
+                        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
                 );
 
                 return normalizePath(attachPath);
@@ -139,7 +139,7 @@ class Metadata {
                 .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
                 .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
                 .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-                .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
+                .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
         );
 
         return normalizePath(attachPath);

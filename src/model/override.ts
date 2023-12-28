@@ -92,7 +92,9 @@ export class OverrideModal extends Modal {
 
         new Setting(contentEl)
             .setName("Attachment format")
-            .setDesc(`Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`)
+            .setDesc(
+                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
+            )
             .addText((text) =>
                 text
                     .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)

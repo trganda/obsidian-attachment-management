@@ -1,11 +1,13 @@
 import { DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
-import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, OriginalNameStorage } from "./settings/settings";
 import {
     SETTINGS_VARIABLES_NOTENAME,
     SETTINGS_VARIABLES_NOTEPATH,
     SETTINGS_VARIABLES_NOTEPARENT,
+    SETTINGS_VARIABLES_ORIGINALNAME,
 } from "./lib/constant";
 import { Md5 } from "ts-md5";
+import { getExtensionOverrideSetting } from "./model/extensionOverride";
 
 export enum ATTACHMENT_RENAME_TYPE {
     // need to rename the attachment folder and file name
