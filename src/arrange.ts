@@ -1,8 +1,8 @@
-import { App, Notice, TFile, TFolder } from "obsidian";
+import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./log";
 import { getOverrideSetting } from "./override";
-import { ATTACHMENT_RENAME_TYPE, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { ATTACHMENT_RENAME_TYPE, MD5, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
@@ -10,16 +10,19 @@ import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
+import { containOriginalNameVariable, loadOriginalName } from "./lib/originalStorage";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
 export class ArrangeHandler {
     settings: AttachmentManagementPluginSettings;
     app: App;
+    plugin: Plugin;
 
-    constructor(settings: AttachmentManagementPluginSettings, app: App) {
+    constructor(settings: AttachmentManagementPluginSettings, app: App, plugin: Plugin) {
         this.settings = settings;
         this.app = app;
+        this.plugin = plugin;
     }
 
     /**
@@ -69,19 +72,38 @@ export class ArrangeHandler {
                 const metadata = getMetadata(obNote, linkFile);
                 const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
 
-                const attachName = await metadata.getAttachFileName(
-                    setting,
-                    this.settings.dateFormat,
-                    "",
-                    this.app.vault.adapter,
-                    path.basename(link, path.extname(link)),
-                );
-                // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);
-                // check if the link was already satisfy the attachment name config
-                if (!this.needToRename(setting, attachPath, attachName, metadata.basename, link)) {
-                    debugLog("rearrangeAttachment - no need to rename:", link);
+                const md5 = await MD5(this.app.vault.adapter, linkFile);
+                const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
+                debugLog("rearrangeAttachment - original name:", originalName);
+
+                let attachName = "";
+                if (containOriginalNameVariable(setting, linkFile.extension)) {
+                    attachName = await metadata.getAttachFileName(
+                        setting,
+                        this.settings.dateFormat,
+                        originalName?.on ?? "",
+                        this.app.vault.adapter,
+                        path.basename(link, path.extname(link))
+                    );
+                } else {
+                    attachName = await metadata.getAttachFileName(
+                        setting,
+                        this.settings.dateFormat,
+                        path.basename(link, path.extname(link)),
+                        this.app.vault.adapter
+                    );
+                }
+
+                // ignore if the name was equal to the link name
+                if (attachName === path.basename(link, path.extname(link))) {
                     continue;
                 }
+
+                // check if the link was already satisfy the attachment name config
+                // if (!this.needToRename(setting, attachPath, attachName, metadata.basename, link)) {
+                //     debugLog("rearrangeAttachment - no need to rename:", link);
+                //     continue;
+                // }
 
                 if (!(await this.app.vault.adapter.exists(attachPath))) {
                     await this.app.vault.adapter.mkdir(attachPath);
@@ -94,9 +116,8 @@ export class ArrangeHandler {
                 }
                 const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFile);
                 debugLog("rearrangeAttachment - deduplicated name:", name);
-                const dest = path.join(attachPath, name);
 
-                await this.app.fileManager.renameFile(linkFile, dest);
+                await this.app.fileManager.renameFile(linkFile, path.join(attachPath, name));
             }
         }
     }
@@ -113,7 +134,8 @@ export class ArrangeHandler {
     async getAttachmentsInVault(
         settings: AttachmentManagementPluginSettings,
         type: "active" | "links" | "file",
-        file?: TFile, oldPath?: string
+        file?: TFile,
+        oldPath?: string
     ): Promise<Record<string, Set<string>>> {
         let attachmentsRecord: Record<string, Set<string>> = {};
 
@@ -134,7 +156,8 @@ export class ArrangeHandler {
     async getAttachmentsInVaultByLinks(
         settings: AttachmentManagementPluginSettings,
         type: "active" | "links" | "file",
-        file?: TFile, oldPath?: string
+        file?: TFile,
+        oldPath?: string
     ): Promise<Record<string, Set<string>>> {
         const attachmentsRecord: Record<string, Set<string>> = {};
         let resolvedLinks: Record<string, Record<string, number>> = {};
@@ -291,7 +314,7 @@ export class ArrangeHandler {
         attachPath: string,
         attachName: string,
         noteName: string,
-        link: string,
+        link: string
     ): boolean {
         const linkPath = path.dirname(link);
         const linkName = path.basename(link, path.extname(link));

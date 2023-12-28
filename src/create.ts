@@ -8,7 +8,8 @@ import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
-import { isImage, isPastedImage } from "./utils";
+import { MD5, isImage, isPastedImage } from "./utils";
+import { saveOrigianlName } from "./lib/originalStorage";
 
 export class CreateHandler {
     readonly app: App;
@@ -66,7 +67,7 @@ export class CreateHandler {
             )) +
             "." +
             file.extension;
-    
+
         const view = getActiveView(this.app);
         const content = view?.getViewData();
         const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
@@ -111,14 +112,20 @@ export class CreateHandler {
         debugLog("renameFile - ", file.path, " to ", dst);
 
         const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
-        const oldPath = file.path;
-        const oldName = file.name;
+        const original = file.basename;
 
         // this api will not update the link automatically on `create` event
         // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
         //   await this.app.fileManager.renameFile(file, dst);
         await this.app.vault.adapter.rename(file.path, dst);
-        new Notice(`Renamed ${oldName} to ${attachName}.`);
+        new Notice(`Renamed ${file.name} to ${attachName}.`);
+
+        // save origianl name in setting
+        const { setting } = getOverrideSetting(this.settings, activeFile);
+        saveOrigianlName(this.settings, setting, file.extension, {
+            on: original,
+            md5: await MD5(this.app.vault.adapter, file),
+        });
 
         if (!updateLink) {
             return;
@@ -141,7 +148,7 @@ export class CreateHandler {
                 val = content.replace(oldLinkText, newLinkText);
                 break;
             case "canvas":
-                val = content.replace(`/(file\s*\:\s*\")${oldPath}(\")/g`, `$1${dst}$2`);
+                val = content.replace(`/(file\s*\:\s*\")${file.path}(\")/g`, `$1${dst}$2`);
                 break;
         }
 

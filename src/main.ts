@@ -29,8 +29,10 @@ export default class AttachmentManagementPlugin extends Plugin {
         this.addCommand({
             id: "attachment-management-rearrange-all-links",
             name: "Rearrange all linked attachments",
-            callback: () => {
-                new ArrangeHandler(this.settings, this.app).rearrangeAttachment("links");
+            callback: async () => {
+                await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("links");
+                await this.saveSettings();
+                this.loadSettings();
                 new Notice("Arrange completed");
             },
         });
@@ -38,8 +40,10 @@ export default class AttachmentManagementPlugin extends Plugin {
         this.addCommand({
             id: "attachment-management-rearrange-active-links",
             name: "Rearrange linked attachments",
-            callback: () => {
-                new ArrangeHandler(this.settings, this.app).rearrangeAttachment("active");
+            callback: async () => {
+                await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("active");
+                await this.saveSettings();
+                this.loadSettings();
                 new Notice("Arrange completed");
             },
         });
@@ -111,11 +115,10 @@ export default class AttachmentManagementPlugin extends Plugin {
                             await this.overrideConfiguration(file, fileSetting);
                         });
                 });
-            }),
+            })
         );
 
         this.registerEvent(
-            // not working while drop file to text view
             this.app.vault.on("create", async (file: TAbstractFile) => {
                 debugLog("on create event - file:", file.path);
                 // only processing create of file, ignore folder creation
@@ -145,8 +148,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                     debugLog("create - image", file);
                     await processor.processAttach(file);
+                    await this.saveSettings();
+                    await this.loadSettings();
                 });
-            }),
+            })
         );
 
         this.registerEvent(
@@ -183,9 +188,9 @@ export default class AttachmentManagementPlugin extends Plugin {
                     }
 
                     // debugLog("rename - overrideSetting:", setting);
-                    await new ArrangeHandler(this.settings, this.app).rearrangeAttachment("file", file, oldPath);
-
-                    // remove old attachment path if it's empty
+                    await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath);
+                    await this.saveSettings();
+                    this.loadSettings();
                     if (!(await this.app.vault.adapter.exists(oldPath, true))) {
                         return;
                     }
@@ -194,6 +199,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
                     debugLog("onRename - old attachment path:", oldAttachPath);
                     const old = await this.app.vault.adapter.list(oldAttachPath);
+                    // remove old attachment path if it's empty
                     if (old.files.length === 0 && old.folders.length === 0) {
                         await this.app.vault.adapter.rmdir(oldAttachPath, true);
                     }
@@ -201,7 +207,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     // ignore rename event of folder
                     return;
                 }
-            }),
+            })
         );
 
         this.registerEvent(
@@ -215,10 +221,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                 if (deleteOverrideSetting(this.settings, file)) {
                     await this.saveSettings();
-                    await this.loadSettings();
+                    this.loadSettings();
                     new Notice("Removed override setting of " + file.path);
                 }
-            }),
+            })
         );
 
         // This adds a settings tab so the user can configure various aspects of the plugin

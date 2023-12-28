@@ -32,8 +32,15 @@ export interface AttachmentPathSettings {
     attachFormat: string;
     // Override type
     type: SETTINGS_TYPES;
-    //extension override
+    // Extension override
     extensionOverride?: ExtensionOverrideSettings[];
+}
+
+export interface OriginalNameStorage {
+    // Original name
+    on: string;
+    // Current name
+    md5: string;
 }
 
 export interface ExtensionOverrideSettings {
@@ -64,6 +71,8 @@ export interface AttachmentManagementPluginSettings {
     excludePathsArray: string[];
     // Exclude subpath also
     excludeSubpaths: boolean;
+    // Presistence storage of original name
+    originalNameStorage: OriginalNameStorage[];
     // Path of notes that override global configuration
     overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -82,6 +91,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
     excludedPaths: "",
     excludePathsArray: [],
     excludeSubpaths: false,
+    originalNameStorage: [],
     overridePath: {},
 };
 
@@ -204,19 +214,6 @@ export class SettingTab extends PluginSettingTab {
                     });
             });
 
-        // new Setting(containerEl)
-        //   .setName("Handle all attachments")
-        //   .setDesc(
-        //     "By default, only auto-rename the image file, if enable this option, all created file (except 'md' or 'canvas') will be renamed automatically"
-        //   )
-        //   .addToggle((toggle) =>
-        //     toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
-        //       debugLog("setting - handle all attachment:" + value);
-        //       this.plugin.settings.handleAll = value;
-        //       this.displaySw(containerEl);
-        //       await this.plugin.saveSettings();
-        //     })
-        //   );
         new Setting(containerEl)
             .setName("Automatically rename attachment")
             .setDesc(
@@ -286,12 +283,17 @@ export class SettingTab extends PluginSettingTab {
                         btn.setIcon("check")
                             .setTooltip("Save extension override")
                             .onClick(async () => {
-                                const wrongIndex = validateExtensionEntry(this.plugin.settings.attachPath, this.plugin.settings);
+                                const wrongIndex = validateExtensionEntry(
+                                    this.plugin.settings.attachPath,
+                                    this.plugin.settings
+                                );
                                 if (wrongIndex.length > 0) {
                                     for (const i of wrongIndex) {
                                         const resIndex = i.index < 0 ? 0 : i.index;
-                                        const wrongSetting = containerEl.getElementsByClassName("override_extension_set")[resIndex];
-                                        wrongSetting.getElementsByTagName("input")[0].style.border = "1px solid var(--color-red)";
+                                        const wrongSetting =
+                                            containerEl.getElementsByClassName("override_extension_set")[resIndex];
+                                        wrongSetting.getElementsByTagName("input")[0].style.border =
+                                            "1px solid var(--color-red)";
                                         generateErrorExtensionMessage(i.type);
                                     }
                                     return;
@@ -334,7 +336,9 @@ export class SettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Exclude subpaths")
-            .setDesc("Turn on this option if you want to also exclude all subfolders of the folder paths provided above.")
+            .setDesc(
+                "Turn on this option if you want to also exclude all subfolders of the folder paths provided above."
+            )
             .addToggle((toggle) =>
                 toggle.setValue(this.plugin.settings.excludeSubpaths).onChange(async (value) => {
                     debugLog("setting - excluded subpaths:" + value);
