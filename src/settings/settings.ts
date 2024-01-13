@@ -38,7 +38,7 @@ export interface AttachmentPathSettings {
 
 export interface OriginalNameStorage {
     // Original name
-    on: string;
+    n: string;
     // Current name
     md5: string;
 }
@@ -57,6 +57,8 @@ export interface ExtensionOverrideSettings {
 }
 
 export interface AttachmentManagementPluginSettings {
+    // Disable notification
+    disableNotification: boolean;
     // Path
     attachPath: AttachmentPathSettings;
     // Date format
@@ -93,6 +95,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
     excludeSubpaths: false,
     originalNameStorage: [],
     overridePath: {},
+    disableNotification: false,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -128,6 +131,13 @@ export class SettingTab extends PluginSettingTab {
         const { containerEl } = this;
 
         containerEl.empty();
+
+        new Setting(containerEl).setName("Disable notification").addToggle((toggle) => {
+            toggle.setValue(this.plugin.settings.disableNotification).onChange(async (value) => {
+                this.plugin.settings.disableNotification = value;
+                await this.plugin.saveSettings();
+            });
+        });
 
         new Setting(containerEl)
             .setName("Root path to save attachment")

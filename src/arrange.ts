@@ -31,6 +31,7 @@ export class ArrangeHandler {
      *
      * @param {"active" | "links" | "file"} type - The type of attachments to rearrange.
      * @param {TFile} file - The file to which the attachments are linked (optional), if the type was "file", thi should be provided.
+     * @param {string} oldPath - The old path of the file (optional), used for rename event.
      */
     async rearrangeAttachment(type: "active" | "links" | "file", file?: TFile, oldPath?: string) {
         if (!this.settings.autoRenameAttachment) {
@@ -98,12 +99,6 @@ export class ArrangeHandler {
                 if (attachName === path.basename(link, path.extname(link))) {
                     continue;
                 }
-
-                // check if the link was already satisfy the attachment name config
-                // if (!this.needToRename(setting, attachPath, attachName, metadata.basename, link)) {
-                //     debugLog("rearrangeAttachment - no need to rename:", link);
-                //     continue;
-                // }
 
                 if (!(await this.app.vault.adapter.exists(attachPath))) {
                     await this.app.vault.adapter.mkdir(attachPath);
