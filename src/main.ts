@@ -149,7 +149,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                     debugLog("create - image", file);
                     await processor.processAttach(file);
                     await this.saveSettings();
-                    await this.loadSettings();
+                    this.loadSettings();
                 });
             })
         );
@@ -187,7 +187,6 @@ export default class AttachmentManagementPlugin extends Plugin {
                         return;
                     }
 
-                    // debugLog("rename - overrideSetting:", setting);
                     await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath);
                     await this.saveSettings();
                     this.loadSettings();

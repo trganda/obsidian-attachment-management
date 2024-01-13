@@ -123,7 +123,7 @@ export class CreateHandler {
         // save origianl name in setting
         const { setting } = getOverrideSetting(this.settings, activeFile);
         saveOrigianlName(this.settings, setting, file.extension, {
-            on: original,
+            n: original,
             md5: await MD5(this.app.vault.adapter, file),
         });
 

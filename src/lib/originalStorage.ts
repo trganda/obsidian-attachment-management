@@ -24,6 +24,9 @@ export function saveOrigianlName(
     }
 
     if (containOriginalNameVariable(setting, ext)) {
+        settings.originalNameStorage
+            .filter((n) => n.md5 == data.md5)
+            .forEach((n) => settings.originalNameStorage.remove(n));
         settings.originalNameStorage.push(data);
     }
 }
@@ -41,10 +44,10 @@ export function loadOriginalName(
         if (first === undefined || last == undefined) {
             return undefined;
         }
-        if (first.md5 === last.md5 && first.on === last.on) {
+        if (first.md5 === last.md5 && first.n === last.n) {
             return last;
-        } else if (first.md5 === last.md5 && first.on !== last.on) {
-            // remove dumplicated item, the oldder one
+        } else if (first.md5 === last.md5 && first.n !== last.n) {
+            // remove duplicated item, the oldder one
             settings.originalNameStorage.remove(first);
             return last;
         }

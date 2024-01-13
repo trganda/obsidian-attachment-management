@@ -81,7 +81,7 @@ export class ArrangeHandler {
                     attachName = await metadata.getAttachFileName(
                         setting,
                         this.settings.dateFormat,
-                        originalName?.on ?? "",
+                        originalName?.n ?? "",
                         this.app.vault.adapter,
                         path.basename(link, path.extname(link))
                     );
