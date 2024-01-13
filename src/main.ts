@@ -3,6 +3,7 @@ import {
     AttachmentManagementPluginSettings,
     AttachmentPathSettings,
     DEFAULT_SETTINGS,
+    OriginalNameStorage,
     SETTINGS_TYPES,
     SettingTab,
 } from "./settings/settings";
@@ -10,7 +11,7 @@ import { debugLog } from "./log";
 import { OverrideModal } from "./model/override";
 import { getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension } from "./utils";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, MD5 } from "./utils";
 import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
@@ -24,6 +25,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         await this.loadSettings();
 
         console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
+        debugLog(this.settings.originalNameStorage);
         // this.backupConfigs();
 
         this.addCommand({
@@ -93,11 +95,42 @@ export default class AttachmentManagementPlugin extends Plugin {
                         }
                         delete this.settings.overridePath[file.path];
                         this.saveSettings();
+                        this.loadSettings();
                         new Notice(`Reset attachment setting of ${file.path}`);
                     }
                     return true;
                 }
                 return false;
+            },
+        });
+
+        this.addCommand({
+            id: "attachment-management-clear-unused-originalname-storage",
+            name: "Clear unused original name storage",
+            callback: async () => {
+                const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
+                    this.settings,
+                    "links"
+                );
+                const storages: OriginalNameStorage[] = [];
+                for (const attachs of Object.values(attachments)) {
+                    for (const attach of attachs) {
+                        const link = decodeURI(attach);
+                        const linkFile = this.app.vault.getAbstractFileByPath(link);
+                        if (linkFile !== null && linkFile instanceof TFile) {
+                            const md5 = await MD5(this.app.vault.adapter, linkFile);
+                            const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
+                            if (ret) {
+                                storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
+                                storages.push(ret);
+                            }
+                        }
+                    }
+                }
+                debugLog("clearUnusedOriginalNameStorage - storage:", storages);
+                this.settings.originalNameStorage = storages;
+                await this.saveSettings();
+                this.loadSettings();
             },
         });
 
