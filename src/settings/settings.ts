@@ -132,12 +132,12 @@ export class SettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
-        new Setting(containerEl).setName("Disable notification").addToggle((toggle) => {
-            toggle.setValue(this.plugin.settings.disableNotification).onChange(async (value) => {
-                this.plugin.settings.disableNotification = value;
-                await this.plugin.saveSettings();
-            });
-        });
+        // new Setting(containerEl).setName("Disable notification").addToggle((toggle) => {
+        //     toggle.setValue(this.plugin.settings.disableNotification).onChange(async (value) => {
+        //         this.plugin.settings.disableNotification = value;
+        //         await this.plugin.saveSettings();
+        //     });
+        // });
 
         new Setting(containerEl)
             .setName("Root path to save attachment")
