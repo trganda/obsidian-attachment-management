@@ -68,16 +68,6 @@ export class CreateHandler {
             "." +
             file.extension;
 
-        const view = getActiveView(this.app);
-        const content = view?.getViewData();
-        const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
-        debugLog("processAttach - oldLinkText:", oldLinkText);
-        // if we have not fould old link in content, the create event should be ignored.
-        if (content != null && content?.indexOf(oldLinkText) < 0) {
-            debugLog("processAttach - not found ${oldLinkText} in contetn, skipped");
-            return;
-        }
-
         // make sure the path was created
         if (!(await this.app.vault.adapter.exists(attachPath, true))) {
             await this.app.vault.adapter.mkdir(attachPath);
@@ -113,12 +103,13 @@ export class CreateHandler {
 
         const oldLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
         const original = file.basename;
+        const name = file.name;
 
-        // this api will not update the link automatically on `create` event
+        // this api will not update the link in markdonw file automatically on `create` event
         // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
-        //   await this.app.fileManager.renameFile(file, dst);
-        await this.app.vault.adapter.rename(file.path, dst);
-        new Notice(`Renamed ${file.name} to ${attachName}.`);
+        await this.app.fileManager.renameFile(file, dst);
+        // await this.app.vault.adapter.rename(file.path, dst);
+        new Notice(`Renamed ${name} to ${attachName}.`);
 
         // save origianl name in setting
         const { setting } = getOverrideSetting(this.settings, activeFile);
@@ -131,7 +122,7 @@ export class CreateHandler {
             return;
         }
 
-        // in case fileManager.renameFile may not update the internal link in the active file,
+        // in case fileManager.renameFile may not update the internal link in the active markdown file,
         // we manually replace the current line by manipulating the editor
         const newLinkText = this.app.fileManager.generateMarkdownLink(file, activeFile.path);
         debugLog("renameFile - replace text:", oldLinkText, newLinkText);
@@ -141,18 +132,17 @@ export class CreateHandler {
             new Notice(`Failed to update link in ${activeFile.path}: no active view`);
             return;
         }
-        const content = view.getViewData();
-        let val = "";
-        switch (activeFile.extension) {
-            case "md":
-                val = content.replace(oldLinkText, newLinkText);
-                break;
-            case "canvas":
-                val = content.replace(`/(file\s*\:\s*\")${file.path}(\")/g`, `$1${dst}$2`);
-                break;
-        }
 
-        view.setViewData(val, false);
-        new Notice(`Updated 1 link in ${activeFile.path}`);
+        if (activeFile.extension == "md") {
+            const content = view.getViewData();
+            // if we have not fould old link in content, the create event should be ignored.
+            if (content.indexOf(oldLinkText) < 0) {
+                debugLog(`processAttach - not found ${oldLinkText} in content, skipped`);
+                return;
+            }
+
+            view.setViewData(content.replace(oldLinkText, newLinkText), false);
+            new Notice(`Updated 1 link in ${activeFile.path}`);
+        }
     }
 }

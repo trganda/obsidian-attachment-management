@@ -201,12 +201,14 @@ export class ArrangeHandler {
         if (resolvedLinks) {
             for (const [mdFile, links] of Object.entries(resolvedLinks)) {
                 const attachmentsSet: Set<string> = new Set();
-                for (const [filePath] of Object.entries(links)) {
-                    if (isAttachment(settings, filePath)) {
-                        this.addToSet(attachmentsSet, filePath);
+                if (links) {
+                    for (const [filePath] of Object.entries(links)) {
+                        if (isAttachment(settings, filePath)) {
+                            this.addToSet(attachmentsSet, filePath);
+                        }
                     }
+                    this.addToRecord(attachmentsRecord, mdFile, attachmentsSet);
                 }
-                this.addToRecord(attachmentsRecord, mdFile, attachmentsSet);
             }
         }
         // Loop Files and Check Frontmatter/Canvas

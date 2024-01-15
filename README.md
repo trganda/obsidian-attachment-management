@@ -146,7 +146,7 @@ The origianl name was stored in **data.json**, it's the configuration file of pl
   ],
 ```
 
-As you can see the original name was saved with a hash, so if you add a same file multi-times only the first will be save. The **originalNameStorage** will not clear automatically, use command `Clear unused original name storage`. This command will keep the entry if the hash of an attachment was matched.
+As you can see the original name was saved with a hash, so if you add a same file multi-times only the last one will be save. The **originalNameStorage** will not clear automatically, use command `Clear unused original name storage`. This command will keep the entry if the hash of an attachment was matched.
 
 ### Known Issues
 
