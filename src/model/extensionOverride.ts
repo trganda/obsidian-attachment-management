@@ -14,7 +14,7 @@ import {
 import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
 import { matchExtension } from "src/utils";
-import { debugLog } from "src/log";
+import { debugLog } from "src/lib/log";
 
 /**
  * Retrieves the override setting for a specific extension.

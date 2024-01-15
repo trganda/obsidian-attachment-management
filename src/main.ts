@@ -9,6 +9,7 @@ import {
 } from "./settings/settings";
 import { debugLog } from "./lib/log";
 import { OverrideModal } from "./model/override";
+import { ConfirmModal } from "./model/confirm";
 import { getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
 import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, MD5 } from "./utils";
@@ -30,8 +31,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             id: "attachment-management-rearrange-all-links",
             name: "Rearrange all linked attachments",
             callback: async () => {
-                await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("links");
-                new Notice("Arrange completed");
+                new ConfirmModal(this).open();
             },
         });
 
@@ -41,7 +41,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             callback: async () => {
                 new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("active").finally(() => {
                     new Notice("Arrange completed");
-                })
+                });
             },
         });
 
