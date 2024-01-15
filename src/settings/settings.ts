@@ -11,9 +11,9 @@ import {
     SETTINGS_VARIABLES_ORIGINALNAME,
     SETTINGS_VARIABLES_MD5,
 } from "../lib/constant";
-import { debugLog } from "src/log";
 import { OverrideExtensionModal } from "src/model/extensionOverride";
 import { validateExtensionEntry, generateErrorExtensionMessage } from "src/utils";
+import { debugLog } from "src/lib/log";
 
 export enum SETTINGS_TYPES {
     GLOBAL = "GLOBAL",

@@ -1,6 +1,6 @@
 import { TAbstractFile, TFile, TFolder } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings, SETTINGS_TYPES } from "./settings/settings";
-import { debugLog } from "./log";
+import { debugLog } from "./lib/log";
 import { stripPaths } from "./utils";
 
 /**

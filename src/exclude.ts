@@ -1,4 +1,4 @@
-import { debugLog } from "./log";
+import { debugLog } from "./lib/log";
 import { AttachmentManagementPluginSettings } from "./settings/settings";
 
 export function isExcluded(path: string, settings: AttachmentManagementPluginSettings): boolean {

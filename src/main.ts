@@ -7,7 +7,7 @@ import {
     SETTINGS_TYPES,
     SettingTab,
 } from "./settings/settings";
-import { debugLog } from "./log";
+import { debugLog } from "./lib/log";
 import { OverrideModal } from "./model/override";
 import { getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
@@ -25,16 +25,12 @@ export default class AttachmentManagementPlugin extends Plugin {
         await this.loadSettings();
 
         console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
-        debugLog(this.settings.originalNameStorage);
-        // this.backupConfigs();
 
         this.addCommand({
             id: "attachment-management-rearrange-all-links",
             name: "Rearrange all linked attachments",
             callback: async () => {
                 await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("links");
-                await this.saveSettings();
-                this.loadSettings();
                 new Notice("Arrange completed");
             },
         });
@@ -43,10 +39,9 @@ export default class AttachmentManagementPlugin extends Plugin {
             id: "attachment-management-rearrange-active-links",
             name: "Rearrange linked attachments",
             callback: async () => {
-                await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("active");
-                await this.saveSettings();
-                this.loadSettings();
-                new Notice("Arrange completed");
+                new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("active").finally(() => {
+                    new Notice("Arrange completed");
+                })
             },
         });
 
@@ -266,24 +261,6 @@ export default class AttachmentManagementPlugin extends Plugin {
     async overrideConfiguration(file: TAbstractFile, setting: AttachmentPathSettings) {
         new OverrideModal(this, file, setting).open();
         await this.loadSettings();
-    }
-
-    backupConfigs() {
-        //@ts-ignore
-        this.originalObsAttachPath = this.app.vault.getConfig("attachmentFolderPath");
-    }
-
-    restoreConfigs() {
-        //@ts-ignore
-        this.app.vault.setConfig("attachmentFolderPath", this.originalObsAttachPath);
-    }
-    updateAttachmentFolderConfig(path: string) {
-        //@ts-ignore
-        this.app.vault.setConfig("attachmentFolderPath", path);
-    }
-
-    onunload() {
-        // this.restoreConfigs();
     }
 
     async loadSettings() {

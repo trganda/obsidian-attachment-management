@@ -1,7 +1,7 @@
 import { App, Notice, TFile, TFolder, normalizePath } from "obsidian";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
-import { debugLog } from "./log";
+import { debugLog } from "./lib/log";
 import { AttachmentManagementPluginSettings, DEFAULT_SETTINGS } from "./settings/settings";
 import { getActiveFile, getActiveView } from "./commons";
 import { getOverrideSetting } from "./override";

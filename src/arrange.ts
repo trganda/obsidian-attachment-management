@@ -1,6 +1,6 @@
 import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
 import { path } from "./lib/path";
-import { debugLog } from "./log";
+import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
 import { ATTACHMENT_RENAME_TYPE, MD5, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";

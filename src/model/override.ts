@@ -1,5 +1,4 @@
 import { Modal, TFile, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
-import { debugLog } from "src/log";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPES } from "../settings/settings";
 import {
     SETTINGS_ROOT_OBSFOLDER,
@@ -14,6 +13,7 @@ import {
 } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { OverrideExtensionModal } from "./extensionOverride";
+import { debugLog } from "src/lib/log";
 
 export class OverrideModal extends Modal {
     plugin: AttachmentManagementPlugin;
