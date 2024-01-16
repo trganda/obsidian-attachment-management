@@ -20,6 +20,7 @@ import { getMetadata } from "./settings/metadata";
 
 export default class AttachmentManagementPlugin extends Plugin {
     settings: AttachmentManagementPluginSettings;
+    createdQueue: TFile[] = [];
     originalObsAttachPath: string;
 
     async onload() {
@@ -160,24 +161,56 @@ export default class AttachmentManagementPlugin extends Plugin {
                     const curentTime = new Date().getTime();
                     const timeGapMs = curentTime - file.stat.mtime;
                     const timeGapCs = curentTime - file.stat.ctime;
-                    if (timeGapMs > 1000 || timeGapCs > 1000) {
-                        return;
-                    }
                     // ignore markdown and canvas file.
-                    if (isMarkdownFile(file.extension) || isCanvasFile(file.extension)) {
+                    if (
+                        timeGapMs > 1000 ||
+                        timeGapCs > 1000 ||
+                        isMarkdownFile(file.extension) ||
+                        isCanvasFile(file.extension)
+                    ) {
                         return;
                     }
 
-                    const processor = new CreateHandler(this.app, this.settings);
                     if (matchExtension(file.extension, this.settings.excludeExtensionPattern)) {
                         debugLog("create - excluded file by extension", file);
                         return;
                     }
 
-                    debugLog("create - image", file);
-                    await processor.processAttach(file);
-                    await this.saveSettings();
-                    this.loadSettings();
+                    this.createdQueue.push(file);
+                });
+            })
+        );
+
+        this.registerEvent(
+            this.app.vault.on("modify", async (file: TAbstractFile) => {
+                debugLog("create queue:", this.createdQueue);
+                if (this.createdQueue.length < 1 || !(file instanceof TFile)) {
+                    return;
+                }
+
+                debugLog("on modify event - file:", file.path);
+                this.app.vault.adapter.process(file.path, (data) => {
+                    debugLog("on modify event - file content:", data);
+                    this.createdQueue.forEach((f) => {
+                        this.app.vault.adapter.exists(f.path, true).then((exist) => {
+                            if (exist) {
+                                debugLog("on modify event - file exist:", f.path);
+                                const processor = new CreateHandler(this, this.settings);
+                                const link = this.app.fileManager.generateMarkdownLink(f, file.path);
+                                if (
+                                    (file.extension == "md" && data.indexOf(link) != -1) ||
+                                    (file.extension == "canvas" && data.indexOf(f.path) != -1)
+                                ) {
+                                    this.createdQueue.remove(f);
+                                    processor.processAttach(f, file);
+                                }
+                            } else {
+                                // remove not exists file
+                                this.createdQueue.remove(f);
+                            }
+                        });
+                    });
+                    return data;
                 });
             })
         );
