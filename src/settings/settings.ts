@@ -9,10 +9,11 @@ import {
     SETTINGS_ROOT_INFOLDER,
     SETTINGS_ROOT_NEXTTONOTE,
     SETTINGS_VARIABLES_ORIGINALNAME,
+    SETTINGS_VARIABLES_MD5,
 } from "../lib/constant";
-import { debugLog } from "src/log";
 import { OverrideExtensionModal } from "src/model/extensionOverride";
 import { validateExtensionEntry, generateErrorExtensionMessage } from "src/utils";
+import { debugLog } from "src/lib/log";
 
 export enum SETTINGS_TYPES {
     GLOBAL = "GLOBAL",
@@ -31,8 +32,15 @@ export interface AttachmentPathSettings {
     attachFormat: string;
     // Override type
     type: SETTINGS_TYPES;
-    //extension override
+    // Extension override
     extensionOverride?: ExtensionOverrideSettings[];
+}
+
+export interface OriginalNameStorage {
+    // Original name
+    n: string;
+    // Current name
+    md5: string;
 }
 
 export interface ExtensionOverrideSettings {
@@ -49,6 +57,8 @@ export interface ExtensionOverrideSettings {
 }
 
 export interface AttachmentManagementPluginSettings {
+    // Disable notification
+    disableNotification: boolean;
     // Path
     attachPath: AttachmentPathSettings;
     // Date format
@@ -63,6 +73,8 @@ export interface AttachmentManagementPluginSettings {
     excludePathsArray: string[];
     // Exclude subpath also
     excludeSubpaths: boolean;
+    // Presistence storage of original name
+    originalNameStorage: OriginalNameStorage[];
     // Path of notes that override global configuration
     overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -81,7 +93,9 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
     excludedPaths: "",
     excludePathsArray: [],
     excludeSubpaths: false,
+    originalNameStorage: [],
     overridePath: {},
+    disableNotification: false,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -118,9 +132,16 @@ export class SettingTab extends PluginSettingTab {
 
         containerEl.empty();
 
+        // new Setting(containerEl).setName("Disable notification").addToggle((toggle) => {
+        //     toggle.setValue(this.plugin.settings.disableNotification).onChange(async (value) => {
+        //         this.plugin.settings.disableNotification = value;
+        //         await this.plugin.saveSettings();
+        //     });
+        // });
+
         new Setting(containerEl)
-            .setName("Root path to save new attachments")
-            .setDesc("Select root path for all new attachments")
+            .setName("Root path to save attachment")
+            .setDesc("Select root path of attachment")
             .addDropdown((text) =>
                 text
                     .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
@@ -152,7 +173,7 @@ export class SettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Attachment path")
             .setDesc(
-                `Path of new attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`
+                `Path of attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`
             )
             .addText((text) =>
                 text
@@ -168,7 +189,7 @@ export class SettingTab extends PluginSettingTab {
         new Setting(containerEl)
             .setName("Attachment format")
             .setDesc(
-                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
+                `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
             )
             .addText((text) =>
                 text
@@ -203,19 +224,6 @@ export class SettingTab extends PluginSettingTab {
                     });
             });
 
-        // new Setting(containerEl)
-        //   .setName("Handle all attachments")
-        //   .setDesc(
-        //     "By default, only auto-rename the image file, if enable this option, all created file (except 'md' or 'canvas') will be renamed automatically"
-        //   )
-        //   .addToggle((toggle) =>
-        //     toggle.setValue(this.plugin.settings.handleAll).onChange(async (value) => {
-        //       debugLog("setting - handle all attachment:" + value);
-        //       this.plugin.settings.handleAll = value;
-        //       this.displaySw(containerEl);
-        //       await this.plugin.saveSettings();
-        //     })
-        //   );
         new Setting(containerEl)
             .setName("Automatically rename attachment")
             .setDesc(
@@ -285,12 +293,17 @@ export class SettingTab extends PluginSettingTab {
                         btn.setIcon("check")
                             .setTooltip("Save extension override")
                             .onClick(async () => {
-                                const wrongIndex = validateExtensionEntry(this.plugin.settings.attachPath, this.plugin.settings);
+                                const wrongIndex = validateExtensionEntry(
+                                    this.plugin.settings.attachPath,
+                                    this.plugin.settings
+                                );
                                 if (wrongIndex.length > 0) {
                                     for (const i of wrongIndex) {
                                         const resIndex = i.index < 0 ? 0 : i.index;
-                                        const wrongSetting = containerEl.getElementsByClassName("override_extension_set")[resIndex];
-                                        wrongSetting.getElementsByTagName("input")[0].style.border = "1px solid var(--color-red)";
+                                        const wrongSetting =
+                                            containerEl.getElementsByClassName("override_extension_set")[resIndex];
+                                        wrongSetting.getElementsByTagName("input")[0].style.border =
+                                            "1px solid var(--color-red)";
                                         generateErrorExtensionMessage(i.type);
                                     }
                                     return;
@@ -333,7 +346,9 @@ export class SettingTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName("Exclude subpaths")
-            .setDesc("Turn on this option if you want to also exclude all subfolders of the folder paths provided above.")
+            .setDesc(
+                "Turn on this option if you want to also exclude all subfolders of the folder paths provided above."
+            )
             .addToggle((toggle) =>
                 toggle.setValue(this.plugin.settings.excludeSubpaths).onChange(async (value) => {
                     debugLog("setting - excluded subpaths:" + value);

@@ -1,5 +1,5 @@
 import { TFolder } from "obsidian";
-import { debugLog } from "../log";
+import { debugLog } from "./log";
 import { path } from "./path";
 
 export interface NameObj {
@@ -17,7 +17,7 @@ export async function deduplicateNewName(newName: string, file: TFolder): Promis
     // list files in dir
     const dir = file.path;
     const listed = await this.app.vault.adapter.list(dir);
-    debugLog("sibling files", listed);
+    debugLog("deduplicateNewName - sibling files", listed);
 
     // parse newName
     const newNameExt = path.extname(newName),
@@ -26,7 +26,9 @@ export async function deduplicateNewName(newName: string, file: TFolder): Promis
         delimiter = "-",
         delimiterEscaped = escapeRegExp(delimiter);
 
-    const dupNameRegex = new RegExp(`^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d+)\\.${newNameExt}$`);
+    const dupNameRegex = new RegExp(
+        `^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d{1,3})\\.${newNameExt}$`
+    );
 
     debugLog("dupNameRegex", dupNameRegex);
 

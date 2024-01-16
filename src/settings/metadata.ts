@@ -1,5 +1,5 @@
 import { DataAdapter, TFile, normalizePath } from "obsidian";
-import { AttachmentPathSettings } from "./settings/settings";
+import { AttachmentPathSettings } from "./settings";
 import {
     SETTINGS_VARIABLES_DATES,
     SETTINGS_VARIABLES_MD5,
@@ -7,11 +7,11 @@ import {
     SETTINGS_VARIABLES_NOTEPARENT,
     SETTINGS_VARIABLES_NOTEPATH,
     SETTINGS_VARIABLES_ORIGINALNAME,
-} from "./lib/constant";
-import { getRootPath } from "./commons";
-import { path } from "./lib/path";
-import { MD5 } from "./utils";
-import { getExtensionOverrideSetting } from "./model/extensionOverride";
+} from "../lib/constant";
+import { getRootPath } from "../commons";
+import { path } from "../lib/path";
+import { MD5 } from "../utils";
+import { getExtensionOverrideSetting } from "../model/extensionOverride";
 
 /**
  * Metadata of notes file
@@ -44,7 +44,7 @@ class Metadata {
         extension: string,
         parentPath: string,
         parentName: string,
-        attachmentFile?: TFile,
+        attachmentFile?: TFile
     ) {
         this.path = path;
         this.name = name;
@@ -69,8 +69,8 @@ class Metadata {
         dateFormat: string,
         originalName: string,
         adapter: DataAdapter,
-        linkName?: string,
-    ) {
+        linkName?: string
+    ): Promise<string> {
         const dateTime = window.moment().format(dateFormat);
 
         let md5 = "";
@@ -85,8 +85,8 @@ class Metadata {
             }
         }
 
-        // we have no persistence of original name,  return current linking name
         if (attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
+            // we have no persistence of original name,  return current linking name
             if (originalName === "" && linkName != undefined) {
                 return linkName;
             } else {
@@ -125,7 +125,7 @@ class Metadata {
                         .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
                         .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
                         .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-                        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
+                        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
                 );
 
                 return normalizePath(attachPath);
@@ -139,7 +139,7 @@ class Metadata {
                 .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
                 .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
                 .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-                .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
+                .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
         );
 
         return normalizePath(attachPath);

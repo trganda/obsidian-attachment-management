@@ -2,6 +2,8 @@
 
 This plugin supports more flexibly to setting your attachment location with variable like `${notepath}`, `${notename}`, `${date}` and `${md5}`. And a override setting feature can be use for change the global setting of a folder, file or extension.
 
+> Read the [Original Name](#original-name) before using `${originalname}`.
+
 ## Roadmap of Features
 
 This plugin currently supports:
@@ -127,10 +129,29 @@ file setting > most close parent folder setting > global setting
 
 If you want to reset the setting of files or folder to the global setting, use the command `Reset Override Setting` or the `Reset` button of override setting panel. By the way, **the reset will only working on each file or folder that you have set on**. The more appropriate method to handle the reset will be add in future.
 
+### Original Name
+
+The `${originalname}` represent the origianl filename (without extension) of attachment that your added to vault. For some reason, people want to keep the filename no to change or combine with other variable like `${date}`. If you want to keep the filename of an attach no to change, set the **Attachment Format** with `${originalname}` is enougth.
+
+If you want to use `${origianlname}` with other variables, like `${originalname}-${date}`. This plugin will persists the origianl name for future using. Suppose you change the **Attachment Format** from `${originalname}-${date}` to `IMG-${originalname}`, it's work fine.
+
+The origianl name was stored in **data.json**, it's the configuration file of plugin, your can find it in `.obsidian/plugins/attachment-management/data.json`.
+
+```json
+  "originalNameStorage": [
+    {
+      "n": "Pasted image 20240113222517",
+      "md5": "9B1546EBA299E1A2A2FC86C664A15073"
+    }
+  ],
+```
+
+As you can see the original name was saved with a hash, so if you add a same file multi-times only the last one will be save. The **originalNameStorage** will not clear automatically, use command `Clear unused original name storage`. This command will keep the entry if the hash of an attachment was matched.
+
 ### Known Issues
 
 - ~~No support for processing duplicated file name right now (in develop). In backup, you could use the data variable [`x`](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/) to use Unix timestamp with millisecond as filename (it will prevent duplicated filename).~~
-- When drop a file in `canvas`, it's will delay to show the updated link/filename.
+- When paste or drop a file in `canvas` and `markdown`, it's will delay to show the updated link/filename. The reason is the obsidian's api has no `paste` or `drop` event support for `canvas`, so I have implement in another way and this cause the delay of rename attachment.
 
 ![Screen Recording](./images/canvas_drop_delay.gif)
 

@@ -1,25 +1,28 @@
-import { App, Notice, TFile, TFolder } from "obsidian";
+import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
 import { path } from "./lib/path";
-import { debugLog } from "./log";
+import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
-import { ATTACHMENT_RENAME_TYPE, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { ATTACHMENT_RENAME_TYPE, MD5, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
-import { getMetadata } from "./metadata";
+import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
+import { containOriginalNameVariable, loadOriginalName } from "./lib/originalStorage";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
 export class ArrangeHandler {
     settings: AttachmentManagementPluginSettings;
     app: App;
+    plugin: Plugin;
 
-    constructor(settings: AttachmentManagementPluginSettings, app: App) {
+    constructor(settings: AttachmentManagementPluginSettings, app: App, plugin: Plugin) {
         this.settings = settings;
         this.app = app;
+        this.plugin = plugin;
     }
 
     /**
@@ -28,6 +31,7 @@ export class ArrangeHandler {
      *
      * @param {"active" | "links" | "file"} type - The type of attachments to rearrange.
      * @param {TFile} file - The file to which the attachments are linked (optional), if the type was "file", thi should be provided.
+     * @param {string} oldPath - The old path of the file (optional), used for rename event.
      */
     async rearrangeAttachment(type: "active" | "links" | "file", file?: TFile, oldPath?: string) {
         if (!this.settings.autoRenameAttachment) {
@@ -69,17 +73,30 @@ export class ArrangeHandler {
                 const metadata = getMetadata(obNote, linkFile);
                 const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
 
-                const attachName = await metadata.getAttachFileName(
-                    setting,
-                    this.settings.dateFormat,
-                    "",
-                    this.app.vault.adapter,
-                    path.basename(link, path.extname(link)),
-                );
-                // debugLog(`rearrangeAttachment - ${attachPath}, ${attachName}`);
-                // check if the link was already satisfy the attachment name config
-                if (!this.needToRename(setting, attachPath, attachName, metadata.basename, link)) {
-                    debugLog("rearrangeAttachment - no need to rename:", link);
+                const md5 = await MD5(this.app.vault.adapter, linkFile);
+                const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
+                debugLog("rearrangeAttachment - original name:", originalName);
+
+                let attachName = "";
+                if (containOriginalNameVariable(setting, linkFile.extension)) {
+                    attachName = await metadata.getAttachFileName(
+                        setting,
+                        this.settings.dateFormat,
+                        originalName?.n ?? "",
+                        this.app.vault.adapter,
+                        path.basename(link, path.extname(link))
+                    );
+                } else {
+                    attachName = await metadata.getAttachFileName(
+                        setting,
+                        this.settings.dateFormat,
+                        path.basename(link, path.extname(link)),
+                        this.app.vault.adapter
+                    );
+                }
+
+                // ignore if the path was equal to the link
+                if (attachPath == path.dirname(link) && attachName === path.basename(link, path.extname(link))) {
                     continue;
                 }
 
@@ -94,9 +111,8 @@ export class ArrangeHandler {
                 }
                 const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFile);
                 debugLog("rearrangeAttachment - deduplicated name:", name);
-                const dest = path.join(attachPath, name);
 
-                await this.app.fileManager.renameFile(linkFile, dest);
+                await this.app.fileManager.renameFile(linkFile, path.join(attachPath, name));
             }
         }
     }
@@ -113,7 +129,8 @@ export class ArrangeHandler {
     async getAttachmentsInVault(
         settings: AttachmentManagementPluginSettings,
         type: "active" | "links" | "file",
-        file?: TFile, oldPath?: string
+        file?: TFile,
+        oldPath?: string
     ): Promise<Record<string, Set<string>>> {
         let attachmentsRecord: Record<string, Set<string>> = {};
 
@@ -134,7 +151,8 @@ export class ArrangeHandler {
     async getAttachmentsInVaultByLinks(
         settings: AttachmentManagementPluginSettings,
         type: "active" | "links" | "file",
-        file?: TFile, oldPath?: string
+        file?: TFile,
+        oldPath?: string
     ): Promise<Record<string, Set<string>>> {
         const attachmentsRecord: Record<string, Set<string>> = {};
         let resolvedLinks: Record<string, Record<string, number>> = {};
@@ -183,12 +201,14 @@ export class ArrangeHandler {
         if (resolvedLinks) {
             for (const [mdFile, links] of Object.entries(resolvedLinks)) {
                 const attachmentsSet: Set<string> = new Set();
-                for (const [filePath] of Object.entries(links)) {
-                    if (isAttachment(settings, filePath)) {
-                        this.addToSet(attachmentsSet, filePath);
+                if (links) {
+                    for (const [filePath] of Object.entries(links)) {
+                        if (isAttachment(settings, filePath)) {
+                            this.addToSet(attachmentsSet, filePath);
+                        }
                     }
+                    this.addToRecord(attachmentsRecord, mdFile, attachmentsSet);
                 }
-                this.addToRecord(attachmentsRecord, mdFile, attachmentsSet);
             }
         }
         // Loop Files and Check Frontmatter/Canvas
@@ -291,7 +311,7 @@ export class ArrangeHandler {
         attachPath: string,
         attachName: string,
         noteName: string,
-        link: string,
+        link: string
     ): boolean {
         const linkPath = path.dirname(link);
         const linkName = path.basename(link, path.extname(link));
