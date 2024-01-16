@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.2](https://github.com/trganda/obsidian-attachment-management/compare/0.9.1...0.9.2) (2024-01-16)
+
+
+### Features
+
+* clear original name storage ([84cdeac](https://github.com/trganda/obsidian-attachment-management/commit/84cdeaceb99ce5a089ee5f90913ee52db7265e81))
+* clear original name storage ([760d130](https://github.com/trganda/obsidian-attachment-management/commit/760d1308d0f534abfd434ae699d19ebc5758e5d0))
+* original name storage ([2645b17](https://github.com/trganda/obsidian-attachment-management/commit/2645b17a65ae12ca28f1e9ab5a6b13cafab7343e))
+* tips for rearrange all ([cd4aa57](https://github.com/trganda/obsidian-attachment-management/commit/cd4aa572fac7ce0a4ae0a798802b1104cc9d2bc2))
+
+
+### Bug Fixes
+
+* canvas rename failed ([d6ac121](https://github.com/trganda/obsidian-attachment-management/commit/d6ac121437d0b4df9ebc8b9db0be569557f3c052))
+* ignore rename on original name ([7d2f86c](https://github.com/trganda/obsidian-attachment-management/commit/7d2f86cd085a6dd574ba695998c4cc4e30872968))
+* optimize the logic of created file ([0fbc8d3](https://github.com/trganda/obsidian-attachment-management/commit/0fbc8d34698f88edd9d4fafa20fc667b5bab9e5b))
+* unexpected rename on syncing ([fc20547](https://github.com/trganda/obsidian-attachment-management/commit/fc20547bb858684fc92c68697a20aef2ab10d9e3))
+
 ### [0.9.1](https://github.com/trganda/obsidian-attachment-management/compare/0.9.0...0.9.1) (2023-12-07)
 
 
