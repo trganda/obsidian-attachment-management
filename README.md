@@ -151,7 +151,7 @@ As you can see the original name was saved with a hash, so if you add a same fil
 ### Known Issues
 
 - ~~No support for processing duplicated file name right now (in develop). In backup, you could use the data variable [`x`](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/) to use Unix timestamp with millisecond as filename (it will prevent duplicated filename).~~
-- When drop a file in `canvas`, it's will delay to show the updated link/filename.
+- When paste or drop a file in `canvas` and `markdown`, it's will delay to show the updated link/filename. The reason is the obsidian's api has no `paste` or `drop` event support for `canvas`, so I have implement in another way and this cause the delay of rename attachment.
 
 ![Screen Recording](./images/canvas_drop_delay.gif)
 
