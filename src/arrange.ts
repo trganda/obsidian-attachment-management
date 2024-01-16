@@ -95,8 +95,8 @@ export class ArrangeHandler {
                     );
                 }
 
-                // ignore if the name was equal to the link name
-                if (attachName === path.basename(link, path.extname(link))) {
+                // ignore if the path was equal to the link
+                if (attachPath == path.dirname(link) && attachName === path.basename(link, path.extname(link))) {
                     continue;
                 }
 
