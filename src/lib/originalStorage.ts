@@ -13,7 +13,7 @@ export function containOriginalNameVariable(setting: AttachmentPathSettings, ext
     return false;
 }
 
-export function saveOrigianlName(
+export function saveOriginalName(
     settings: AttachmentManagementPluginSettings,
     setting: AttachmentPathSettings,
     ext: string,

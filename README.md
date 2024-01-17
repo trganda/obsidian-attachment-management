@@ -133,7 +133,7 @@ If you want to reset the setting of files or folder to the global setting, use t
 
 The `${originalname}` represent the origianl filename (without extension) of attachment that your added to vault. For some reason, people want to keep the filename no to change or combine with other variable like `${date}`. If you want to keep the filename of an attach no to change, set the **Attachment Format** with `${originalname}` is enougth.
 
-If you want to use `${origianlname}` with other variables, like `${originalname}-${date}`. This plugin will persists the origianl name for future using. Suppose you change the **Attachment Format** from `${originalname}-${date}` to `IMG-${originalname}`, it's work fine.
+If you want to use `${originalname}` with other variables, like `${originalname}-${date}`. This plugin will persists the origianl name for future using. Suppose you change the **Attachment Format** from `${originalname}-${date}` to `IMG-${originalname}`, it's work fine.
 
 The origianl name was stored in **data.json**, it's the configuration file of plugin, your can find it in `.obsidian/plugins/attachment-management/data.json`.
 

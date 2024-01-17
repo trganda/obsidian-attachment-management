@@ -8,7 +8,7 @@ import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { MD5, isImage, isPastedImage } from "./utils";
-import { saveOrigianlName } from "./lib/originalStorage";
+import { saveOriginalName } from "./lib/originalStorage";
 import { getActiveFile } from "./commons";
 
 export class CreateHandler {
@@ -96,7 +96,7 @@ export class CreateHandler {
                 // save origianl name in setting
                 const { setting } = getOverrideSetting(this.settings, source);
                 MD5(this.app.vault.adapter, attach).then((md5) => {
-                    saveOrigianlName(this.settings, setting, attach.extension, {
+                    saveOriginalName(this.settings, setting, attach.extension, {
                         n: original,
                         md5: md5,
                     });
