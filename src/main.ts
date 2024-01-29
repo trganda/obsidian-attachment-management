@@ -10,7 +10,7 @@ import {
 import { debugLog } from "./lib/log";
 import { OverrideModal } from "./model/override";
 import { ConfirmModal } from "./model/confirm";
-import { getActiveFile } from "./commons";
+import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
 import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, MD5 } from "./utils";
 import { ArrangeHandler } from "./arrange";
@@ -250,19 +250,19 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                     await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath);
                     await this.saveSettings();
-                    this.loadSettings();
-                    if (!(await this.app.vault.adapter.exists(oldPath, true))) {
+
+                    const oldMetadata = getMetadata(oldPath);
+                    // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be changed.
+                    const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+                    if (!(await this.app.vault.adapter.exists(oldAttachPath, true))) {
                         return;
                     }
-                    const oldMetadata = getMetadata(oldPath);
-                    debugLog("onRename - old metadata:", oldMetadata);
-                    const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
-                    debugLog("onRename - old attachment path:", oldAttachPath);
-                    const old = await this.app.vault.adapter.list(oldAttachPath);
-                    // remove old attachment path if it's empty
-                    if (old.files.length === 0 && old.folders.length === 0) {
-                        await this.app.vault.adapter.rmdir(oldAttachPath, true);
-                    }
+
+                    checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
+                        if (empty) {
+                            this.app.vault.adapter.rmdir(oldAttachPath, true);
+                        }
+                    });
                 } else if (file instanceof TFolder) {
                     // ignore rename event of folder
                     return;
@@ -281,9 +281,23 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                 if (deleteOverrideSetting(this.settings, file)) {
                     await this.saveSettings();
-                    this.loadSettings();
                     new Notice("Removed override setting of " + file.path);
                 }
+
+                const oldMetadata = getMetadata(file.path);
+                const {setting} = getOverrideSetting(this.settings, file);
+                const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+                
+                if (!(await this.app.vault.adapter.exists(oldAttachPath, true))) {
+                    return;
+                }
+
+                checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
+                    if (empty) {
+                        this.app.vault.adapter.rmdir(oldAttachPath, true);
+                    }
+                });
+                
             })
         );
 
