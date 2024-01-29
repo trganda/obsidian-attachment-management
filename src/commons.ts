@@ -1,4 +1,4 @@
-import { App, TFile, TextFileView, normalizePath } from "obsidian";
+import { App, DataAdapter, TFile, TextFileView, normalizePath } from "obsidian";
 import { SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE } from "./lib/constant";
 import { path } from "./lib/path";
 import { AttachmentPathSettings, ExtensionOverrideSettings } from "./settings/settings";
@@ -62,4 +62,23 @@ export function getRootPath(notePath: string, setting: AttachmentPathSettings | 
     }
 
     return root === "/" ? root : normalizePath(root);
+}
+
+export async function checkEmptyFolder(adapter: DataAdapter, path: string): Promise<boolean> {
+    if (!adapter.exists(path, true)) {
+        return true;
+    }
+
+    const data = await adapter.list(path);
+    if (data.files.length > 0) {
+        return false;
+    }
+
+    if (data.folders.length > 0) {
+        data.folders.forEach((folder) => {
+            return checkEmptyFolder(adapter, folder)
+        })
+    }
+
+    return true;
 }
