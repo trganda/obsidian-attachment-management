@@ -185,7 +185,6 @@ export function updateOverrideSetting(
 export function deleteOverrideSetting(settings: AttachmentManagementPluginSettings, file: TAbstractFile): boolean {
     const keys = Object.keys(settings.overridePath);
     for (const key of keys) {
-        debugLog("deleteOverrideSetting - key:", key, file.path);
         if (file.path === key) {
             delete settings.overridePath[key];
             return true;
