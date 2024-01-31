@@ -65,7 +65,8 @@ export function getRootPath(notePath: string, setting: AttachmentPathSettings | 
 }
 
 export async function checkEmptyFolder(adapter: DataAdapter, path: string): Promise<boolean> {
-    if (!adapter.exists(path, true)) {
+    const exist = await adapter.exists(path, true);
+    if (!exist) {
         return true;
     }
 
@@ -75,9 +76,9 @@ export async function checkEmptyFolder(adapter: DataAdapter, path: string): Prom
     }
 
     if (data.folders.length > 0) {
-        data.folders.forEach((folder) => {
-            return checkEmptyFolder(adapter, folder)
-        })
+        for (let i = 0; i < data.folders.length; i++) {
+            return checkEmptyFolder(adapter, data.folders[i]);
+        }
     }
 
     return true;

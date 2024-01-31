@@ -9,7 +9,6 @@ import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { MD5, isImage, isPastedImage } from "./utils";
 import { saveOriginalName } from "./lib/originalStorage";
-import { getActiveFile } from "./commons";
 
 export class CreateHandler {
     readonly plugin: Plugin;
@@ -28,13 +27,6 @@ export class CreateHandler {
      * @returns - none
      */
     processAttach(attach: TFile, source: TFile) {
-        const activeFile = getActiveFile(this.app);
-        if (activeFile == undefined || activeFile != source) {
-            debugLog("Error: no active file found.");
-            return;
-        }
-        
-        debugLog("processAttach - parent:", source.parent?.path);
         if (source.parent && isExcluded(source.parent.path, this.settings)) {
             debugLog("processAttach - not a file or exclude path:", source.path);
             new Notice(`${source.path} was excluded, skipped`);

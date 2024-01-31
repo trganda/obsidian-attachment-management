@@ -17,6 +17,7 @@ import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
+import { path } from "./lib/path";
 
 export default class AttachmentManagementPlugin extends Plugin {
     settings: AttachmentManagementPluginSettings;
@@ -253,14 +254,19 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                     const oldMetadata = getMetadata(oldPath);
                     // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be changed.
+                    // fixed by travese from parent folder
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
-                    if (!(await this.app.vault.adapter.exists(oldAttachPath, true))) {
-                        return;
-                    }
-
-                    checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
-                        if (empty) {
-                            this.app.vault.adapter.rmdir(oldAttachPath, true);
+                    this.app.vault.adapter.exists(path.dirname(oldAttachPath)).then((exists) => {
+                        if (exists) {
+                            this.app.vault.adapter.list(path.dirname(oldAttachPath)).then((data) => {
+                                data.folders.forEach((folder) => {
+                                    checkEmptyFolder(this.app.vault.adapter, folder).then((empty) => {
+                                        if (empty) {
+                                            this.app.vault.adapter.rmdir(folder, true);
+                                        }
+                                    });
+                                });
+                            });
                         }
                     });
                 } else if (file instanceof TFolder) {
@@ -275,7 +281,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                 debugLog("on delete event - file path:", file.path);
 
                 if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
-                    debugLog("rename - exclude path or the file is an attachment:", file.path);
+                    debugLog("delete - exclude path or the file is an attachment:", file.path);
                     return;
                 }
 
@@ -284,20 +290,24 @@ export default class AttachmentManagementPlugin extends Plugin {
                     new Notice("Removed override setting of " + file.path);
                 }
 
-                const oldMetadata = getMetadata(file.path);
-                const {setting} = getOverrideSetting(this.settings, file);
-                const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
-                
-                if (!(await this.app.vault.adapter.exists(oldAttachPath, true))) {
-                    return;
+                if (file instanceof TFile) {
+                    const oldMetadata = getMetadata(file.path);
+                    const { setting } = getOverrideSetting(this.settings, file);
+                    const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+                    this.app.vault.adapter.exists(path.dirname(oldAttachPath), true).then((exists) => {
+                        if (exists) {
+                            this.app.vault.adapter.list(path.dirname(oldAttachPath)).then((data) => {
+                                data.folders.forEach((folder) => {
+                                    checkEmptyFolder(this.app.vault.adapter, folder).then((empty) => {
+                                        if (empty) {
+                                            this.app.vault.adapter.rmdir(folder, true);
+                                        }
+                                    });
+                                });
+                            });
+                        }
+                    });
                 }
-
-                checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
-                    if (empty) {
-                        this.app.vault.adapter.rmdir(oldAttachPath, true);
-                    }
-                });
-                
             })
         );
 
