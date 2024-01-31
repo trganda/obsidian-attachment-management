@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.5](https://github.com/trganda/obsidian-attachment-management/compare/0.9.4...0.9.5) (2024-01-31)
+
+
+### Bug Fixes
+
+* rename not working while quickly switch tab ([6206789](https://github.com/trganda/obsidian-attachment-management/commit/6206789563126256c4e5a974ae684ce09cf28eb7))
+
 ### [0.9.4](https://github.com/trganda/obsidian-attachment-management/compare/0.9.3...0.9.4) (2024-01-29)
 
 
