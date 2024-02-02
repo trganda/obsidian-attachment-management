@@ -17,7 +17,6 @@ import { ArrangeHandler } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
-import { path } from "./lib/path";
 
 export default class AttachmentManagementPlugin extends Plugin {
     settings: AttachmentManagementPluginSettings;
@@ -257,14 +256,10 @@ export default class AttachmentManagementPlugin extends Plugin {
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
                     this.app.vault.adapter.exists(oldAttachPath).then((exists) => {
                         if (exists) {
-                            this.app.vault.adapter.list(oldAttachPath).then((data) => {
-                                data.folders.forEach((folder) => {
-                                    checkEmptyFolder(this.app.vault.adapter, folder).then((empty) => {
-                                        if (empty) {
-                                            this.app.vault.adapter.rmdir(folder, true);
-                                        }
-                                    });
-                                });
+                            checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
+                                if (empty) {
+                                    this.app.vault.adapter.rmdir(oldAttachPath, true);
+                                }
                             });
                         }
                     });
@@ -295,14 +290,10 @@ export default class AttachmentManagementPlugin extends Plugin {
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
                     this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
                         if (exists) {
-                            this.app.vault.adapter.list(oldAttachPath).then((data) => {
-                                data.folders.forEach((folder) => {
-                                    checkEmptyFolder(this.app.vault.adapter, folder).then((empty) => {
-                                        if (empty) {
-                                            this.app.vault.adapter.rmdir(folder, true);
-                                        }
-                                    });
-                                });
+                            checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
+                                if (empty) {
+                                    this.app.vault.adapter.rmdir(oldAttachPath, true);
+                                }
                             });
                         }
                     });
