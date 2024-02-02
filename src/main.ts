@@ -253,12 +253,11 @@ export default class AttachmentManagementPlugin extends Plugin {
                     await this.saveSettings();
 
                     const oldMetadata = getMetadata(oldPath);
-                    // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be changed.
-                    // fixed by travese from parent folder
+                    // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
-                    this.app.vault.adapter.exists(path.dirname(oldAttachPath)).then((exists) => {
+                    this.app.vault.adapter.exists(oldAttachPath).then((exists) => {
                         if (exists) {
-                            this.app.vault.adapter.list(path.dirname(oldAttachPath)).then((data) => {
+                            this.app.vault.adapter.list(oldAttachPath).then((data) => {
                                 data.folders.forEach((folder) => {
                                     checkEmptyFolder(this.app.vault.adapter, folder).then((empty) => {
                                         if (empty) {
@@ -294,9 +293,9 @@ export default class AttachmentManagementPlugin extends Plugin {
                     const oldMetadata = getMetadata(file.path);
                     const { setting } = getOverrideSetting(this.settings, file);
                     const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
-                    this.app.vault.adapter.exists(path.dirname(oldAttachPath), true).then((exists) => {
+                    this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
                         if (exists) {
-                            this.app.vault.adapter.list(path.dirname(oldAttachPath)).then((data) => {
+                            this.app.vault.adapter.list(oldAttachPath).then((data) => {
                                 data.folders.forEach((folder) => {
                                     checkEmptyFolder(this.app.vault.adapter, folder).then((empty) => {
                                         if (empty) {
