@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.6](https://github.com/trganda/obsidian-attachment-management/compare/0.9.5...0.9.6) (2024-02-02)
+
+
+### Bug Fixes
+
+* delete unrelate empty folder ([7d0e96c](https://github.com/trganda/obsidian-attachment-management/commit/7d0e96c8de08fe72656718e01f6a75948565b825))
+* delete unrelate empty folder ([2057dda](https://github.com/trganda/obsidian-attachment-management/commit/2057dda0705d9628ae157a93fc1af89722c6f0e0))
+
 ### [0.9.5](https://github.com/trganda/obsidian-attachment-management/compare/0.9.4...0.9.5) (2024-01-31)
 
 
