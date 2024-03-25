@@ -182,8 +182,8 @@ export default class AttachmentManagementPlugin extends Plugin {
         );
 
         this.registerEvent(
-            this.app.vault.on("modify", async (file: TAbstractFile) => {
-                debugLog("create queue:", this.createdQueue);
+            this.app.vault.on("modify", (file: TAbstractFile) => {
+                debugLog("on modify event - create queue:", this.createdQueue);
                 if (this.createdQueue.length < 1 || !(file instanceof TFile)) {
                     return;
                 }
@@ -191,25 +191,26 @@ export default class AttachmentManagementPlugin extends Plugin {
                 debugLog("on modify event - file:", file.path);
                 this.app.vault.adapter.process(file.path, (data) => {
                     debugLog("on modify event - file content:", data);
-                    this.createdQueue.forEach((f) => {
+                    const f = this.createdQueue.first();
+                    if (f != undefined) {
                         this.app.vault.adapter.exists(f.path, true).then((exist) => {
                             if (exist) {
-                                debugLog("on modify event - file exist:", f.path);
                                 const processor = new CreateHandler(this, this.settings);
                                 const link = this.app.fileManager.generateMarkdownLink(f, file.path);
                                 if (
                                     (file.extension == "md" && data.indexOf(link) != -1) ||
                                     (file.extension == "canvas" && data.indexOf(f.path) != -1)
                                 ) {
-                                    this.createdQueue.remove(f);
                                     processor.processAttach(f, file);
+                                    this.createdQueue.remove(f);
                                 }
                             } else {
                                 // remove not exists file
+                                debugLog("on modify event - file does not exist:", f.path);
                                 this.createdQueue.remove(f);
                             }
                         });
-                    });
+                    }
                     return data;
                 });
             })

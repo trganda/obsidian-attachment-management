@@ -77,7 +77,7 @@ export class CreateHandler {
         const original = attach.basename;
         const name = attach.name;
 
-        // this api will not update the link in markdonw file automatically on `create` event
+        // this api will not update the link in markdown file automatically on `create` event
         // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
         this.app.fileManager
             .renameFile(attach, dst)
