@@ -190,7 +190,8 @@ export default class AttachmentManagementPlugin extends Plugin {
 
                 debugLog("on modify event - file:", file.path);
                 this.app.vault.adapter.process(file.path, (data) => {
-                    debugLog("on modify event - file content:", data);
+                    // debugLog("on modify event - file content:", data);
+                    // processing one file at one event loop, other files will be processed in the next event loop
                     const f = this.createdQueue.first();
                     if (f != undefined) {
                         this.app.vault.adapter.exists(f.path, true).then((exist) => {
@@ -201,8 +202,8 @@ export default class AttachmentManagementPlugin extends Plugin {
                                     (file.extension == "md" && data.indexOf(link) != -1) ||
                                     (file.extension == "canvas" && data.indexOf(f.path) != -1)
                                 ) {
-                                    processor.processAttach(f, file);
                                     this.createdQueue.remove(f);
+                                    processor.processAttach(f, file);
                                 }
                             } else {
                                 // remove not exists file
