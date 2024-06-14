@@ -117,7 +117,6 @@ export class OverrideModal extends Modal {
                     attachmentPath: this.setting.attachmentPath,
                     attachFormat: this.setting.attachFormat,
                 });
-                console.log(this.setting.extensionOverride);
                 this.onOpen();
             });
         });

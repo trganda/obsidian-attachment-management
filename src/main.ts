@@ -30,8 +30,6 @@ export default class AttachmentManagementPlugin extends Plugin {
 
         this.app.workspace.onLayoutReady(() => {
 
-            console.log(`${this.manifest.name} got onLayoutReady`);
-
             this.addCommand({
                 id: "attachment-management-rearrange-all-links",
                 name: "Rearrange all linked attachments",
