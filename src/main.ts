@@ -152,7 +152,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             this.registerEvent(
                 this.app.vault.on("create", async (file: TAbstractFile) => {
                     debugLog("on create event - file:", file.path);
-                    // only processing create of file, ignore folder creation
+                    // only processing creatation of file, ignore folder creation
                     if (!(file instanceof TFile)) {
                         return;
                     }
