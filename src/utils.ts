@@ -3,17 +3,6 @@ import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./se
 
 import { Md5 } from "ts-md5";
 
-export enum ATTACHMENT_RENAME_TYPE {
-  // need to rename the attachment folder and file name
-  BOTH = "BOTH",
-  // need to rename the attachment folder
-  FOLDER = "FOLDER",
-  // need to rename the attachment file name
-  FILE = "FILE",
-  // no need to rename
-  NULL = "NULL",
-}
-
 const PASTED_IMAGE_PREFIX = "Pasted image ";
 const ImageExtensionRegex = /^(jpe?g|png|gif|svg|bmp|eps|webp)$/i;
 
