@@ -4,6 +4,54 @@ This plugin supports more flexibly setting your attachment location with variabl
 
 > Read the [Original Name](#original-name) section before using the `${originalname}` variable.
 
+## Installation
+
+- Install from Obsidian community plugins.
+- Clone this repo
+  - `npm i` to install dependencies
+  - `npm run build` to start compilation in watch mode.
+  - Copy the `main.js`, `manifest.json` and `style.css` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
+- Download the release file and unarchive the file to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
+
+## Usage
+
+Install and enable the plugin, after configuration you can paste or drop attachment file as usually and it will be auto renamed.
+
+This plugin supports a command `Rearrange linked attachments/Rearrange all linked attachments`. If you run this command, it will rename all attachments (image file default, to rename another type, you need to enable [Handle All Attachements](#handle-all-attachments)) that have been linked in the `markdown` or `canvas` file as you configured.
+
+![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
+
+**Notice**: The `Rearrange linked attachments/Rearrange all linked attachments` is currently an experimental feature; if you want to try it out, it's best to back up your files first.
+
+### Overriding Setting
+
+You can set the attachment path setting for a file or folder. The priority of these settings are:
+
+```
+file setting > most close parent folder setting > global setting
+```
+
+If you want to reset the settings of files or folders to the global setting, use the command `Reset Override Setting` or the `Reset` button on the override setting panel. **The reset will only work on each file or folder that you trigger the command on**. A more appropriate method to handle resetting will be added in the future.
+
+### Original Name
+
+The `${originalname}` represents the original filename (without extension) of the attachment you added to the vault. Some people want to keep the original filename and/or combine it with other variables like `${date}`. If you want to keep the original filename of an attachment, set the **Attachment Format** with `${originalname}`.
+
+If you want to use `${originalname}` with other variables, like `${originalname}-${date}`. This plugin will persist the original name for future use. Suppose you change the **Attachment Format** from `${originalname}-${date}` to `IMG-${originalname}`, it's work fine.
+
+The original name is stored in **data.json**, the configuration file of the plugin. You can find it at `.obsidian/plugins/attachment-management/data.json`.
+
+```json
+  "originalNameStorage": [
+    {
+      "n": "Pasted image 20240113222517",
+      "md5": "9B1546EBA299E1A2A2FC86C664A15073"
+    }
+  ],
+```
+
+As you can see, the original name was saved with a hash, so if you add the same file multiple times, only the last one will be saved. The **originalNameStorage** will not clear automatically, use command `Clear unused original name storage`. This command will keep the entry if the hash of an attachment is matched.
+
 ## Roadmap of Features
 
 This plugin currently supports:
@@ -19,15 +67,6 @@ This plugin currently supports:
 - [x] Override attachment configuration for specified notes or folder
 - [x] Exclude folders that you want this plugin to skip
   - [x] Add Exclude folder by menu
-
-## How to Install
-
-- Install from Obsidian community plugins.
-- Clone this repo
-  - `npm i` to install dependencies
-  - `npm run build` to start compilation in watch mode.
-  - Copy the `main.js`, `manifest.json` and `style.css` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
-- Download the release file and unarchive the file to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
 
 ## Settings
 
@@ -109,45 +148,6 @@ By default, the "Exclude paths" will only work on the folder you added, and that
 
 > **The path is case-sensitive and should not have a leading slash '/' at the beginning.**
 
-## Usage
-
-Install and enable the plugin, after configuration you can paste or drop attachment file as usually and it will be auto renamed.
-
-This plugin supports a command `Rearrange linked attachments/Rearrange all linked attachments`. If you run this command, it will rename all attachments (image file default, to rename another type, you need to enable [Handle All Attachements](#handle-all-attachments)) that have been linked in the `markdown` or `canvas` file as you configured.
-
-![SCR-20230511-rrtk](./images/SCR-20230511-rrtk.png)
-
-**Notice**: The `Rearrange linked attachments/Rearrange all linked attachments` is currently an experimental feature; if you want to try it out, it's best to back up your files first.
-
-### Overriding Setting
-
-You can set the attachment path setting for a file or folder. The priority of these settings are:
-
-```
-file setting > most close parent folder setting > global setting
-```
-
-If you want to reset the settings of files or folders to the global setting, use the command `Reset Override Setting` or the `Reset` button on the override setting panel. **The reset will only work on each file or folder that you trigger the command on**. A more appropriate method to handle resetting will be added in the future.
-
-### Original Name
-
-The `${originalname}` represents the original filename (without extension) of the attachment you added to the vault. Some people want to keep the original filename and/or combine it with other variables like `${date}`. If you want to keep the original filename of an attachment, set the **Attachment Format** with `${originalname}`.
-
-If you want to use `${originalname}` with other variables, like `${originalname}-${date}`. This plugin will persist the original name for future use. Suppose you change the **Attachment Format** from `${originalname}-${date}` to `IMG-${originalname}`, it's work fine.
-
-The original name is stored in **data.json**, the configuration file of the plugin. You can find it at `.obsidian/plugins/attachment-management/data.json`.
-
-```json
-  "originalNameStorage": [
-    {
-      "n": "Pasted image 20240113222517",
-      "md5": "9B1546EBA299E1A2A2FC86C664A15073"
-    }
-  ],
-```
-
-As you can see, the original name was saved with a hash, so if you add the same file multiple times, only the last one will be saved. The **originalNameStorage** will not clear automatically, use command `Clear unused original name storage`. This command will keep the entry if the hash of an attachment is matched.
-
 ### Known Issues
 
 - ~~No support for processing duplicated file names right now (in development). In backup, you could use the data variable [`x`](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format/) to use Unix timestamp with millisecond as filename (it will prevent duplicated filename).~~
@@ -165,3 +165,7 @@ As you can see, the original name was saved with a hash, so if you add the same 
 Q: What if I add '/' to Exclude Paths?
 
 A: It will exclude the whole vault folder.
+
+Q: Is this plugin support auto rename pdf file?
+
+A: By default, this plugin will only rename the image file. For other file types, you can use the extension override setting.
