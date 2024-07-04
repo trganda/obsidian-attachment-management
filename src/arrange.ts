@@ -2,7 +2,7 @@ import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
-import { ATTACHMENT_RENAME_TYPE, MD5, attachRenameType, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { MD5, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
@@ -50,10 +50,19 @@ export class ArrangeHandler {
             }
             const { setting } = getOverrideSetting(this.settings, innerFile);
 
-            const type = attachRenameType(setting);
-            if (type === ATTACHMENT_RENAME_TYPE.NULL) {
-                debugLog("rearrangeAttachment - no variable use, skipped");
-                return;
+            // create attachment path if it's not exists
+            const md = getMetadata(obNote);
+            const attachPath = md.getAttachmentPath(setting, this.settings.dateFormat);
+            if (!(await this.app.vault.adapter.exists(attachPath, true))) {
+                // process the case where rename the filename to uppercase or lowercase
+                if (oldPath != undefined && (await this.app.vault.adapter.exists(attachPath, false))) {
+                    const mdOld = getMetadata(oldPath);
+                    const attachPathOld = mdOld.getAttachmentPath(setting, this.settings.dateFormat);
+                    // this will trigger the rename event and cause the path of attachment change
+                    this.app.vault.adapter.rename(attachPathOld, attachPath);
+                } else {
+                    await this.app.vault.adapter.mkdir(attachPath);
+                }
             }
 
             for (let link of attachments[obNote]) {
@@ -71,8 +80,6 @@ export class ArrangeHandler {
                 }
 
                 const metadata = getMetadata(obNote, linkFile);
-                const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
-
                 const md5 = await MD5(this.app.vault.adapter, linkFile);
                 const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
                 debugLog("rearrangeAttachment - original name:", originalName);
@@ -100,10 +107,6 @@ export class ArrangeHandler {
                     continue;
                 }
 
-                if (!(await this.app.vault.adapter.exists(attachPath))) {
-                    await this.app.vault.adapter.mkdir(attachPath);
-                }
-
                 const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath);
                 if (attachPathFile === null || !(attachPathFile instanceof TFolder)) {
                     debugLog(`${attachPath} not exists, skipped`);
@@ -124,7 +127,7 @@ export class ArrangeHandler {
      * @param {AttachmentManagementPluginSettings} settings - The settings for the attachment management plugin.
      * @param {"active" | "links" | "file"} type - The type of attachments to retrieve.
      * @param {TFile} [file] - The file to filter attachments by. Optional.
-     * @return {Promise<Record<string, Set<string>>>} - A promise that resolves to a record of attachments, where each key is a file name and each value is a set of attachment names.
+     * @return {Promise<Record<string, Set<string>>>} - A promise that resolves to a record of attachments, where each key is a file name and each value is a set of associated attachment names.
      */
     async getAttachmentsInVault(
         settings: AttachmentManagementPluginSettings,

@@ -29,7 +29,6 @@ export default class AttachmentManagementPlugin extends Plugin {
         console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
 
         this.app.workspace.onLayoutReady(() => {
-
             this.addCommand({
                 id: "attachment-management-rearrange-all-links",
                 name: "Rearrange all linked attachments",
@@ -134,7 +133,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
             this.registerEvent(
                 this.app.workspace.on("file-menu", async (menu, file) => {
-                    if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+                    if (
+                        (file.parent && isExcluded(file.parent.path, this.settings)) ||
+                        isAttachment(this.settings, file)
+                    ) {
                         return;
                     }
                     menu.addItem((item) => {
@@ -250,13 +252,17 @@ export default class AttachmentManagementPlugin extends Plugin {
                             return;
                         }
 
-                        await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath);
+                        await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(
+                            "file",
+                            file,
+                            oldPath
+                        );
                         await this.saveSettings();
 
                         const oldMetadata = getMetadata(oldPath);
                         // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
                         const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
-                        this.app.vault.adapter.exists(oldAttachPath).then((exists) => {
+                        this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
                             if (exists) {
                                 checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
                                     if (empty) {
@@ -276,7 +282,10 @@ export default class AttachmentManagementPlugin extends Plugin {
                 this.app.vault.on("delete", async (file: TAbstractFile) => {
                     debugLog("on delete event - file path:", file.path);
 
-                    if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+                    if (
+                        (file.parent && isExcluded(file.parent.path, this.settings)) ||
+                        isAttachment(this.settings, file)
+                    ) {
                         debugLog("delete - exclude path or the file is an attachment:", file.path);
                         return;
                     }
@@ -306,7 +315,6 @@ export default class AttachmentManagementPlugin extends Plugin {
             // This adds a settings tab so the user can configure various aspects of the plugin
             this.addSettingTab(new SettingTab(this.app, this));
         });
-        
     }
 
     async overrideConfiguration(file: TAbstractFile, setting: AttachmentPathSettings) {

@@ -132,36 +132,6 @@ export function isAttachment(settings: AttachmentManagementPluginSettings, fileP
     return !matchExtension(file.extension, settings.excludeExtensionPattern);
 }
 
-/**
- * Returns the attachment rename type based on the given attachment path settings.
- *
- * @param {AttachmentPathSettings} setting - The attachment path settings to examine.
- * @return {ATTACHMENT_RENAME_TYPE} - The attachment rename type based on the given attachment path settings.
- */
-export function attachRenameType(setting: AttachmentPathSettings): ATTACHMENT_RENAME_TYPE {
-    let ret = ATTACHMENT_RENAME_TYPE.BOTH;
-
-    if (setting.attachFormat.includes(SETTINGS_VARIABLES_NOTENAME)) {
-        if (
-            setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
-            setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
-            setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
-        ) {
-            ret = ATTACHMENT_RENAME_TYPE.BOTH;
-        } else {
-            ret = ATTACHMENT_RENAME_TYPE.FILE;
-        }
-    } else if (
-        setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTENAME) ||
-        setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPATH) ||
-        setting.attachmentPath.includes(SETTINGS_VARIABLES_NOTEPARENT)
-    ) {
-        ret = ATTACHMENT_RENAME_TYPE.FOLDER;
-    }
-
-    return ret;
-}
-
 export function getParentFolder(rf: TFile) {
     const parent = rf.parent;
     let parentPath = "/";
