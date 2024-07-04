@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.10](https://github.com/trganda/obsidian-attachment-management/compare/0.9.9...0.9.10) (2024-07-04)
+
+
+### Bug Fixes
+
+* error while change filename to uppercase or lowercase ([fdc0e58](https://github.com/trganda/obsidian-attachment-management/commit/fdc0e5822a2a203ba19994264e0bd0dfd3805cd6))
+
 ### [0.9.9](https://github.com/trganda/obsidian-attachment-management/compare/0.9.8...0.9.9) (2024-06-26)
 
 
