@@ -24,9 +24,11 @@ export class CreateHandler {
   /**
    * Post-processing of created attachment file (for paste and drop event).
    * @param attach - the attachment file to process
+   * @param source - the notes file that linked to attach
    * @returns - none
    */
   processAttach(attach: TFile, source: TFile) {
+    // ignore if the path of notes file has been excluded.
     if (source.parent && isExcluded(source.parent.path, this.settings)) {
       debugLog("processAttach - not a file or exclude path:", source.path);
       new Notice(`${source.path} was excluded, skipped`);

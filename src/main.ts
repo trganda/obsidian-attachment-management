@@ -315,4 +315,10 @@ export default class AttachmentManagementPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
   }
+
+  async onunload() {
+    console.log("unloading attachment management.");
+    // Clear the queue of created file.
+    this.createdQueue = [];
+  }
 }
