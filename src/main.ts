@@ -85,8 +85,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           debugLog("on modify event - file:", file.path);
-          this.app.vault.adapter.process(file.path, (data) => {
-            // debugLog("on modify event - file content:", data);
+          this.app.vault.adapter.process(file.path, (pdata) => {
             // processing one file at one event loop, other files will be processed in the next event loop
             const f = this.createdQueue.first();
             if (f != undefined) {
@@ -95,8 +94,8 @@ export default class AttachmentManagementPlugin extends Plugin {
                   const processor = new CreateHandler(this, this.settings);
                   const link = this.app.fileManager.generateMarkdownLink(f, file.path);
                   if (
-                    (file.extension == "md" && data.indexOf(link) != -1) ||
-                    (file.extension == "canvas" && data.indexOf(f.path) != -1)
+                    (file.extension == "md" && pdata.indexOf(link) != -1) ||
+                    (file.extension == "canvas" && pdata.indexOf(f.path) != -1)
                   ) {
                     this.createdQueue.remove(f);
                     processor.processAttach(f, file);
@@ -108,7 +107,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                 }
               });
             }
-            return data;
+            return pdata;
           });
         })
       );
@@ -123,8 +122,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           debugLog("rename - using settings:", setting);
           if (setting.type === SETTINGS_TYPES.FOLDER || setting.type === SETTINGS_TYPES.FILE) {
             updateOverrideSetting(this.settings, file, oldPath);
-            await this.saveSettings();
-            await this.loadSettings();
+            this.saveSettings();
           }
           debugLog("rename - updated settings:", setting);
 
@@ -136,7 +134,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
               debugLog("rename - exclude path:", file.parent.path);
-              new Notice(`${file.path} was excluded, skipped`);
+              new Notice(`${file.path} was excluded`);
               return;
             }
 
@@ -146,8 +144,7 @@ export default class AttachmentManagementPlugin extends Plugin {
               return;
             }
 
-            await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath);
-            await this.saveSettings();
+            new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath).finally(() => { this.saveSettings(); });
 
             const oldMetadata = getMetadata(oldPath);
             // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
