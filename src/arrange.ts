@@ -2,7 +2,7 @@ import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
-import { MD5, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { md5sum, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
@@ -80,7 +80,7 @@ export class ArrangeHandler {
         }
 
         const metadata = getMetadata(obNote, linkFile);
-        const md5 = await MD5(this.app.vault.adapter, linkFile);
+        const md5 = await md5sum(this.app.vault.adapter, linkFile);
         const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
         debugLog("rearrangeAttachment - original name:", originalName);
 
