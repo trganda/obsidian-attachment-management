@@ -1,6 +1,6 @@
 import { Modal, Notice, Setting } from "obsidian";
 import AttachmentManagementPlugin from "../main";
-import { ArrangeHandler } from "src/arrange";
+import { ArrangeHandler, RearrangeType } from "src/arrange";
 
 export class ConfirmModal extends Modal {
   plugin: AttachmentManagementPlugin;
@@ -33,7 +33,7 @@ export class ConfirmModal extends Modal {
       .addButton((btn) =>
         btn.setButtonText("Continue").onClick(async () => {
           new ArrangeHandler(this.plugin.settings, this.plugin.app, this.plugin)
-            .rearrangeAttachment("links")
+            .rearrangeAttachment(RearrangeType.LINKS)
             .finally(() => {
               new Notice("Arrange completed");
               this.close();

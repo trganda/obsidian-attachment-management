@@ -14,6 +14,12 @@ import { containOriginalNameVariable, loadOriginalName } from "./lib/originalSto
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
+export enum RearrangeType {
+  ACTIVE,
+  LINKS,
+  FILE,
+}
+
 export class ArrangeHandler {
   settings: AttachmentManagementPluginSettings;
   app: App;
@@ -29,11 +35,11 @@ export class ArrangeHandler {
    * Rearranges attachments that are linked by markdown or canvas.
    * Only rearranges attachments if autoRenameAttachment is enabled in settings.
    *
-   * @param {"active" | "links" | "file"} type - The type of attachments to rearrange.
+   * @param {RearrangeType} type - The type of attachments to rearrange.
    * @param {TFile} file - The file to which the attachments are linked (optional), if the type was "file", thi should be provided.
    * @param {string} oldPath - The old path of the file (optional), used for rename event.
    */
-  async rearrangeAttachment(type: "active" | "links" | "file", file?: TFile, oldPath?: string) {
+  async rearrangeAttachment(type: RearrangeType, file?: TFile, oldPath?: string) {
     if (!this.settings.autoRenameAttachment) {
       debugLog("rearrangeAttachment - autoRenameAttachment not enable");
       return;
@@ -125,13 +131,13 @@ export class ArrangeHandler {
    * If a file is provided, only attachments related to that file will be returned.
    *
    * @param {AttachmentManagementPluginSettings} settings - The settings for the attachment management plugin.
-   * @param {"active" | "links" | "file"} type - The type of attachments to retrieve.
+   * @param {RearrangeType} type - The type of attachments to retrieve.
    * @param {TFile} [file] - The file to filter attachments by. Optional.
    * @return {Promise<Record<string, Set<string>>>} - A promise that resolves to a record of attachments, where each key is a file name and each value is a set of associated attachment names.
    */
   async getAttachmentsInVault(
     settings: AttachmentManagementPluginSettings,
-    type: "active" | "links" | "file",
+    type: RearrangeType,
     file?: TFile,
     oldPath?: string
   ): Promise<Record<string, Set<string>>> {
@@ -147,24 +153,24 @@ export class ArrangeHandler {
    * Retrieves a record of attachments in the vault based on the given settings and type.
    *
    * @param {AttachmentManagementPluginSettings} settings - The settings for the attachment management plugin.
-   * @param {"active" | "links" | "file"} type - The type of attachments to retrieve.
+   * @param {RearrangeType} type - The type of attachments to retrieve.
    * @param {TFile} file - The file to retrieve attachments for (optional).
    * @return {Promise<Record<string, Set<string>>>} - A promise that resolves to a record of attachments.
    */
   async getAttachmentsInVaultByLinks(
     settings: AttachmentManagementPluginSettings,
-    type: "active" | "links" | "file",
+    type: RearrangeType,
     file?: TFile,
     oldPath?: string
   ): Promise<Record<string, Set<string>>> {
     const attachmentsRecord: Record<string, Set<string>> = {};
     let resolvedLinks: Record<string, Record<string, number>> = {};
     let allFiles: TFile[] = [];
-    if (type === "links") {
+    if (type == RearrangeType.LINKS) {
       // resolvedLinks was not working for canvas file
       resolvedLinks = this.app.metadataCache.resolvedLinks;
       allFiles = this.app.vault.getFiles();
-    } else if (type === "active") {
+    } else if (type == RearrangeType.ACTIVE) {
       const file = getActiveFile(this.app);
       if (file) {
         if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
@@ -179,7 +185,7 @@ export class ArrangeHandler {
           debugLog("getAttachmentsInVaultByLinks - resolvedLinks:", resolvedLinks);
         }
       }
-    } else if (type === "file" && file != undefined) {
+    } else if (type == RearrangeType.FILE && file != undefined) {
       if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
         allFiles = [];
         new Notice(`${file.path} was excluded, skipped`);

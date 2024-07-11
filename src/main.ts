@@ -13,7 +13,7 @@ import { ConfirmModal } from "./model/confirm";
 import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
 import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, md5sum } from "./utils";
-import { ArrangeHandler } from "./arrange";
+import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
@@ -144,7 +144,11 @@ export default class AttachmentManagementPlugin extends Plugin {
               return;
             }
 
-            new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath).finally(() => { this.saveSettings(); });
+            new ArrangeHandler(this.settings, this.app, this)
+              .rearrangeAttachment(RearrangeType.FILE, file, oldPath)
+              .finally(() => {
+                this.saveSettings();
+              });
 
             const oldMetadata = getMetadata(oldPath);
             // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
@@ -229,7 +233,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       id: "attachment-management-rearrange-active-links",
       name: "Rearrange linked attachments",
       callback: async () => {
-        new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("active").finally(() => {
+        new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
           new Notice("Arrange completed");
         });
       },
@@ -293,7 +297,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       callback: async () => {
         const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
           this.settings,
-          "links"
+          RearrangeType.LINKS
         );
         const storages: OriginalNameStorage[] = [];
         for (const attachs of Object.values(attachments)) {
@@ -307,7 +311,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                   storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
                   storages.push(ret);
                 }
-              })
+              });
             }
           }
         }
