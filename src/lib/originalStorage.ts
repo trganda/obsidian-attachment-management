@@ -47,7 +47,7 @@ export function loadOriginalName(
     if (first.md5 === last.md5 && first.n === last.n) {
       return last;
     } else if (first.md5 === last.md5 && first.n !== last.n) {
-      // remove duplicated item, the oldder one
+      // remove duplicated item, choice the oldder one
       settings.originalNameStorage.remove(first);
       return last;
     }

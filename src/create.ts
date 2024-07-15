@@ -7,7 +7,7 @@ import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
-import { MD5, isImage, isPastedImage } from "./utils";
+import { md5sum, isImage, isPastedImage } from "./utils";
 import { saveOriginalName } from "./lib/originalStorage";
 
 export class CreateHandler {
@@ -24,9 +24,11 @@ export class CreateHandler {
   /**
    * Post-processing of created attachment file (for paste and drop event).
    * @param attach - the attachment file to process
+   * @param source - the notes file that linked to attach
    * @returns - none
    */
   processAttach(attach: TFile, source: TFile) {
+    // ignore if the path of notes file has been excluded.
     if (source.parent && isExcluded(source.parent.path, this.settings)) {
       debugLog("processAttach - not a file or exclude path:", source.path);
       new Notice(`${source.path} was excluded, skipped`);
@@ -87,7 +89,7 @@ export class CreateHandler {
       .finally(() => {
         // save origianl name in setting
         const { setting } = getOverrideSetting(this.settings, source);
-        MD5(this.app.vault.adapter, attach).then((md5) => {
+        md5sum(this.app.vault.adapter, attach).then((md5) => {
           saveOriginalName(this.settings, setting, attach.extension, {
             n: original,
             md5: md5,

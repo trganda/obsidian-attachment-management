@@ -10,7 +10,7 @@ import {
 } from "../lib/constant";
 import { getRootPath } from "../commons";
 import { path } from "../lib/path";
-import { MD5 } from "../utils";
+import { md5sum } from "../utils";
 import { getExtensionOverrideSetting } from "../model/extensionOverride";
 
 /**
@@ -76,7 +76,7 @@ class Metadata {
     let md5 = "";
     let attachFormat = "";
     if (this.attachmentFile !== undefined) {
-      md5 = await MD5(adapter, this.attachmentFile);
+      md5 = await md5sum(adapter, this.attachmentFile);
       const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
       if (extSetting !== undefined) {
         attachFormat = extSetting.attachFormat;

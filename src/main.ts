@@ -12,8 +12,8 @@ import { OverrideModal } from "./model/override";
 import { ConfirmModal } from "./model/confirm";
 import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, MD5 } from "./utils";
-import { ArrangeHandler } from "./arrange";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, md5sum } from "./utils";
+import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
@@ -29,107 +29,7 @@ export default class AttachmentManagementPlugin extends Plugin {
     console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
 
     this.app.workspace.onLayoutReady(() => {
-      this.addCommand({
-        id: "attachment-management-rearrange-all-links",
-        name: "Rearrange all linked attachments",
-        callback: async () => {
-          new ConfirmModal(this).open();
-        },
-      });
-
-      this.addCommand({
-        id: "attachment-management-rearrange-active-links",
-        name: "Rearrange linked attachments",
-        callback: async () => {
-          new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("active").finally(() => {
-            new Notice("Arrange completed");
-          });
-        },
-      });
-
-      this.addCommand({
-        id: "override-setting",
-        name: "Overriding setting",
-        checkCallback: (checking: boolean) => {
-          const file = getActiveFile(this.app);
-
-          if (file) {
-            if (isAttachment(this.settings, file)) {
-              new Notice(`${file.path} is an attachment, skipped`);
-              return true;
-            }
-
-            if (!checking) {
-              if (file.parent && isExcluded(file.parent.path, this.settings)) {
-                new Notice(`${file.path} was excluded, skipped`);
-                return true;
-              }
-              const { setting } = getOverrideSetting(this.settings, file);
-              const fileSetting = Object.assign({}, setting);
-              this.overrideConfiguration(file, fileSetting);
-            }
-            return true;
-          }
-          return false;
-        },
-      });
-
-      this.addCommand({
-        id: "reset-override-setting",
-        name: "Reset override setting",
-        checkCallback: (checking: boolean) => {
-          const file = getActiveFile(this.app);
-          if (file) {
-            if (isAttachment(this.settings, file)) {
-              new Notice(`${file.path} is an attachment, skipped`);
-              return true;
-            }
-
-            if (!checking) {
-              if (file.parent && isExcluded(file.parent.path, this.settings)) {
-                new Notice(`${file.path} was excluded, skipped`);
-                return true;
-              }
-              delete this.settings.overridePath[file.path];
-              this.saveSettings();
-              this.loadSettings();
-              new Notice(`Reset attachment setting of ${file.path}`);
-            }
-            return true;
-          }
-          return false;
-        },
-      });
-
-      this.addCommand({
-        id: "attachment-management-clear-unused-originalname-storage",
-        name: "Clear unused original name storage",
-        callback: async () => {
-          const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
-            this.settings,
-            "links"
-          );
-          const storages: OriginalNameStorage[] = [];
-          for (const attachs of Object.values(attachments)) {
-            for (const attach of attachs) {
-              const link = decodeURI(attach);
-              const linkFile = this.app.vault.getAbstractFileByPath(link);
-              if (linkFile !== null && linkFile instanceof TFile) {
-                const md5 = await MD5(this.app.vault.adapter, linkFile);
-                const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
-                if (ret) {
-                  storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
-                  storages.push(ret);
-                }
-              }
-            }
-          }
-          debugLog("clearUnusedOriginalNameStorage - storage:", storages);
-          this.settings.originalNameStorage = storages;
-          await this.saveSettings();
-          this.loadSettings();
-        },
-      });
+      this.initCommands();
 
       this.registerEvent(
         this.app.workspace.on("file-menu", async (menu, file) => {
@@ -142,8 +42,9 @@ export default class AttachmentManagementPlugin extends Plugin {
               .setIcon("image-plus")
               .onClick(async () => {
                 const { setting } = getOverrideSetting(this.settings, file);
+                // Deep copy
                 const fileSetting = Object.assign({}, setting);
-                await this.overrideConfiguration(file, fileSetting);
+                this.overrideConfiguration(file, fileSetting);
               });
           });
         })
@@ -184,8 +85,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           debugLog("on modify event - file:", file.path);
-          this.app.vault.adapter.process(file.path, (data) => {
-            // debugLog("on modify event - file content:", data);
+          this.app.vault.adapter.process(file.path, (pdata) => {
             // processing one file at one event loop, other files will be processed in the next event loop
             const f = this.createdQueue.first();
             if (f != undefined) {
@@ -194,8 +94,8 @@ export default class AttachmentManagementPlugin extends Plugin {
                   const processor = new CreateHandler(this, this.settings);
                   const link = this.app.fileManager.generateMarkdownLink(f, file.path);
                   if (
-                    (file.extension == "md" && data.indexOf(link) != -1) ||
-                    (file.extension == "canvas" && data.indexOf(f.path) != -1)
+                    (file.extension == "md" && pdata.indexOf(link) != -1) ||
+                    (file.extension == "canvas" && pdata.indexOf(f.path) != -1)
                   ) {
                     this.createdQueue.remove(f);
                     processor.processAttach(f, file);
@@ -207,7 +107,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                 }
               });
             }
-            return data;
+            return pdata;
           });
         })
       );
@@ -222,8 +122,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           debugLog("rename - using settings:", setting);
           if (setting.type === SETTINGS_TYPES.FOLDER || setting.type === SETTINGS_TYPES.FILE) {
             updateOverrideSetting(this.settings, file, oldPath);
-            await this.saveSettings();
-            await this.loadSettings();
+            this.saveSettings();
           }
           debugLog("rename - updated settings:", setting);
 
@@ -235,7 +134,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
               debugLog("rename - exclude path:", file.parent.path);
-              new Notice(`${file.path} was excluded, skipped`);
+              new Notice(`${file.path} was excluded`);
               return;
             }
 
@@ -245,8 +144,11 @@ export default class AttachmentManagementPlugin extends Plugin {
               return;
             }
 
-            await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment("file", file, oldPath);
-            await this.saveSettings();
+            new ArrangeHandler(this.settings, this.app, this)
+              .rearrangeAttachment(RearrangeType.FILE, file, oldPath)
+              .finally(() => {
+                this.saveSettings();
+              });
 
             const oldMetadata = getMetadata(oldPath);
             // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
@@ -305,7 +207,119 @@ export default class AttachmentManagementPlugin extends Plugin {
 
   async overrideConfiguration(file: TAbstractFile, setting: AttachmentPathSettings) {
     new OverrideModal(this, file, setting).open();
-    await this.loadSettings();
+  }
+
+  /**
+   * Initializes and registers the plugin's commands
+   * This method is responsible for setting up the user interface by adding various commands.
+   * These commands include settings overrides, resetting settings, clearing unused original name storage,
+   * and rearranging attachments.
+   *
+   * Note: The actual implementation of each command is not included in this method and needs to be
+   * defined separately asynchronously.
+   *
+   * Warning: Make sure you have checked for errors while implementing the functionality of each command.
+   */
+  initCommands() {
+    this.addCommand({
+      id: "attachment-management-rearrange-all-links",
+      name: "Rearrange all linked attachments",
+      callback: async () => {
+        new ConfirmModal(this).open();
+      },
+    });
+
+    this.addCommand({
+      id: "attachment-management-rearrange-active-links",
+      name: "Rearrange linked attachments",
+      callback: async () => {
+        new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
+          new Notice("Arrange completed");
+        });
+      },
+    });
+
+    this.addCommand({
+      id: "attachment-management-override-setting",
+      name: "Overriding setting",
+      checkCallback: (checking: boolean) => {
+        const file = getActiveFile(this.app);
+
+        if (file) {
+          if (isAttachment(this.settings, file)) {
+            return true;
+          }
+
+          if (!checking) {
+            if (file.parent && isExcluded(file.parent.path, this.settings)) {
+              new Notice(`${file.path} was excluded`);
+              return true;
+            }
+            const { setting } = getOverrideSetting(this.settings, file);
+            const fileSetting = Object.assign({}, setting);
+            this.overrideConfiguration(file, fileSetting);
+          }
+          return true;
+        }
+        return false;
+      },
+    });
+
+    this.addCommand({
+      id: "attachment-management-reset-override-setting",
+      name: "Reset override setting",
+      checkCallback: (checking: boolean) => {
+        const file = getActiveFile(this.app);
+        if (file) {
+          if (isAttachment(this.settings, file)) {
+            return true;
+          }
+
+          if (!checking) {
+            if (file.parent && isExcluded(file.parent.path, this.settings)) {
+              new Notice(`${file.path} was excluded`);
+              return true;
+            }
+            delete this.settings.overridePath[file.path];
+            this.saveSettings().finally(() => {
+              new Notice(`Reset attachment setting of ${file.path}`);
+            });
+          }
+          return true;
+        }
+        return false;
+      },
+    });
+
+    this.addCommand({
+      id: "attachment-management-clear-unused-originalname-storage",
+      name: "Clear unused original name storage",
+      callback: async () => {
+        const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
+          this.settings,
+          RearrangeType.LINKS
+        );
+        const storages: OriginalNameStorage[] = [];
+        for (const attachs of Object.values(attachments)) {
+          for (const attach of attachs) {
+            const link = decodeURI(attach);
+            const linkFile = this.app.vault.getAbstractFileByPath(link);
+            if (linkFile !== null && linkFile instanceof TFile) {
+              md5sum(this.app.vault.adapter, linkFile).then((md5) => {
+                const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
+                if (ret) {
+                  storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
+                  storages.push(ret);
+                }
+              });
+            }
+          }
+        }
+        debugLog("clearUnusedOriginalNameStorage - storage:", storages);
+        this.settings.originalNameStorage = storages;
+        this.saveSettings();
+      },
+    });
   }
 
   async loadSettings() {
@@ -314,5 +328,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  async onunload() {
+    console.log("unloading attachment management.");
+    // Clear the queue of created file.
+    this.createdQueue = [];
   }
 }
