@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-attachment-management",
-	"version": "0.9.10",
+	"version": "0.9.11",
 	"description": "Customize your attachment path of notes independently with variables and auto rename it on change.",
 	"main": "main.js",
 	"scripts": {

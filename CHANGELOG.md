@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.11](https://github.com/trganda/obsidian-attachment-management/compare/0.9.10...0.9.11) (2024-07-15)
+
+
+### Bug Fixes
+
+* not to create folder if not have attachment ([941ef88](https://github.com/trganda/obsidian-attachment-management/commit/941ef88c65b6e61589fcc379d0450dba4755371f))
+
 ### [0.9.10](https://github.com/trganda/obsidian-attachment-management/compare/0.9.9...0.9.10) (2024-07-04)
 
 
