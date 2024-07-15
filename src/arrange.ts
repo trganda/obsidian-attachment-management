@@ -56,6 +56,10 @@ export class ArrangeHandler {
       }
       const { setting } = getOverrideSetting(this.settings, innerFile);
 
+      if (attachments[obNote].size == 0) {
+        break;
+      }
+
       // create attachment path if it's not exists
       const md = getMetadata(obNote);
       const attachPath = md.getAttachmentPath(setting, this.settings.dateFormat);
