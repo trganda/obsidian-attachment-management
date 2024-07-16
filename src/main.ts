@@ -144,11 +144,11 @@ export default class AttachmentManagementPlugin extends Plugin {
               return;
             }
 
-            new ArrangeHandler(this.settings, this.app, this)
-              .rearrangeAttachment(RearrangeType.FILE, file, oldPath)
-              .finally(() => {
-                this.saveSettings();
-              });
+            await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(
+              RearrangeType.FILE,
+              file,
+              oldPath
+            );
 
             const oldMetadata = getMetadata(oldPath);
             // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
