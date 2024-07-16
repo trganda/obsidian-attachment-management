@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.12](https://github.com/trganda/obsidian-attachment-management/compare/0.9.11...0.9.12) (2024-07-16)
+
+
+### Bug Fixes
+
+* rm empty folder on rename event ([4853889](https://github.com/trganda/obsidian-attachment-management/commit/48538890fb03c6322f0f6fdd6e398e6b54ad64ba))
+
 ### [0.9.11](https://github.com/trganda/obsidian-attachment-management/compare/0.9.10...0.9.11) (2024-07-15)
 
 
