@@ -12,6 +12,7 @@ import { getRootPath } from "../commons";
 import { path } from "../lib/path";
 import { md5sum } from "../utils";
 import { getExtensionOverrideSetting } from "../model/extensionOverride";
+import { debugLog } from "src/lib/log";
 
 /**
  * Metadata of notes file
@@ -133,6 +134,7 @@ class Metadata {
     }
 
     root = getRootPath(this.parentPath, setting);
+    debugLog("getAttachmentPath - root", root);
     attachPath = path.join(
       root,
       setting.attachmentPath

@@ -53,14 +53,22 @@ export class CreateHandler {
       .then((attachName) => {
         attachName = attachName + "." + attach.extension;
         // make sure the attachment path was created
-        this.app.vault.adapter.mkdir(attachPath).finally(() => {
-          debugLog("processAttach - create path:", attachPath);
-          const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
-          deduplicateNewName(attachName, attachPathFolder).then(({ name }) => {
-            debugLog("processAttach - new path of file:", path.join(attachPath, name));
-            this.renameCreateFile(attach, attachPath, name, source);
+        this.app.vault.adapter
+          .exists(attachPath, true)
+          .then((exists) => {
+            if (!exists) {
+              this.app.vault.adapter.mkdir(attachPath).finally(() => {
+                debugLog("processAttach - create path:", attachPath);
+              });
+            }
+          })
+          .finally(() => {
+            const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
+            deduplicateNewName(attachName, attachPathFolder).then(({ name }) => {
+              debugLog("processAttach - new path of file:", path.join(attachPath, name));
+              this.renameCreateFile(attach, attachPath, name, source);
+            });
           });
-        });
       });
   }
 
