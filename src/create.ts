@@ -55,11 +55,10 @@ export class CreateHandler {
         // make sure the attachment path was created
         this.app.vault.adapter
           .exists(attachPath, true)
-          .then((exists) => {
+          .then(async (exists) => {
             if (!exists) {
-              this.app.vault.adapter.mkdir(attachPath).finally(() => {
-                debugLog("processAttach - create path:", attachPath);
-              });
+				await this.app.vault.adapter.mkdir(attachPath);
+          		debugLog("processAttach - create path:", attachPath);
             }
           })
           .finally(() => {
