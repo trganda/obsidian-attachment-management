@@ -237,7 +237,10 @@ export class SettingTab extends PluginSettingTab {
         })
       );
 
-    new Setting(containerEl).addButton((btn) => {
+    new Setting(containerEl)
+      .setName("Extension override")
+      .setDesc("Using the extension override if you want to autorename the attachment with a specific extension (e.g. pdf or zip).")
+      .addButton((btn) => {
       btn.setButtonText("Add extension overrides").onClick(async () => {
         if (this.plugin.settings.attachPath.extensionOverride === undefined) {
           this.plugin.settings.attachPath.extensionOverride = [];
@@ -262,7 +265,7 @@ export class SettingTab extends PluginSettingTab {
           .setClass("override_extension_set")
           .addText((text) =>
             text
-              .setPlaceholder("pdf")
+              .setPlaceholder("pdf|docx?")
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
