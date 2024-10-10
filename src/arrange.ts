@@ -57,7 +57,7 @@ export class ArrangeHandler {
       const { setting } = getOverrideSetting(this.settings, innerFile);
 
       if (attachments[obNote].size == 0) {
-        break;
+        continue;
       }
 
       // create attachment path if it's not exists
