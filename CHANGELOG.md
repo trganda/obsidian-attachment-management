@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [0.9.16](https://github.com/trganda/obsidian-attachment-management/compare/0.9.15...0.9.16) (2024-10-10)
+
+
+### Bug Fixes
+
+* rearrange all  linked attachments early break ([88af21a](https://github.com/trganda/obsidian-attachment-management/commit/88af21a3b5551ebbce660de4fd4898261b4d901d))
+
 ### [0.9.15](https://github.com/trganda/obsidian-attachment-management/compare/0.9.14...0.9.15) (2024-09-12)
 
 ### [0.9.14](https://github.com/trganda/obsidian-attachment-management/compare/0.9.13...0.9.14) (2024-07-25)
