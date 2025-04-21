@@ -2,7 +2,7 @@ import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
-import { md5sum, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
+import { md5sum, isAttachment, isCanvasFile, isMarkdownFile, isPastedImage } from "./utils";
 import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
@@ -95,7 +95,10 @@ export class ArrangeHandler {
         debugLog("rearrangeAttachment - original name:", originalName);
 
         let attachName = "";
-        if (containOriginalNameVariable(setting, linkFile.extension)) {
+        if (this.settings.autoRenameAttachmentWithoutName && !isPastedImage(linkFile)) {
+          // 如果不是第一次贴图 且 开启自动命名附件不改变附件名称 使用旧的文件名
+          attachName = linkFile.basename;
+        } else if (containOriginalNameVariable(setting, linkFile.extension)) {
           attachName = await metadata.getAttachFileName(
             setting,
             this.settings.dateFormat,
