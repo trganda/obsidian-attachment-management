@@ -67,6 +67,8 @@ export interface AttachmentManagementPluginSettings {
   excludeExtensionPattern: string;
   // Auto-rename attachment folder or filename and update the link
   autoRenameAttachment: boolean;
+  // Auto-rename attachment folder or filename and update the link but only change path without name
+  autoRenameAttachmentWithoutName: boolean;
   // Exclude path not to rename
   excludedPaths: string;
   // Exclude path array
@@ -90,6 +92,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   dateFormat: "YYYYMMDDHHmmssSSS",
   excludeExtensionPattern: "",
   autoRenameAttachment: true,
+  autoRenameAttachmentWithoutName: false,
   excludedPaths: "",
   excludePathsArray: [],
   excludeSubpaths: false,
@@ -233,6 +236,19 @@ export class SettingTab extends PluginSettingTab {
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
           debugLog("setting - automatically rename attachment folder:" + value);
           this.plugin.settings.autoRenameAttachment = value;
+          await this.plugin.saveSettings();
+        })
+      );
+      
+      new Setting(containerEl)
+      .setName("Automatically rename attachment without name")
+      .setDesc(
+        "Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed. But just change the path without name."
+      )
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.autoRenameAttachmentWithoutName).onChange(async (value) => {
+          debugLog("setting - automatically rename attachment folder without name:" + value);
+          this.plugin.settings.autoRenameAttachmentWithoutName = value;
           await this.plugin.saveSettings();
         })
       );
