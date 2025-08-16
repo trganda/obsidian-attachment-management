@@ -11,6 +11,7 @@ import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
 import { containOriginalNameVariable, loadOriginalName } from "./lib/originalStorage";
+import { LinkUpdater } from "./lib/linkUpdater";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -24,11 +25,13 @@ export class ArrangeHandler {
   settings: AttachmentManagementPluginSettings;
   app: App;
   plugin: Plugin;
+  linkUpdater: LinkUpdater;
 
   constructor(settings: AttachmentManagementPluginSettings, app: App, plugin: Plugin) {
     this.settings = settings;
     this.app = app;
     this.plugin = plugin;
+    this.linkUpdater = new LinkUpdater(app);
   }
 
   /**
@@ -125,7 +128,20 @@ export class ArrangeHandler {
         const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFile);
         debugLog("rearrangeAttachment - deduplicated name:", name);
 
-        await this.app.fileManager.renameFile(linkFile, path.join(attachPath, name));
+        const oldPath = linkFile.path;
+        const newPath = path.join(attachPath, name);
+        
+        // 重命名文件
+        await this.app.fileManager.renameFile(linkFile, newPath);
+        
+        // 手动更新链接引用，因为fileManager.renameFile在某些情况下不会自动更新链接
+        // 参考: https://github.com/trganda/obsidian-attachment-management/issues/46
+        try {
+          await this.linkUpdater.updateLinksForRenamedFile(oldPath, newPath);
+          debugLog(`Successfully updated links for renamed file: ${oldPath} -> ${newPath}`);
+        } catch (error) {
+          console.error(`Failed to update links for renamed file: ${oldPath} -> ${newPath}`, error);
+        }
       }
     }
   }
