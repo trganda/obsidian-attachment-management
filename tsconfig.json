@@ -1,4 +1,5 @@
 {
+  "types": ["node"],
   "compilerOptions": {
     "baseUrl": ".",
     "inlineSourceMap": true,
@@ -13,9 +14,9 @@
 	"strictNullChecks": true,
     "lib": [
       "DOM",
-      "ES5",
-      "ES6",
-      "ES7"
+      "ES2018",
+      "ES2019",
+      "ES2020"
     ]
   },
   "resolveJsonModule": true,

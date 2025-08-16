@@ -1,5 +1,6 @@
 import { DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
+import { t } from "./i18n/index";
 
 import { Md5 } from "ts-md5";
 
@@ -182,14 +183,14 @@ export function validateExtensionEntry(setting: AttachmentPathSettings, plugin: 
 
 export function generateErrorExtensionMessage(type: "md" | "canvas" | "empty" | "duplicate" | "excluded") {
   if (type === "canvas") {
-    new Notice("Canvas is not supported as an extension override.");
+    new Notice(t('errors.canvasNotSupported'));
   } else if (type === "md") {
-    new Notice("Markdown is not supported as an extension override.");
+    new Notice(t('errors.markdownNotSupported'));
   } else if (type === "empty") {
-    new Notice("Extension override cannot be empty.");
+    new Notice(t('errors.extensionEmpty'));
   } else if (type === "duplicate") {
-    new Notice("Duplicate extension override.");
+    new Notice(t('errors.duplicateExtension'));
   } else if (type === "excluded") {
-    new Notice("Extension override cannot be an excluded extension.");
+    new Notice(t('errors.excludedExtension'));
   }
 }

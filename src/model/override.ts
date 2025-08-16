@@ -14,6 +14,7 @@ import {
 import AttachmentManagementPlugin from "../main";
 import { OverrideExtensionModal } from "./extensionOverride";
 import { debugLog } from "src/lib/log";
+import { t } from "../i18n/index";
 
 export class OverrideModal extends Modal {
   plugin: AttachmentManagementPlugin;
@@ -44,17 +45,17 @@ export class OverrideModal extends Modal {
     contentEl.empty();
 
     contentEl.createEl("h3", {
-      text: "Overriding Settings",
+      text: t('override.title'),
     });
 
     new Setting(contentEl)
-      .setName("Root path to save attachment")
-      .setDesc("Select root path of attachment")
+      .setName(t('settings.rootPath.name'))
+      .setDesc(t('settings.rootPath.desc'))
       .addDropdown((text) =>
         text
-          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
-          .addOption(`${SETTINGS_ROOT_INFOLDER}`, "In the folder specified below")
-          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, "Next to note in folder specified below")
+          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t('settings.rootPath.options.obsidian'))
+          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t('settings.rootPath.options.inFolder'))
+          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t('settings.rootPath.options.nextToNote'))
           .setValue(this.setting.saveAttE)
           .onChange(async (value) => {
             this.setting.saveAttE = value;
@@ -63,7 +64,7 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName("Root folder")
+      .setName(t('settings.rootFolder.name'))
       .setClass("override_root_folder_set")
       .addText((text) =>
         text
@@ -76,10 +77,8 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName("Attachment path")
-      .setDesc(
-        `Path of attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`
-      )
+      .setName(t('settings.attachmentPath.name'))
+      .setDesc(t('settings.attachmentPath.desc'))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
@@ -91,10 +90,8 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName("Attachment format")
-      .setDesc(
-        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
-      )
+      .setName(t('settings.attachmentFormat.name'))
+      .setDesc(t('settings.attachmentFormat.desc'))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
@@ -106,7 +103,7 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl).addButton((btn) => {
-      btn.setButtonText("Add extension overrides").onClick(async () => {
+      btn.setButtonText(t('override.addExtensionOverrides')).onClick(async () => {
         if (this.setting.extensionOverride === undefined) {
           this.setting.extensionOverride = [];
         }
@@ -124,12 +121,12 @@ export class OverrideModal extends Modal {
     if (this.setting.extensionOverride !== undefined) {
       this.setting.extensionOverride.forEach((ext) => {
         new Setting(contentEl)
-          .setName("Extension")
-          .setDesc("Extension to override")
+          .setName(t('override.extension.name'))
+          .setDesc(t('override.extension.desc'))
           .setClass("override_extension_set")
           .addText((text) =>
             text
-              .setPlaceholder("pdf")
+              .setPlaceholder(t('override.extension.placeholder'))
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
@@ -156,18 +153,18 @@ export class OverrideModal extends Modal {
 
     new Setting(contentEl)
       .addButton((btn) => {
-        btn.setButtonText("Reset").onClick(async () => {
+        btn.setButtonText(t('override.buttons.reset')).onClick(async () => {
           this.setting = this.plugin.settings.attachPath;
           delete this.plugin.settings.overridePath[this.file.path];
           await this.plugin.saveSettings();
           await this.plugin.loadSettings();
-          new Notice(`Reset attachment setting of ${this.file.path}`);
+          new Notice(t('override.notifications.reset', { path: this.file.path }));
           this.close();
         });
       })
       .addButton((btn) =>
         btn
-          .setButtonText("Submit")
+          .setButtonText(t('override.buttons.submit'))
           .setCta()
           .onClick(async () => {
             if (this.file instanceof TFile) {
@@ -178,7 +175,7 @@ export class OverrideModal extends Modal {
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             await this.plugin.saveSettings();
             debugLog("override - overriding settings:", this.file.path, this.setting);
-            new Notice(`Overridden attachment setting of ${this.file.path}`);
+            new Notice(t('override.notifications.overridden', { path: this.file.path }));
             this.close();
           })
       );

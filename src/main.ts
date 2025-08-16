@@ -5,10 +5,12 @@ import {
   DEFAULT_SETTINGS,
   OriginalNameStorage,
   SETTINGS_TYPES,
-  SettingTab,
+  AttachmentManagementSettingTab,
 } from "./settings/settings";
 import { debugLog } from "./lib/log";
 import { OverrideModal } from "./model/override";
+import { initI18n, setLanguage, detectLanguage, t, SupportedLanguage } from "./i18n/index";
+import { loadAllTranslations } from "./i18n/loader";
 import { ConfirmModal } from "./model/confirm";
 import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
@@ -26,6 +28,12 @@ export default class AttachmentManagementPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
+    // 初始化国际化系统
+    loadAllTranslations();
+    const savedLanguage = this.settings.language as SupportedLanguage || detectLanguage();
+    setLanguage(savedLanguage);
+    initI18n();
+
     console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
 
     this.app.workspace.onLayoutReady(() => {
@@ -38,7 +46,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
           menu.addItem((item) => {
             item
-              .setTitle("Overriding attachment setting")
+              .setTitle(t('override.menuTitle'))
               .setIcon("image-plus")
               .onClick(async () => {
                 const { setting } = getOverrideSetting(this.settings, file);
@@ -134,7 +142,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
               debugLog("rename - exclude path:", file.parent.path);
-              new Notice(`${file.path} was excluded`);
+              new Notice(t('notifications.fileExcluded', { path: file.path }));
               return;
             }
 
@@ -201,7 +209,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       );
 
       // This adds a settings tab so the user can configure various aspects of the plugin
-      this.addSettingTab(new SettingTab(this.app, this));
+      this.addSettingTab(new AttachmentManagementSettingTab(this.app, this));
     });
   }
 
@@ -223,7 +231,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   initCommands() {
     this.addCommand({
       id: "attachment-management-rearrange-all-links",
-      name: "Rearrange all linked attachments",
+      name: t('commands.rearrangeAllLinks'),
       callback: async () => {
         new ConfirmModal(this).open();
       },
@@ -231,10 +239,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-rearrange-active-links",
-      name: "Rearrange linked attachments",
+      name: t('commands.rearrangeActiveLinks'),
       callback: async () => {
         new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
-          new Notice("Arrange completed");
+          new Notice(t('notifications.arrangeCompleted'));
         });
       },
     });
@@ -267,7 +275,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-reset-override-setting",
-      name: "Reset override setting",
+      name: t('commands.resetOverrideSetting'),
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
@@ -282,7 +290,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             }
             delete this.settings.overridePath[file.path];
             this.saveSettings().finally(() => {
-              new Notice(`Reset attachment setting of ${file.path}`);
+              new Notice(t('notifications.resetAttachmentSetting', { path: file.path }));
             });
           }
           return true;
@@ -293,7 +301,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-clear-unused-originalname-storage",
-      name: "Clear unused original name storage",
+      name: t('commands.clearUnusedStorage'),
       callback: async () => {
         const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
           this.settings,

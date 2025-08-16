@@ -15,6 +15,7 @@ import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
 import { matchExtension } from "src/utils";
 import { debugLog } from "src/lib/log";
+import { t } from "../i18n/index";
 
 /**
  * Retrieves the override setting for a specific extension.
@@ -78,17 +79,17 @@ export class OverrideExtensionModal extends Modal {
     contentEl.empty();
 
     contentEl.createEl("h3", {
-      text: `Extension settings for ${this.settings.extension}`,
+      text: t('extensionOverride.title'),
     });
 
     new Setting(contentEl)
-      .setName("Root path to save attachment")
-      .setDesc("Select root path of attachment")
+      .setName(t('extensionOverride.rootPath.name'))
+      .setDesc(t('extensionOverride.rootPath.desc'))
       .addDropdown((text) =>
         text
-          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
-          .addOption(`${SETTINGS_ROOT_INFOLDER}`, "In the folder specified below")
-          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, "Next to note in folder specified below")
+          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t('settings.rootPath.options.obsidian'))
+          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t('settings.rootPath.options.inFolder'))
+          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t('settings.rootPath.options.nextToNote'))
           .setValue(this.settings.saveAttE)
           .onChange(async (value) => {
             this.settings.saveAttE = value;
@@ -98,7 +99,7 @@ export class OverrideExtensionModal extends Modal {
       );
     if (this.settings.saveAttE !== "obsFolder") {
       new Setting(contentEl)
-        .setName("Root folder")
+        .setName(t('extensionOverride.rootFolder.name'))
         .setClass("override_root_folder_set")
         .addText((text) =>
           text
@@ -110,10 +111,8 @@ export class OverrideExtensionModal extends Modal {
         );
     }
     new Setting(contentEl)
-      .setName("Attachment path")
-      .setDesc(
-        `Path of attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME} and ${SETTINGS_VARIABLES_NOTEPARENT}`
-      )
+      .setName(t('extensionOverride.attachmentPath.name'))
+      .setDesc(t('extensionOverride.attachmentPath.desc'))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
@@ -124,10 +123,8 @@ export class OverrideExtensionModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName("Attachment format")
-      .setDesc(
-        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
-      )
+      .setName(t('extensionOverride.attachmentFormat.name'))
+      .setDesc(t('extensionOverride.attachmentFormat.desc'))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
@@ -138,7 +135,7 @@ export class OverrideExtensionModal extends Modal {
       );
 
     new Setting(contentEl).addButton((button) =>
-      button.setButtonText("Save").onClick(async () => {
+      button.setButtonText(t('extensionOverride.buttons.save')).onClick(async () => {
         this.onSubmit(this.settings);
         this.close();
       })
