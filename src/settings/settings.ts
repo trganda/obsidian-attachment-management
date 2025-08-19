@@ -14,6 +14,8 @@ import {
 import { OverrideExtensionModal } from "src/model/extensionOverride";
 import { validateExtensionEntry, generateErrorExtensionMessage } from "src/utils";
 import { debugLog } from "src/lib/log";
+import { t, setLanguage, getCurrentLanguage } from "../i18n/index";
+import { getSupportedLanguages } from "../i18n/loader";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
@@ -57,6 +59,8 @@ export interface ExtensionOverrideSettings {
 }
 
 export interface AttachmentManagementPluginSettings {
+  // Language setting
+  language: string;
   // Disable notification
   disableNotification: boolean;
   // Path
@@ -80,6 +84,7 @@ export interface AttachmentManagementPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
+  language: "en",
   attachPath: {
     attachmentRoot: "",
     saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
@@ -98,7 +103,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   disableNotification: false,
 };
 
-export class SettingTab extends PluginSettingTab {
+export class AttachmentManagementSettingTab extends PluginSettingTab {
   plugin: AttachmentManagementPlugin;
 
   constructor(app: App, plugin: AttachmentManagementPlugin) {
@@ -132,6 +137,27 @@ export class SettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
+    containerEl.createEl("h2", { text: t('settings.title') });
+
+    // 语言设置
+    new Setting(containerEl)
+      .setName(t('settings.language.name'))
+      .setDesc(t('settings.language.desc'))
+      .addDropdown(dropdown => {
+        const languages = getSupportedLanguages();
+        languages.forEach(lang => {
+          dropdown.addOption(lang.code, lang.nativeName);
+        });
+        dropdown.setValue(getCurrentLanguage());
+        dropdown.onChange(async (value) => {
+          setLanguage(value as any);
+          this.plugin.settings.language = value as any;
+          await this.plugin.saveSettings();
+          // 重新显示设置页面以应用新语言
+          this.display();
+        });
+      });
+
     // new Setting(containerEl).setName("Disable notification").addToggle((toggle) => {
     //     toggle.setValue(this.plugin.settings.disableNotification).onChange(async (value) => {
     //         this.plugin.settings.disableNotification = value;
@@ -140,13 +166,13 @@ export class SettingTab extends PluginSettingTab {
     // });
 
     new Setting(containerEl)
-      .setName("Root path to save attachment")
-      .setDesc("Select root path of attachment")
+      .setName(t('settings.rootPath.name'))
+      .setDesc(t('settings.rootPath.desc'))
       .addDropdown((text) =>
         text
-          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, "Copy Obsidian settings")
-          .addOption(`${SETTINGS_ROOT_INFOLDER}`, "In the folder specified below")
-          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, "Next to note in folder specified below")
+          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t('settings.rootPath.options.obsidian'))
+          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t('settings.rootPath.options.inFolder'))
+          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t('settings.rootPath.options.nextToNote'))
           .setValue(this.plugin.settings.attachPath.saveAttE)
           .onChange(async (value) => {
             this.plugin.settings.attachPath.saveAttE = value;
@@ -156,8 +182,8 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Root folder")
-      .setDesc("Root folder of new attachment")
+      .setName(t('settings.rootFolder.name'))
+      .setDesc(t('settings.rootFolder.desc'))
       .setClass("root_folder_set")
       .addText((text) =>
         text
@@ -171,10 +197,8 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Attachment path")
-      .setDesc(
-        `Path of attachment in root folder, available variables ${SETTINGS_VARIABLES_NOTEPATH}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_NOTEPARENT}`
-      )
+      .setName(t('settings.attachmentPath.name'))
+      .setDesc(t('settings.attachmentPath.desc'))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
@@ -187,10 +211,8 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Attachment format")
-      .setDesc(
-        `Define how to name the attachment file, available variables ${SETTINGS_VARIABLES_DATES}, ${SETTINGS_VARIABLES_NOTENAME}, ${SETTINGS_VARIABLES_MD5} and ${SETTINGS_VARIABLES_ORIGINALNAME}.`
-      )
+      .setName(t('settings.attachmentFormat.name'))
+      .setDesc(t('settings.attachmentFormat.desc'))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
@@ -203,13 +225,13 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Date format")
+      .setName(t('settings.dateFormat.name'))
       .setDesc(
         createFragment((frag) => {
-          frag.appendText("Moment date format to use ");
+          frag.appendText(t('settings.dateFormat.desc') + " ");
           frag.createEl("a", {
             href: "https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format",
-            text: "Moment format options",
+            text: t('settings.dateFormat.linkText'),
           });
         })
       )
@@ -225,10 +247,8 @@ export class SettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Automatically rename attachment")
-      .setDesc(
-        "Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed."
-      )
+      .setName(t('settings.autoRename.name'))
+      .setDesc(t('settings.autoRename.desc'))
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
           debugLog("setting - automatically rename attachment folder:" + value);
@@ -238,10 +258,10 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Extension override")
-      .setDesc("Using the extension override if you want to autorename the attachment with a specific extension (e.g. pdf or zip).")
+      .setName(t('settings.extensionOverride.name'))
+      .setDesc(t('settings.extensionOverride.desc'))
       .addButton((btn) => {
-      btn.setButtonText("Add extension overrides").onClick(async () => {
+      btn.setButtonText(t('settings.extensionOverride.addButton')).onClick(async () => {
         if (this.plugin.settings.attachPath.extensionOverride === undefined) {
           this.plugin.settings.attachPath.extensionOverride = [];
         }
@@ -260,12 +280,12 @@ export class SettingTab extends PluginSettingTab {
     if (this.plugin.settings.attachPath.extensionOverride !== undefined) {
       this.plugin.settings.attachPath.extensionOverride.forEach((ext) => {
         new Setting(containerEl)
-          .setName("Extension")
-          .setDesc("Extension to override")
+          .setName(t('settings.extensionOverride.extension.name'))
+          .setDesc(t('settings.extensionOverride.extension.desc'))
           .setClass("override_extension_set")
           .addText((text) =>
             text
-              .setPlaceholder("pdf|docx?")
+              .setPlaceholder(t('settings.extensionOverride.extension.placeholder'))
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
@@ -274,7 +294,7 @@ export class SettingTab extends PluginSettingTab {
           .addButton((btn) => {
             btn
               .setIcon("trash")
-              .setTooltip("Remove extension override")
+              .setTooltip(t('settings.extensionOverride.tooltips.remove'))
               .onClick(async () => {
                 //get index of extension
                 const index = this.plugin.settings.attachPath.extensionOverride?.indexOf(ext) ?? -1;
@@ -287,7 +307,7 @@ export class SettingTab extends PluginSettingTab {
           .addButton((btn) => {
             btn
               .setIcon("pencil")
-              .setTooltip("Edit extension override")
+              .setTooltip(t('settings.extensionOverride.tooltips.edit'))
               .onClick(async () => {
                 new OverrideExtensionModal(this.plugin, ext, (result) => {
                   ext = result;
@@ -297,7 +317,7 @@ export class SettingTab extends PluginSettingTab {
           .addButton((btn) => {
             btn
               .setIcon("check")
-              .setTooltip("Save extension override")
+              .setTooltip(t('settings.extensionOverride.tooltips.save'))
               .onClick(async () => {
                 const wrongIndex = validateExtensionEntry(this.plugin.settings.attachPath, this.plugin.settings);
                 if (wrongIndex.length > 0) {
@@ -311,18 +331,18 @@ export class SettingTab extends PluginSettingTab {
                 }
                 await this.plugin.saveSettings();
                 this.display();
-                new Notice("Saved extension override");
+                new Notice(t('settings.extensionOverride.saveNotice'));
               });
           });
       });
     }
 
     new Setting(containerEl)
-      .setName("Exclude extension pattern")
-      .setDesc(`Regex pattern to exclude certain extensions from being handled.`)
+      .setName(t('settings.excludeExtension.name'))
+      .setDesc(t('settings.excludeExtension.desc'))
       .addText((text) =>
         text
-          .setPlaceholder("pdf|docx?|xlsx?|pptx?|zip|rar")
+          .setPlaceholder(t('settings.excludeExtension.placeholder'))
           .setValue(this.plugin.settings.excludeExtensionPattern)
           .onChange(async (value) => {
             this.plugin.settings.excludeExtensionPattern = value;
@@ -331,10 +351,8 @@ export class SettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Excluded paths")
-      .setDesc(
-        `Provide the full path of the folder names (case sensitive and without leading slash '/') divided by semicolon (;) to be excluded from renaming.`
-      )
+      .setName(t('settings.excludedPaths.name'))
+      .setDesc(t('settings.excludedPaths.desc'))
       .addTextArea((component: TextAreaComponent) => {
         component.setValue(this.plugin.settings.excludedPaths).onChange(async (value) => {
           this.plugin.settings.excludedPaths = value;
@@ -346,8 +364,8 @@ export class SettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Exclude subpaths")
-      .setDesc("Turn on this option if you want to also exclude all subfolders of the folder paths provided above.")
+      .setName(t('settings.excludeSubpaths.name'))
+      .setDesc(t('settings.excludeSubpaths.desc'))
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.excludeSubpaths).onChange(async (value) => {
           debugLog("setting - excluded subpaths:" + value);
