@@ -8,8 +8,8 @@ This plugin supports more flexibly setting your attachment location with variabl
 
 - Install from Obsidian community plugins.
 - Clone this repo
-  - `npm i` to install dependencies
-  - `npm run build` to start compilation in watch mode.
+  - `pnpm i` to install dependencies
+  - `pnpm run build` to start compilation in watch mode.
   - Copy the `main.js`, `manifest.json` and `style.css` files to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
 - Download the release file and unarchive the file to your vault `VaultFolder.obsidian/plugins/obsidian-attachment-management`
 
