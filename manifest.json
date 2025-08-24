@@ -1,7 +1,7 @@
 {
 	"id": "attachment-management",
 	"name": "Attachment Management",
-	"version": "0.9.16",
+	"version": "0.10.0",
 	"description": "Customize your attachment path of notes independently with variables and auto rename it on change.",
 	"author": "trganda",
 	"authorUrl": "https://github.com/trganda",
