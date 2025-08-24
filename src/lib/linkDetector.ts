@@ -64,8 +64,8 @@ export const getAllLinkMatchesInFile = async (mdFile: TFile, app: App, fileText?
     }
   }
 
-  // --> Get All Markdown Links
-  const markdownRegex = /\[(^$|.*?)\]\((.*?)\)/g;
+  // --> Get All Markdown Links (including image links)
+  const markdownRegex = /!?\[(^$|.*?)\]\((.*?)\)/g;
   const markdownMatches = fileText.match(markdownRegex);
   if (markdownMatches) {
     const fileRegex = /(?<=\().*(?=\))/;
