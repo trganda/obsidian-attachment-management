@@ -60,21 +60,6 @@ export class ArrangeHandler {
         continue;
       }
 
-      // create attachment path if it's not exists
-      const md = getMetadata(obNote);
-      const attachPath = md.getAttachmentPath(setting, this.settings.dateFormat);
-      if (!(await this.app.vault.adapter.exists(attachPath, true))) {
-        // process the case where rename the filename to uppercase or lowercase
-        if (oldPath != undefined && (await this.app.vault.adapter.exists(attachPath, false))) {
-          const mdOld = getMetadata(oldPath);
-          const attachPathOld = mdOld.getAttachmentPath(setting, this.settings.dateFormat);
-          // this will trigger the rename event and cause the path of attachment change
-          this.app.vault.adapter.rename(attachPathOld, attachPath);
-        } else {
-          await this.app.vault.adapter.mkdir(attachPath);
-        }
-      }
-
       for (let link of attachments[obNote]) {
         try {
           link = decodeURI(link);
@@ -93,6 +78,20 @@ export class ArrangeHandler {
         const md5 = await md5sum(this.app.vault.adapter, linkFile);
         const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
         debugLog("rearrangeAttachment - original name:", originalName);
+
+        // create attachment path if it's not exists
+        const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
+        if (!(await this.app.vault.adapter.exists(attachPath, true))) {
+          // process the case where rename the filename to uppercase or lowercase
+          if (oldPath != undefined && (await this.app.vault.adapter.exists(attachPath, false))) {
+            const mdOld = getMetadata(oldPath);
+            const attachPathOld = mdOld.getAttachmentPath(setting, this.settings.dateFormat);
+            // this will trigger the rename event and cause the path of attachment change
+            this.app.vault.adapter.rename(attachPathOld, attachPath);
+          } else {
+            await this.app.vault.adapter.mkdir(attachPath);
+          }
+        }
 
         let attachName = "";
         if (containOriginalNameVariable(setting, linkFile.extension)) {

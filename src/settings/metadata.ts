@@ -72,12 +72,13 @@ class Metadata {
     adapter: DataAdapter,
     linkName?: string
   ): Promise<string> {
-    const dateTime = window.moment().format(dateFormat);
+    let dateTime = window.moment().format(dateFormat);
 
     let md5 = "";
     let attachFormat = "";
     if (this.attachmentFile !== undefined) {
       md5 = await md5sum(adapter, this.attachmentFile);
+      dateTime = window.moment(this.attachmentFile.stat.mtime).format(dateFormat);
       const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
       if (extSetting !== undefined) {
         attachFormat = extSetting.attachFormat;
