@@ -27,7 +27,7 @@ export class CreateHandler {
    * @param source - the notes file that linked to attach
    * @returns - none
    */
-  processAttach(attach: TFile, source: TFile) {
+  async processAttach(attach: TFile, source: TFile) {
     // ignore if the path of notes file has been excluded.
     if (source.parent && isExcluded(source.parent.path, this.settings)) {
       debugLog("processAttach - not a file or exclude path:", source.path);
@@ -47,7 +47,7 @@ export class CreateHandler {
     const metadata = getMetadata(source.path, attach);
     debugLog("processAttach - metadata:", metadata);
 
-    const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
+    const attachPath = await metadata.getAttachmentPath(setting, this.settings.dateFormat, this.app.vault.adapter);
     metadata
       .getAttachFileName(setting, this.settings.dateFormat, attach.basename, this.app.vault.adapter)
       .then((attachName) => {

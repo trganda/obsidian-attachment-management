@@ -39,7 +39,7 @@ export const en: TranslationMap = {
     },
     attachmentFormat: {
       name: 'Attachment format',
-      desc: 'Define how to name the attachment file, available variables {{dates}}, {{notename}}, {{md5}} and {{originalname}}.'
+      desc: 'Define how to name the attachment file, available variables {{date}}, {{notename}}, {{md5}} and {{originalname}}.'
     },
     dateFormat: {
       name: 'Date format',

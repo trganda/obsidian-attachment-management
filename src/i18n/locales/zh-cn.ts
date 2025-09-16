@@ -39,7 +39,7 @@ export const zhCn: TranslationMap = {
     },
     attachmentFormat: {
       name: '附件格式',
-      desc: '定义如何命名附件文件，可用变量 {{dates}}、{{notename}}、{{md5}} 和 {{originalname}}。'
+      desc: '定义如何命名附件文件，可用变量 {{date}}、{{notename}}、{{md5}} 和 {{originalname}}。'
     },
     dateFormat: {
       name: '日期格式',
