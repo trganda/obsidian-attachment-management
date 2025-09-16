@@ -5,8 +5,8 @@ import { SETTINGS_VARIABLES_ORIGINALNAME } from "./constant";
 export function containOriginalNameVariable(setting: AttachmentPathSettings, ext: string): boolean {
   const { extSetting } = getExtensionOverrideSetting(ext, setting);
   if (
-    (extSetting !== undefined && extSetting.attachFormat.contains(SETTINGS_VARIABLES_ORIGINALNAME)) ||
-    setting.attachFormat.contains(SETTINGS_VARIABLES_ORIGINALNAME)
+    (extSetting !== undefined && extSetting.attachFormat.contains(`\${${SETTINGS_VARIABLES_ORIGINALNAME}`)) ||
+    setting.attachFormat.contains(`\${${SETTINGS_VARIABLES_ORIGINALNAME}`)
   ) {
     return true;
   }

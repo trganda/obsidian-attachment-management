@@ -4,12 +4,6 @@ import {
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
   SETTINGS_ROOT_OBSFOLDER,
-  SETTINGS_VARIABLES_DATES,
-  SETTINGS_VARIABLES_MD5,
-  SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_NOTEPARENT,
-  SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_ORIGINALNAME,
 } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";

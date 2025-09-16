@@ -30,7 +30,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     // 初始化国际化系统
     loadAllTranslations();
-    const savedLanguage = this.settings.language as SupportedLanguage || detectLanguage();
+    const savedLanguage = (this.settings.language as SupportedLanguage) || detectLanguage();
     setLanguage(savedLanguage);
     initI18n();
 
@@ -46,7 +46,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
           menu.addItem((item) => {
             item
-              .setTitle(t('override.menuTitle'))
+              .setTitle(t("override.menuTitle"))
               .setIcon("image-plus")
               .onClick(async () => {
                 const { setting } = getOverrideSetting(this.settings, file);
@@ -142,7 +142,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
               debugLog("rename - exclude path:", file.parent.path);
-              new Notice(t('notifications.fileExcluded', { path: file.path }));
+              new Notice(t("notifications.fileExcluded", { path: file.path }));
               return;
             }
 
@@ -160,7 +160,11 @@ export default class AttachmentManagementPlugin extends Plugin {
 
             const oldMetadata = getMetadata(oldPath);
             // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = await oldMetadata.getAttachmentPath(
+              setting,
+              this.settings.dateFormat,
+              this.app.vault.adapter
+            );
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
@@ -194,7 +198,11 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             const oldMetadata = getMetadata(file.path);
             const { setting } = getOverrideSetting(this.settings, file);
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = await oldMetadata.getAttachmentPath(
+              setting,
+              this.settings.dateFormat,
+              this.app.vault.adapter
+            );
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
@@ -231,7 +239,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   initCommands() {
     this.addCommand({
       id: "attachment-management-rearrange-all-links",
-      name: t('commands.rearrangeAllLinks'),
+      name: t("commands.rearrangeAllLinks"),
       callback: async () => {
         new ConfirmModal(this).open();
       },
@@ -239,10 +247,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-rearrange-active-links",
-      name: t('commands.rearrangeActiveLinks'),
+      name: t("commands.rearrangeActiveLinks"),
       callback: async () => {
         new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
-          new Notice(t('notifications.arrangeCompleted'));
+          new Notice(t("notifications.arrangeCompleted"));
         });
       },
     });
@@ -275,7 +283,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-reset-override-setting",
-      name: t('commands.resetOverrideSetting'),
+      name: t("commands.resetOverrideSetting"),
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
@@ -290,7 +298,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             }
             delete this.settings.overridePath[file.path];
             this.saveSettings().finally(() => {
-              new Notice(t('notifications.resetAttachmentSetting', { path: file.path }));
+              new Notice(t("notifications.resetAttachmentSetting", { path: file.path }));
             });
           }
           return true;
@@ -301,7 +309,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-clear-unused-originalname-storage",
-      name: t('commands.clearUnusedStorage'),
+      name: t("commands.clearUnusedStorage"),
       callback: async () => {
         const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
           this.settings,
