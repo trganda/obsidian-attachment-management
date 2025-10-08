@@ -256,7 +256,7 @@ export class ArrangeHandler {
           }
         }
         // Any Additional Link
-        const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
+        const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app);
         for (const linkMatch of linkMatches) {
           if (isAttachment(settings, linkMatch.linkText)) {
             this.addToSet(attachmentsSet, linkMatch.linkText);
@@ -284,7 +284,7 @@ export class ArrangeHandler {
                 this.addToSet(attachmentsSet, node.file);
               }
             } else if (node.type == "text") {
-              const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
+              const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app, node.text);
               for (const linkMatch of linkMatches) {
                 if (isAttachment(settings, linkMatch.linkText)) {
                   this.addToSet(attachmentsSet, linkMatch.linkText);
