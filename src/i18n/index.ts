@@ -1,7 +1,7 @@
 import { moment } from 'obsidian';
 
 // 支持的语言类型
-export type SupportedLanguage = 'en' | 'zh-cn';
+export type SupportedLanguage = 'en' | 'zh-cn' | 'ja';
 
 // 翻译键值对接口
 export interface TranslationMap {
@@ -14,7 +14,8 @@ let currentLanguage: SupportedLanguage = 'en';
 // 语言包存储
 const translations: Record<SupportedLanguage, TranslationMap> = {
   'en': {},
-  'zh-cn': {}
+  'zh-cn': {},
+  'ja': {}
 };
 
 /**
@@ -99,6 +100,10 @@ export function detectLanguage(): SupportedLanguage {
   // 检测中文
   if (locale.startsWith('zh')) {
     return 'zh-cn';
+  }
+
+  if (locale.startsWith('ja')) {
+    return 'ja';
   }
   
   // 默认返回英文
