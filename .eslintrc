@@ -24,6 +24,7 @@
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-require-imports": "error",
     "@typescript-eslint/no-empty-function": "error",
-    "@typescript-eslint/no-misused-new": "error"
+    "@typescript-eslint/no-misused-new": "error",
+    "quotes": ["error", "double"]
   }
 }

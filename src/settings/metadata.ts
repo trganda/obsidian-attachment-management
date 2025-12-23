@@ -12,7 +12,7 @@ import { getRootPath } from "../commons";
 import { path } from "../lib/path";
 import { md5sum } from "../utils";
 import { getExtensionOverrideSetting } from "../model/extensionOverride";
-import { debugLog } from "src/lib/log";
+import { debugLog } from "../lib/log";
 
 /**
  * Metadata of notes file

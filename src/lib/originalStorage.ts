@@ -1,5 +1,5 @@
-import { getExtensionOverrideSetting } from "src/model/extensionOverride";
-import { AttachmentPathSettings, AttachmentManagementPluginSettings, OriginalNameStorage } from "src/settings/settings";
+import { getExtensionOverrideSetting } from "../model/extensionOverride";
+import { AttachmentPathSettings, AttachmentManagementPluginSettings, OriginalNameStorage } from "../settings/settings";
 import { SETTINGS_VARIABLES_ORIGINALNAME } from "./constant";
 
 export function containOriginalNameVariable(setting: AttachmentPathSettings, ext: string): boolean {

@@ -1,17 +1,18 @@
 {
-  "types": ["node"],
+  "types": [
+    "node"
+  ],
   "compilerOptions": {
-    "baseUrl": ".",
     "inlineSourceMap": true,
     "inlineSources": true,
-    "module": "ESNext",
+    "module": "Node16",
     "target": "ES6",
     "allowJs": true,
     "noImplicitAny": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "importHelpers": true,
     "isolatedModules": true,
-	"strictNullChecks": true,
+    "strictNullChecks": true,
     "lib": [
       "DOM",
       "ES2018",
@@ -22,5 +23,5 @@
   "resolveJsonModule": true,
   "include": [
     "src/**/*.ts"
-  ]
+  ],
 }

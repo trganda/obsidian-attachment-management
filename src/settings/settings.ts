@@ -4,18 +4,14 @@ import {
   SETTINGS_ROOT_OBSFOLDER,
   SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_NOTEPARENT,
   SETTINGS_VARIABLES_DATES,
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
-  SETTINGS_VARIABLES_ORIGINALNAME,
-  SETTINGS_VARIABLES_MD5,
 } from "../lib/constant";
-import { OverrideExtensionModal } from "src/model/extensionOverride";
-import { validateExtensionEntry, generateErrorExtensionMessage } from "src/utils";
-import { debugLog } from "src/lib/log";
-import { t, setLanguage, getCurrentLanguage } from "../i18n/index";
-import { getSupportedLanguages } from "../i18n/loader";
+import { OverrideExtensionModal } from "../model/extensionOverride";
+import { validateExtensionEntry, generateErrorExtensionMessage } from "../utils";
+import { debugLog } from "../lib/log";
+import { t } from "../i18n/index";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
@@ -59,8 +55,6 @@ export interface ExtensionOverrideSettings {
 }
 
 export interface AttachmentManagementPluginSettings {
-  // Language setting
-  language: string;
   // Disable notification
   disableNotification: boolean;
   // Path
@@ -84,7 +78,6 @@ export interface AttachmentManagementPluginSettings {
 }
 
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
-  language: "en",
   attachPath: {
     attachmentRoot: "",
     saveAttE: `${SETTINGS_ROOT_OBSFOLDER}`,
@@ -137,26 +130,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    containerEl.createEl("h2", { text: t('settings.title') });
-
-    // 语言设置
-    new Setting(containerEl)
-      .setName(t('settings.language.name'))
-      .setDesc(t('settings.language.desc'))
-      .addDropdown(dropdown => {
-        const languages = getSupportedLanguages();
-        languages.forEach(lang => {
-          dropdown.addOption(lang.code, lang.nativeName);
-        });
-        dropdown.setValue(getCurrentLanguage());
-        dropdown.onChange(async (value) => {
-          setLanguage(value as any);
-          this.plugin.settings.language = value as any;
-          await this.plugin.saveSettings();
-          // 重新显示设置页面以应用新语言
-          this.display();
-        });
-      });
+    containerEl.createEl("h2", { text: t("settings.title") });
 
     // new Setting(containerEl).setName("Disable notification").addToggle((toggle) => {
     //     toggle.setValue(this.plugin.settings.disableNotification).onChange(async (value) => {
@@ -166,13 +140,13 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
     // });
 
     new Setting(containerEl)
-      .setName(t('settings.rootPath.name'))
-      .setDesc(t('settings.rootPath.desc'))
+      .setName(t("settings.rootPath.name"))
+      .setDesc(t("settings.rootPath.desc"))
       .addDropdown((text) =>
         text
-          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t('settings.rootPath.options.obsidian'))
-          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t('settings.rootPath.options.inFolder'))
-          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t('settings.rootPath.options.nextToNote'))
+          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t("settings.rootPath.options.obsidian"))
+          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t("settings.rootPath.options.inFolder"))
+          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t("settings.rootPath.options.nextToNote"))
           .setValue(this.plugin.settings.attachPath.saveAttE)
           .onChange(async (value) => {
             this.plugin.settings.attachPath.saveAttE = value;
@@ -182,8 +156,8 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(t('settings.rootFolder.name'))
-      .setDesc(t('settings.rootFolder.desc'))
+      .setName(t("settings.rootFolder.name"))
+      .setDesc(t("settings.rootFolder.desc"))
       .setClass("root_folder_set")
       .addText((text) =>
         text
@@ -197,8 +171,8 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(t('settings.attachmentPath.name'))
-      .setDesc(t('settings.attachmentPath.desc'))
+      .setName(t("settings.attachmentPath.name"))
+      .setDesc(t("settings.attachmentPath.desc"))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
@@ -211,8 +185,8 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(t('settings.attachmentFormat.name'))
-      .setDesc(t('settings.attachmentFormat.desc'))
+      .setName(t("settings.attachmentFormat.name"))
+      .setDesc(t("settings.attachmentFormat.desc"))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
@@ -225,13 +199,13 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(t('settings.dateFormat.name'))
+      .setName(t("settings.dateFormat.name"))
       .setDesc(
         createFragment((frag) => {
-          frag.appendText(t('settings.dateFormat.desc') + " ");
+          frag.appendText(t("settings.dateFormat.desc") + " ");
           frag.createEl("a", {
             href: "https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format",
-            text: t('settings.dateFormat.linkText'),
+            text: t("settings.dateFormat.linkText"),
           });
         })
       )
@@ -247,8 +221,8 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName(t('settings.autoRename.name'))
-      .setDesc(t('settings.autoRename.desc'))
+      .setName(t("settings.autoRename.name"))
+      .setDesc(t("settings.autoRename.desc"))
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.autoRenameAttachment).onChange(async (value) => {
           debugLog("setting - automatically rename attachment folder:" + value);
@@ -258,10 +232,10 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(t('settings.extensionOverride.name'))
-      .setDesc(t('settings.extensionOverride.desc'))
+      .setName(t("settings.extensionOverride.name"))
+      .setDesc(t("settings.extensionOverride.desc"))
       .addButton((btn) => {
-      btn.setButtonText(t('settings.extensionOverride.addButton')).onClick(async () => {
+      btn.setButtonText(t("settings.extensionOverride.addButton")).onClick(async () => {
         if (this.plugin.settings.attachPath.extensionOverride === undefined) {
           this.plugin.settings.attachPath.extensionOverride = [];
         }
@@ -280,12 +254,12 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
     if (this.plugin.settings.attachPath.extensionOverride !== undefined) {
       this.plugin.settings.attachPath.extensionOverride.forEach((ext) => {
         new Setting(containerEl)
-          .setName(t('settings.extensionOverride.extension.name'))
-          .setDesc(t('settings.extensionOverride.extension.desc'))
+          .setName(t("settings.extensionOverride.extension.name"))
+          .setDesc(t("settings.extensionOverride.extension.desc"))
           .setClass("override_extension_set")
           .addText((text) =>
             text
-              .setPlaceholder(t('settings.extensionOverride.extension.placeholder'))
+              .setPlaceholder(t("settings.extensionOverride.extension.placeholder"))
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
@@ -294,7 +268,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
           .addButton((btn) => {
             btn
               .setIcon("trash")
-              .setTooltip(t('settings.extensionOverride.tooltips.remove'))
+              .setTooltip(t("settings.extensionOverride.tooltips.remove"))
               .onClick(async () => {
                 //get index of extension
                 const index = this.plugin.settings.attachPath.extensionOverride?.indexOf(ext) ?? -1;
@@ -307,7 +281,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
           .addButton((btn) => {
             btn
               .setIcon("pencil")
-              .setTooltip(t('settings.extensionOverride.tooltips.edit'))
+              .setTooltip(t("settings.extensionOverride.tooltips.edit"))
               .onClick(async () => {
                 new OverrideExtensionModal(this.plugin, ext, (result) => {
                   ext = result;
@@ -317,7 +291,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
           .addButton((btn) => {
             btn
               .setIcon("check")
-              .setTooltip(t('settings.extensionOverride.tooltips.save'))
+              .setTooltip(t("settings.extensionOverride.tooltips.save"))
               .onClick(async () => {
                 const wrongIndex = validateExtensionEntry(this.plugin.settings.attachPath, this.plugin.settings);
                 if (wrongIndex.length > 0) {
@@ -331,18 +305,18 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
                 }
                 await this.plugin.saveSettings();
                 this.display();
-                new Notice(t('settings.extensionOverride.saveNotice'));
+                new Notice(t("settings.extensionOverride.saveNotice"));
               });
           });
       });
     }
 
     new Setting(containerEl)
-      .setName(t('settings.excludeExtension.name'))
-      .setDesc(t('settings.excludeExtension.desc'))
+      .setName(t("settings.excludeExtension.name"))
+      .setDesc(t("settings.excludeExtension.desc"))
       .addText((text) =>
         text
-          .setPlaceholder(t('settings.excludeExtension.placeholder'))
+          .setPlaceholder(t("settings.excludeExtension.placeholder"))
           .setValue(this.plugin.settings.excludeExtensionPattern)
           .onChange(async (value) => {
             this.plugin.settings.excludeExtensionPattern = value;
@@ -351,8 +325,8 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName(t('settings.excludedPaths.name'))
-      .setDesc(t('settings.excludedPaths.desc'))
+      .setName(t("settings.excludedPaths.name"))
+      .setDesc(t("settings.excludedPaths.desc"))
       .addTextArea((component: TextAreaComponent) => {
         component.setValue(this.plugin.settings.excludedPaths).onChange(async (value) => {
           this.plugin.settings.excludedPaths = value;
@@ -364,8 +338,8 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName(t('settings.excludeSubpaths.name'))
-      .setDesc(t('settings.excludeSubpaths.desc'))
+      .setName(t("settings.excludeSubpaths.name"))
+      .setDesc(t("settings.excludeSubpaths.desc"))
       .addToggle((toggle) =>
         toggle.setValue(this.plugin.settings.excludeSubpaths).onChange(async (value) => {
           debugLog("setting - excluded subpaths:" + value);

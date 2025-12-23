@@ -31,10 +31,11 @@ export class CreateHandler {
     // ignore if the path of notes file has been excluded.
     if (source.parent && isExcluded(source.parent.path, this.settings)) {
       debugLog("processAttach - not a file or exclude path:", source.path);
-      new Notice(`${source.path} was excluded, skipped`);
+      new Notice(`${source.path} was excluded from attachment management.`);
       return;
     }
 
+    // get override setting for the notes file or extension
     const { setting } = getOverrideSetting(this.settings, source);
     const { extSetting } = getExtensionOverrideSetting(attach.extension, setting);
 
@@ -63,6 +64,7 @@ export class CreateHandler {
           })
           .finally(() => {
             const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
+            // deduplicate the new name if needed
             deduplicateNewName(attachName, attachPathFolder).then(({ name }) => {
               debugLog("processAttach - new path of file:", path.join(attachPath, name));
               this.renameCreateFile(attach, attachPath, name, source);

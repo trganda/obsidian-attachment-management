@@ -1,7 +1,8 @@
-import { moment } from 'obsidian';
+import { getLanguage } from "obsidian";
+import { loadAllTranslations } from "./loader";
 
 // 支持的语言类型
-export type SupportedLanguage = 'en' | 'zh-cn';
+export type SupportedLanguage = "en" | "zh";
 
 // 翻译键值对接口
 export interface TranslationMap {
@@ -9,12 +10,12 @@ export interface TranslationMap {
 }
 
 // 当前语言设置
-let currentLanguage: SupportedLanguage = 'en';
+let currentLanguage: SupportedLanguage = "en";
 
 // 语言包存储
 const translations: Record<SupportedLanguage, TranslationMap> = {
-  'en': {},
-  'zh-cn': {}
+  "en": {},
+  "zh": {}
 };
 
 /**
@@ -49,19 +50,19 @@ export function registerTranslations(language: SupportedLanguage, translationMap
  * @returns 翻译后的文本
  */
 export function t(key: string, params?: Record<string, string | number>): string {
-  const keys = key.split('.');
-  let value: any = translations[currentLanguage];
-  
+  const keys = key.split(".");
+  let value: string | TranslationMap = translations[currentLanguage];
+
   // 遍历嵌套键
   for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
+    if (value && typeof value === "object" && k in value) {
       value = value[k];
     } else {
       // 如果当前语言没有找到，尝试使用英文作为后备
-      if (currentLanguage !== 'en') {
-        let fallbackValue: any = translations['en'];
+      if (currentLanguage !== "en") {
+        let fallbackValue: string | TranslationMap = translations["en"];
         for (const fk of keys) {
-          if (fallbackValue && typeof fallbackValue === 'object' && fk in fallbackValue) {
+          if (fallbackValue && typeof fallbackValue === "object" && fk in fallbackValue) {
             fallbackValue = fallbackValue[fk];
           } else {
             fallbackValue = key; // 最终后备：返回键本身
@@ -77,12 +78,12 @@ export function t(key: string, params?: Record<string, string | number>): string
   }
   
   // 确保返回字符串
-  let result = typeof value === 'string' ? value : key;
+  let result = typeof value === "string" ? value : key;
   
   // 处理参数插值
   if (params) {
     Object.entries(params).forEach(([paramKey, paramValue]) => {
-      result = result.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), String(paramValue));
+      result = result.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(paramValue));
     });
   }
   
@@ -94,15 +95,8 @@ export function t(key: string, params?: Record<string, string | number>): string
  * @returns 检测到的语言代码
  */
 export function detectLanguage(): SupportedLanguage {
-  const locale = moment.locale();
-  
-  // 检测中文
-  if (locale.startsWith('zh')) {
-    return 'zh-cn';
-  }
-  
-  // 默认返回英文
-  return 'en';
+  const language = getLanguage();
+  return (language === "zh" ? "zh" : "en") as SupportedLanguage;
 }
 
 /**
@@ -110,6 +104,7 @@ export function detectLanguage(): SupportedLanguage {
  * @param language 可选的初始语言，如果不提供则自动检测
  */
 export function initI18n(language?: SupportedLanguage): void {
+  loadAllTranslations();
   const initialLanguage = language || detectLanguage();
   setLanguage(initialLanguage);
 }

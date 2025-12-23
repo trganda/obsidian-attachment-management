@@ -1,16 +1,16 @@
-import { registerTranslations, SupportedLanguage } from './index';
-import { en } from './locales/en';
-import { zhCn } from './locales/zh-cn';
+import { registerTranslations, SupportedLanguage } from "./index";
+import { en } from "./locales/en";
+import { zhCn as zh } from "./locales/zh";
 
 /**
  * 加载所有语言包
  */
-export function loadAllTranslations(): void {
+export function loadAllTranslations() {
   // 注册英文语言包
-  registerTranslations('en', en);
+  registerTranslations("en", en);
   
   // 注册中文语言包
-  registerTranslations('zh-cn', zhCn);
+  registerTranslations("zh", zh);
 }
 
 /**
@@ -20,14 +20,14 @@ export function loadAllTranslations(): void {
 export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: string; nativeName: string }> {
   return [
     {
-      code: 'en',
-      name: 'English',
-      nativeName: 'English'
+      code: "en",
+      name: "English",
+      nativeName: "English"
     },
     {
-      code: 'zh-cn',
-      name: 'Chinese (Simplified)',
-      nativeName: '简体中文'
+      code: "zh",
+      name: "Chinese (Simplified)",
+      nativeName: "简体中文"
     }
   ];
 }

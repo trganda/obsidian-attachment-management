@@ -183,14 +183,14 @@ export function validateExtensionEntry(setting: AttachmentPathSettings, plugin: 
 
 export function generateErrorExtensionMessage(type: "md" | "canvas" | "empty" | "duplicate" | "excluded") {
   if (type === "canvas") {
-    new Notice(t('errors.canvasNotSupported'));
+    new Notice(t("errors.canvasNotSupported"));
   } else if (type === "md") {
-    new Notice(t('errors.markdownNotSupported'));
+    new Notice(t("errors.markdownNotSupported"));
   } else if (type === "empty") {
-    new Notice(t('errors.extensionEmpty'));
+    new Notice(t("errors.extensionEmpty"));
   } else if (type === "duplicate") {
-    new Notice(t('errors.duplicateExtension'));
+    new Notice(t("errors.duplicateExtension"));
   } else if (type === "excluded") {
-    new Notice(t('errors.excludedExtension'));
+    new Notice(t("errors.excludedExtension"));
   }
 }

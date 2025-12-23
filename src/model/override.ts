@@ -4,16 +4,10 @@ import {
   SETTINGS_ROOT_OBSFOLDER,
   SETTINGS_ROOT_INFOLDER,
   SETTINGS_ROOT_NEXTTONOTE,
-  SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_DATES,
-  SETTINGS_VARIABLES_NOTEPARENT,
-  SETTINGS_VARIABLES_ORIGINALNAME,
-  SETTINGS_VARIABLES_MD5,
 } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { OverrideExtensionModal } from "./extensionOverride";
-import { debugLog } from "src/lib/log";
+import { debugLog } from "../lib/log";
 import { t } from "../i18n/index";
 
 export class OverrideModal extends Modal {
@@ -45,17 +39,17 @@ export class OverrideModal extends Modal {
     contentEl.empty();
 
     contentEl.createEl("h3", {
-      text: t('override.title'),
+      text: t("override.title"),
     });
 
     new Setting(contentEl)
-      .setName(t('settings.rootPath.name'))
-      .setDesc(t('settings.rootPath.desc'))
+      .setName(t("settings.rootPath.name"))
+      .setDesc(t("settings.rootPath.desc"))
       .addDropdown((text) =>
         text
-          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t('settings.rootPath.options.obsidian'))
-          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t('settings.rootPath.options.inFolder'))
-          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t('settings.rootPath.options.nextToNote'))
+          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t("settings.rootPath.options.obsidian"))
+          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t("settings.rootPath.options.inFolder"))
+          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t("settings.rootPath.options.nextToNote"))
           .setValue(this.setting.saveAttE)
           .onChange(async (value) => {
             this.setting.saveAttE = value;
@@ -64,7 +58,7 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName(t('settings.rootFolder.name'))
+      .setName(t("settings.rootFolder.name"))
       .setClass("override_root_folder_set")
       .addText((text) =>
         text
@@ -77,8 +71,8 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName(t('settings.attachmentPath.name'))
-      .setDesc(t('settings.attachmentPath.desc'))
+      .setName(t("settings.attachmentPath.name"))
+      .setDesc(t("settings.attachmentPath.desc"))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
@@ -90,8 +84,8 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl)
-      .setName(t('settings.attachmentFormat.name'))
-      .setDesc(t('settings.attachmentFormat.desc'))
+      .setName(t("settings.attachmentFormat.name"))
+      .setDesc(t("settings.attachmentFormat.desc"))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
@@ -103,7 +97,7 @@ export class OverrideModal extends Modal {
       );
 
     new Setting(contentEl).addButton((btn) => {
-      btn.setButtonText(t('override.addExtensionOverrides')).onClick(async () => {
+      btn.setButtonText(t("override.addExtensionOverrides")).onClick(async () => {
         if (this.setting.extensionOverride === undefined) {
           this.setting.extensionOverride = [];
         }
@@ -121,12 +115,12 @@ export class OverrideModal extends Modal {
     if (this.setting.extensionOverride !== undefined) {
       this.setting.extensionOverride.forEach((ext) => {
         new Setting(contentEl)
-          .setName(t('override.extension.name'))
-          .setDesc(t('override.extension.desc'))
+          .setName(t("override.extension.name"))
+          .setDesc(t("override.extension.desc"))
           .setClass("override_extension_set")
           .addText((text) =>
             text
-              .setPlaceholder(t('override.extension.placeholder'))
+              .setPlaceholder(t("override.extension.placeholder"))
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
@@ -153,18 +147,18 @@ export class OverrideModal extends Modal {
 
     new Setting(contentEl)
       .addButton((btn) => {
-        btn.setButtonText(t('override.buttons.reset')).onClick(async () => {
+        btn.setButtonText(t("override.buttons.reset")).onClick(async () => {
           this.setting = this.plugin.settings.attachPath;
           delete this.plugin.settings.overridePath[this.file.path];
           await this.plugin.saveSettings();
           await this.plugin.loadSettings();
-          new Notice(t('override.notifications.reset', { path: this.file.path }));
+          new Notice(t("override.notifications.reset", { path: this.file.path }));
           this.close();
         });
       })
       .addButton((btn) =>
         btn
-          .setButtonText(t('override.buttons.submit'))
+          .setButtonText(t("override.buttons.submit"))
           .setCta()
           .onClick(async () => {
             if (this.file instanceof TFile) {
@@ -175,7 +169,7 @@ export class OverrideModal extends Modal {
             this.plugin.settings.overridePath[this.file.path] = this.setting;
             await this.plugin.saveSettings();
             debugLog("override - overriding settings:", this.file.path, this.setting);
-            new Notice(t('override.notifications.overridden', { path: this.file.path }));
+            new Notice(t("override.notifications.overridden", { path: this.file.path }));
             this.close();
           })
       );
