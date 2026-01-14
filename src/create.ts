@@ -9,16 +9,19 @@ import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { md5sum, isImage, isPastedImage } from "./utils";
 import { saveOriginalName } from "./lib/originalStorage";
+import { LinkUpdater } from "./lib/linkUpdater";
 
 export class CreateHandler {
   readonly plugin: Plugin;
   readonly app: App;
   readonly settings: AttachmentManagementPluginSettings;
+  readonly linkUpdater: LinkUpdater;
 
   constructor(plugin: Plugin, settings: AttachmentManagementPluginSettings) {
     this.plugin = plugin;
-    this.app = this.plugin.app;
+    this.app = plugin.app;
     this.settings = settings;
+    this.linkUpdater = new LinkUpdater(plugin.app);
   }
 
   /**
@@ -87,13 +90,22 @@ export class CreateHandler {
 
     const original = attach.basename;
     const name = attach.name;
+    const oldPath = attach.path;
 
     // this api will not update the link in markdown file automatically on `create` event
     // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
     this.app.fileManager
       .renameFile(attach, dst)
-      .then(() => {
+      .then(async () => {
         new Notice(`Renamed ${name} to ${attachName}.`);
+        
+        // 手动更新链接引用，因为fileManager.renameFile在create事件中不会自动更新链接
+        try {
+          await this.linkUpdater.updateLinksForRenamedFile(oldPath, dst);
+          debugLog(`Successfully updated links for created file: ${oldPath} -> ${dst}`);
+        } catch (error) {
+          console.error(`Failed to update links for created file: ${oldPath} -> ${dst}`, error);
+        }
       })
       .finally(() => {
         // save origianl name in setting
