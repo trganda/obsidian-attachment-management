@@ -40,11 +40,6 @@ export class ArrangeHandler {
    * @param {string} oldPath - The old path of the file (optional), used for rename event.
    */
   async rearrangeAttachment(type: RearrangeType, file?: TFile, oldPath?: string) {
-    if (!this.settings.autoRenameAttachment) {
-      debugLog("rearrangeAttachment - autoRenameAttachment not enable");
-      return;
-    }
-
     // only rearrange attachment that linked by markdown or canvas
     const attachments = await this.getAttachmentsInVault(this.settings, type, file, oldPath);
     debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));

@@ -48,7 +48,7 @@ export const en: TranslationMap = {
     },
     autoRename: {
       name: "Automatically rename attachment",
-      desc: "Automatically rename the attachment folder/filename when you rename the folder/filename where the corresponding md/canvas file be placed."
+      desc: "Automatically rename attachment when the corresponding note is renamed. If disabled, you can still use the 'Rearrange linked attachments' command manually."
     },
     extensionOverride: {
       name: "Extension override",

@@ -48,7 +48,7 @@ export const zhCn: TranslationMap = {
     },
     autoRename: {
       name: "自动重命名附件",
-      desc: "当您重命名对应 md/canvas 文件所在的文件夹/文件名时，自动重命名附件文件夹/文件名。"
+      desc: "当重命名笔记时，自动重命名附件。如果禁用，您仍然可以手动使用 '重排已链接的附件' 命令。"
     },
     extensionOverride: {
       name: "扩展名覆盖",
