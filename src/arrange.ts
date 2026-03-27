@@ -11,6 +11,7 @@ import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
 import { containOriginalNameVariable, loadOriginalName } from "./lib/originalStorage";
+import { loadAiName } from "./lib/aiStorage";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -91,25 +92,36 @@ export class ArrangeHandler {
 
         const metadata = getMetadata(obNote, linkFile);
         const md5 = await md5sum(this.app.vault.adapter, linkFile);
-        const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
-        debugLog("rearrangeAttachment - original name:", originalName);
+
+        // Reason: Always check aiNameStorage regardless of aiRename.enabled,
+        // so that previously AI-named files keep their names even after disabling AI.
+        const aiName = loadAiName(this.settings.aiNameStorage ?? [], md5, obNote);
 
         let attachName = "";
-        if (containOriginalNameVariable(setting, linkFile.extension)) {
-          attachName = await metadata.getAttachFileName(
-            setting,
-            this.settings.dateFormat,
-            originalName?.n ?? "",
-            this.app.vault.adapter,
-            path.basename(link, path.extname(link))
-          );
+        if (aiName) {
+          // Use the persisted AI name instead of recalculating from template
+          attachName = aiName;
+          debugLog("rearrangeAttachment - using AI name:", aiName);
         } else {
-          attachName = await metadata.getAttachFileName(
-            setting,
-            this.settings.dateFormat,
-            path.basename(link, path.extname(link)),
-            this.app.vault.adapter
-          );
+          const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
+          debugLog("rearrangeAttachment - original name:", originalName);
+
+          if (containOriginalNameVariable(setting, linkFile.extension)) {
+            attachName = await metadata.getAttachFileName(
+              setting,
+              this.settings.dateFormat,
+              originalName?.n ?? "",
+              this.app.vault.adapter,
+              path.basename(link, path.extname(link))
+            );
+          } else {
+            attachName = await metadata.getAttachFileName(
+              setting,
+              this.settings.dateFormat,
+              path.basename(link, path.extname(link)),
+              this.app.vault.adapter
+            );
+          }
         }
 
         // ignore if the path was equal to the link

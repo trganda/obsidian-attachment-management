@@ -12,6 +12,8 @@ import { OverrideExtensionModal } from "../model/extensionOverride";
 import { validateExtensionEntry, generateErrorExtensionMessage } from "../utils";
 import { debugLog } from "../lib/log";
 import { t } from "../i18n/index";
+import { AiRenameSettings, DEFAULT_AI_RENAME_SETTINGS, testAiConnection } from "../lib/ai";
+import { AiNameRecord } from "../lib/aiStorage";
 
 export enum SETTINGS_TYPES {
   GLOBAL = "GLOBAL",
@@ -75,6 +77,12 @@ export interface AttachmentManagementPluginSettings {
   originalNameStorage: OriginalNameStorage[];
   // Path of notes that override global configuration
   overridePath: Record<string, AttachmentPathSettings>;
+  // Auto-fill alt text with attachment basename after rename
+  autoFillAltText: boolean;
+  // AI rename settings
+  aiRename: AiRenameSettings;
+  // AI-generated name storage (keyed by md5 + sourcePath)
+  aiNameStorage: AiNameRecord[];
 }
 
 export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
@@ -94,6 +102,9 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   originalNameStorage: [],
   overridePath: {},
   disableNotification: false,
+  autoFillAltText: true,
+  aiRename: { ...DEFAULT_AI_RENAME_SETTINGS },
+  aiNameStorage: [],
 };
 
 export class AttachmentManagementSettingTab extends PluginSettingTab {
@@ -348,6 +359,155 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
         })
       );
 
+    new Setting(containerEl)
+      .setName(t("settings.autoFillAltText.name"))
+      .setDesc(t("settings.autoFillAltText.desc"))
+      .addToggle((toggle) =>
+        toggle.setValue(this.plugin.settings.autoFillAltText).onChange(async (value) => {
+          this.plugin.settings.autoFillAltText = value;
+          await this.plugin.saveSettings();
+        })
+      );
+
     this.displaySw(containerEl);
+    this.displayAiRenameSettings(containerEl);
+  }
+
+  /**
+   * Renders the AI Rename settings section.
+   * Toggle controls visibility of detailed config fields.
+   */
+  displayAiRenameSettings(containerEl: HTMLElement): void {
+    const aiSettings = this.plugin.settings.aiRename;
+
+    containerEl.createEl("h3", { text: t("settings.aiRename.title") });
+
+    new Setting(containerEl)
+      .setName(t("settings.aiRename.enabled.name"))
+      .setDesc(t("settings.aiRename.enabled.desc"))
+      .addToggle((toggle) =>
+        toggle.setValue(aiSettings.enabled).onChange(async (value) => {
+          aiSettings.enabled = value;
+          await this.plugin.saveSettings();
+          // Re-render to show/hide detail settings
+          this.display();
+        })
+      );
+
+    // Only show detailed settings when AI rename is enabled
+    if (!aiSettings.enabled) {
+      return;
+    }
+
+    new Setting(containerEl)
+      .setName(t("settings.aiRename.apiEndpoint.name"))
+      .setDesc(t("settings.aiRename.apiEndpoint.desc"))
+      .addText((text) =>
+        text
+          .setPlaceholder(t("settings.aiRename.apiEndpoint.placeholder"))
+          .setValue(aiSettings.apiEndpoint)
+          .onChange(async (value) => {
+            aiSettings.apiEndpoint = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.aiRename.apiKey.name"))
+      .setDesc(t("settings.aiRename.apiKey.desc"))
+      .addText((text) => {
+        text.inputEl.type = "password";
+        text
+          .setPlaceholder("sk-...")
+          .setValue(aiSettings.apiKey)
+          .onChange(async (value) => {
+            aiSettings.apiKey = value;
+            await this.plugin.saveSettings();
+          });
+      })
+      .addButton((btn) => {
+        btn
+          .setButtonText(t("settings.aiRename.testConnection"))
+          .onClick(async () => {
+            // Reason: Lock width before changing text to prevent layout shift
+            const el = btn.buttonEl;
+            el.style.minWidth = `${el.offsetWidth}px`;
+            btn.setDisabled(true);
+            btn.setButtonText(t("settings.aiRename.testing"));
+            try {
+              const result = await testAiConnection(aiSettings);
+              if (result.success) {
+                new Notice(t("settings.aiRename.testSuccess"));
+              } else {
+                new Notice(t("settings.aiRename.testFailed", { error: result.error ?? "" }));
+              }
+            } finally {
+              btn.setDisabled(false);
+              btn.setButtonText(t("settings.aiRename.testConnection"));
+              el.style.minWidth = "";
+            }
+          });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.aiRename.model.name"))
+      .setDesc(t("settings.aiRename.model.desc"))
+      .addText((text) =>
+        text
+          .setPlaceholder(t("settings.aiRename.model.placeholder"))
+          .setValue(aiSettings.model)
+          .onChange(async (value) => {
+            aiSettings.model = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName(t("settings.aiRename.sendImageContent.name"))
+      .setDesc(t("settings.aiRename.sendImageContent.desc"))
+      .addToggle((toggle) =>
+        toggle.setValue(aiSettings.sendImageContent).onChange(async (value) => {
+          aiSettings.sendImageContent = value;
+          await this.plugin.saveSettings();
+          this.display();
+        })
+      );
+
+    if (aiSettings.sendImageContent) {
+      new Setting(containerEl)
+        .setName(t("settings.aiRename.maxImageSize.name"))
+        .setDesc(t("settings.aiRename.maxImageSize.desc"))
+        .addText((text) =>
+          text
+            .setPlaceholder("4")
+            .setValue(String(aiSettings.maxImageSizeMB))
+            .onChange(async (value) => {
+              const num = parseFloat(value);
+              if (!isNaN(num) && num > 0) {
+                aiSettings.maxImageSizeMB = num;
+                await this.plugin.saveSettings();
+              }
+            })
+        );
+    }
+
+    new Setting(containerEl)
+      .setName(t("settings.aiRename.customPrompt.name"))
+      .setDesc(t("settings.aiRename.customPrompt.desc"))
+      .addTextArea((textArea: TextAreaComponent) => {
+        textArea
+          .setPlaceholder(t("settings.aiRename.customPrompt.placeholder"))
+          .setValue(aiSettings.customPrompt)
+          .onChange(async (value) => {
+            aiSettings.customPrompt = value;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    // Privacy notice
+    const privacyDiv = containerEl.createDiv({ cls: "setting-item-description" });
+    privacyDiv.setText(t("settings.aiRename.privacyNotice"));
+    privacyDiv.style.marginTop = "8px";
+    privacyDiv.style.color = "var(--text-muted)";
   }
 }

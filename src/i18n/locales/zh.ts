@@ -78,6 +78,53 @@ export const zhCn: TranslationMap = {
     excludeSubpaths: {
       name: "排除子路径",
       desc: "如果您还想排除上面提供的文件夹路径的所有子文件夹，请打开此选项。"
+    },
+    autoFillAltText: {
+      name: "自动填充图片 alt 文本",
+      desc: "重命名后自动将附件文件名填充到图片链接的 alt 文本中。"
+    },
+    aiRename: {
+      title: "AI 重命名",
+      enabled: {
+        name: "启用 AI 重命名",
+        desc: "使用 AI 根据笔记上下文自动为粘贴的图片生成有意义的文件名。"
+      },
+      apiEndpoint: {
+        name: "API 端点",
+        desc: "完整的 API 端点 URL，支持 Chat Completions（.../chat/completions）和 Responses（.../responses）格式。",
+        placeholder: "https://api.openai.com/v1/chat/completions"
+      },
+      apiKey: {
+        name: "API 密钥",
+        desc: "用于身份验证的 API 密钥。以明文存储在插件数据中，可能随 vault 同步传播。"
+      },
+      model: {
+        name: "模型",
+        desc: "用于生成文件名的模型名称。支持视觉的模型（如 gpt-4o）能为图片生成更准确的名称。",
+        placeholder: "gpt-4o-mini"
+      },
+      timeout: {
+        name: "超时时间（毫秒）",
+        desc: "等待 AI 响应的最大时间，超时后回退到模板命名。"
+      },
+      customPrompt: {
+        name: "自定义提示词",
+        desc: "自定义 AI 的系统提示词。留空则使用默认提示词。",
+        placeholder: "根据上下文生成一个简短的描述性文件名..."
+      },
+      sendImageContent: {
+        name: "发送图片内容",
+        desc: "将粘贴的图片内容发送给 AI 以获得更准确的命名，需要模型支持视觉能力。"
+      },
+      maxImageSize: {
+        name: "最大图片大小（MB）",
+        desc: "超过此大小的图片将回退到纯文本命名。"
+      },
+      testConnection: "测试",
+      testSuccess: "AI 连接测试成功！",
+      testFailed: "AI 连接测试失败：{error}",
+      testing: "...",
+      privacyNotice: "注意：启用后，笔记的部分内容（如开启了「发送图片内容」，图片数据也会）将被发送到配置的 API 端点。"
     }
   },
 
