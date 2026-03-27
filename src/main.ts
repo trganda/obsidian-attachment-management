@@ -18,11 +18,16 @@ import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
+import { DEFAULT_AI_RENAME_SETTINGS } from "./lib/ai";
+import { migrateAiNamePath } from "./lib/aiStorage";
 
 export default class AttachmentManagementPlugin extends Plugin {
   settings: AttachmentManagementPluginSettings;
   createdQueue: TFile[] = [];
   originalObsAttachPath: string;
+  // Reason: Serializes attachment processing to prevent race conditions
+  // during rapid consecutive pastes. Each processAttach completes before the next starts.
+  private processPromise: Promise<void> = Promise.resolve();
 
   async onload() {
     await this.loadSettings();
@@ -84,39 +89,62 @@ export default class AttachmentManagementPlugin extends Plugin {
       );
 
       this.registerEvent(
-        this.app.vault.on("modify", (file: TAbstractFile) => {
+        this.app.vault.on("modify", async (file: TAbstractFile) => {
           debugLog("on modify event - create queue:", this.createdQueue);
-          // ignore if no file in the created queue
+          // Ignore if no file in the created queue
           if (this.createdQueue.length < 1 || !(file instanceof TFile)) {
             return;
           }
 
           debugLog("on modify event - file:", file.path);
-          this.app.vault.adapter.process(file.path, (data) => {
-            // processing one file at one event loop, other files will be processed in the next event loop
-            const f = this.createdQueue.first();
-            if (f != undefined) {
-              this.app.vault.adapter.exists(f.path, true).then((exist) => {
-                if (exist) {
-                  const processor = new CreateHandler(this, this.settings);
-                  const link = this.app.fileManager.generateMarkdownLink(f, file.path);
-                  if (
-                    (file.extension == "md" && data.indexOf(link) != -1) ||
-                    (file.extension == "canvas" && data.indexOf(f.path) != -1)
-                  ) {
-                    // rename the attachment file `f`
-                    processor.processAttach(f, file);
-                    this.createdQueue.remove(f);
-                  }
-                } else {
-                  // remove not exists file
-                  debugLog("on modify event - file does not exist:", f.path);
-                  this.createdQueue.remove(f);
-                }
-              });
-            }
-            return data;
-          });
+
+          // Reason: Eagerly dequeue SYNCHRONOUSLY before any await, so that
+          // overlapping modify events cannot both grab the same queue head.
+          const f = this.createdQueue.first();
+          if (f == undefined) {
+            return;
+          }
+          this.createdQueue.remove(f);
+
+          const exist = await this.app.vault.adapter.exists(f.path, true);
+          if (!exist) {
+            debugLog("on modify event - file does not exist:", f.path);
+            return;
+          }
+
+          // Reason: Only md/canvas files contain attachment links.
+          // Skip other file types to avoid unnecessary I/O on binary files.
+          if (file.extension !== "md" && file.extension !== "canvas") {
+            return;
+          }
+
+          // Reason: adapter.process() provides atomic read semantics, ensuring
+          // we see the just-written content that triggered this modify event.
+          const data = await this.app.vault.adapter.process(file.path, (d) => d);
+          const link = this.app.fileManager.generateMarkdownLink(f, file.path);
+
+          debugLog("on modify event - link generated:", link);
+          debugLog("on modify event - file.extension:", file.extension);
+          debugLog("on modify event - data contains link:", data.indexOf(link) != -1);
+          debugLog("on modify event - data contains f.path:", data.indexOf(f.path) != -1);
+
+          const isLinked =
+            (file.extension == "md" && data.indexOf(link) != -1) ||
+            (file.extension == "canvas" && data.indexOf(f.path) != -1);
+
+          debugLog("on modify event - isLinked:", isLinked);
+
+          if (!isLinked) {
+            return;
+          }
+
+          // Serialize actual file processing to prevent concurrent renames
+          const processor = new CreateHandler(this, this.settings);
+          this.processPromise = this.processPromise.then(
+            () => processor.processAttach(f, file, data, link),
+            // Reason: Catch errors from previous promise to prevent chain breakage
+            () => processor.processAttach(f, file, data, link)
+          );
         })
       );
 
@@ -133,6 +161,14 @@ export default class AttachmentManagementPlugin extends Plugin {
             this.saveSettings();
           }
           debugLog("rename - updated settings:", setting);
+
+          // Reason: AI name migration is internal metadata maintenance — it must
+          // run regardless of autoRenameAttachment, otherwise renaming a note while
+          // the toggle is off would orphan aiNameStorage records.
+          if (file instanceof TFile && this.settings.aiNameStorage?.length > 0) {
+            migrateAiNamePath(this.settings.aiNameStorage, oldPath, file.path);
+            await this.saveSettings();
+          }
 
           if (!this.settings.autoRenameAttachment) {
             debugLog("rename - auto rename not enabled:", this.settings.autoRenameAttachment);
@@ -203,9 +239,26 @@ export default class AttachmentManagementPlugin extends Plugin {
             });
           }
 
+          // Clean up AI name records for deleted notes
+          let needsSave = false;
+          if (file instanceof TFile && this.settings.aiNameStorage?.length > 0) {
+            const before = this.settings.aiNameStorage.length;
+            this.settings.aiNameStorage = this.settings.aiNameStorage.filter(
+              (r) => r.sourcePath !== file.path
+            );
+            if (this.settings.aiNameStorage.length < before) {
+              debugLog("delete - cleaned", before - this.settings.aiNameStorage.length, "AI name records for", file.path);
+              needsSave = true;
+            }
+          }
+
           if (deleteOverrideSetting(this.settings, file)) {
-            await this.saveSettings();
+            needsSave = true;
             new Notice("Removed override setting of " + file.path);
+          }
+
+          if (needsSave) {
+            await this.saveSettings();
           }
         })
       );
@@ -333,7 +386,20 @@ export default class AttachmentManagementPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const savedData = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData);
+    // Reason: Object.assign does shallow merge, so nested objects like aiRename
+    // would lose default values for newly added fields. Deep merge them explicitly.
+    if (savedData?.aiRename) {
+      this.settings.aiRename = Object.assign(
+        {},
+        DEFAULT_AI_RENAME_SETTINGS,
+        savedData.aiRename
+      );
+    }
+    if (!this.settings.aiNameStorage) {
+      this.settings.aiNameStorage = [];
+    }
   }
 
   async saveSettings() {

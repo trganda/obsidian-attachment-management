@@ -78,6 +78,53 @@ export const en: TranslationMap = {
     excludeSubpaths: {
       name: "Exclude subpaths",
       desc: "Turn on this option if you want to also exclude all subfolders of the folder paths provided above."
+    },
+    autoFillAltText: {
+      name: "Auto-fill image alt text",
+      desc: "Automatically fill empty alt text in image links with the attachment basename after rename."
+    },
+    aiRename: {
+      title: "AI Rename",
+      enabled: {
+        name: "Enable AI rename",
+        desc: "Use AI to automatically generate descriptive filenames for pasted images based on note context."
+      },
+      apiEndpoint: {
+        name: "API Endpoint",
+        desc: "Full API endpoint URL. Supports both Chat Completions (.../chat/completions) and Responses (.../responses) formats.",
+        placeholder: "https://api.openai.com/v1/chat/completions"
+      },
+      apiKey: {
+        name: "API Key",
+        desc: "API key for authentication. Stored in plain text within plugin data and may be synced with your vault."
+      },
+      model: {
+        name: "Model",
+        desc: "Model name to use for generating filenames. Vision-capable models (e.g. gpt-4o) produce more accurate names for images.",
+        placeholder: "gpt-4o-mini"
+      },
+      timeout: {
+        name: "Timeout (ms)",
+        desc: "Maximum time to wait for AI response before falling back to template naming."
+      },
+      customPrompt: {
+        name: "Custom Prompt",
+        desc: "Custom system prompt for the AI. Leave empty to use the default prompt.",
+        placeholder: "Generate a short descriptive filename based on the context..."
+      },
+      sendImageContent: {
+        name: "Send image content",
+        desc: "Send pasted image content to AI for more accurate naming. Requires a vision-capable model."
+      },
+      maxImageSize: {
+        name: "Max image size (MB)",
+        desc: "Images larger than this will fall back to text-only naming."
+      },
+      testConnection: "Test",
+      testSuccess: "AI connection test successful!",
+      testFailed: "AI connection test failed: {error}",
+      testing: "...",
+      privacyNotice: "Note: When enabled, parts of your note content (and image data if 'Send image content' is on) will be sent to the configured API endpoint."
     }
   },
 
