@@ -1,4 +1,4 @@
-import { App, Plugin, Notice, TFile, TFolder, normalizePath } from "obsidian";
+import { App, Notice, Plugin, TFile, TFolder, normalizePath } from "obsidian";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
@@ -7,7 +7,7 @@ import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
-import { md5sum, isImage, isPastedImage } from "./utils";
+import { isCanvasFile, isImage, isMarkdownFile, isPastedImage, md5sum } from "./utils";
 import { saveOriginalName } from "./lib/originalStorage";
 
 export class CreateHandler {
@@ -67,7 +67,7 @@ export class CreateHandler {
             // deduplicate the new name if needed
             deduplicateNewName(attachName, attachPathFolder).then(({ name }) => {
               debugLog("processAttach - new path of file:", path.join(attachPath, name));
-              this.renameCreateFile(attach, attachPath, name, source);
+              void this.renameCreateFile(attach, attachPath, name, source);
             });
           });
       });
@@ -81,30 +81,60 @@ export class CreateHandler {
    * @param source - associated active file
    * @returns - none
    */
-  renameCreateFile(attach: TFile, attachPath: string, attachName: string, source: TFile) {
+  async renameCreateFile(attach: TFile, attachPath: string, attachName: string, source: TFile) {
     const dst = normalizePath(path.join(attachPath, attachName));
     debugLog("renameFile - ", attach.path, " to ", dst);
 
     const original = attach.basename;
     const name = attach.name;
+    const oldPath = attach.path;
+    const oldMarkdownLink = this.app.fileManager.generateMarkdownLink(attach, source.path);
 
     // this api will not update the link in markdown file automatically on `create` event
     // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
-    this.app.fileManager
-      .renameFile(attach, dst)
-      .then(() => {
-        new Notice(`Renamed ${name} to ${attachName}.`);
-      })
-      .finally(() => {
-        // save origianl name in setting
-        const { setting } = getOverrideSetting(this.settings, source);
-        md5sum(this.app.vault.adapter, attach).then((md5) => {
-          saveOriginalName(this.settings, setting, attach.extension, {
-            n: original,
-            md5: md5,
-          });
-          this.plugin.saveData(this.settings);
+    try {
+      await this.app.fileManager.renameFile(attach, dst);
+      await this.updateSourceReferenceAfterRename(source, oldPath, oldMarkdownLink, dst);
+      new Notice(`Renamed ${name} to ${attachName}.`);
+    } finally {
+      // save origianl name in setting
+      const { setting } = getOverrideSetting(this.settings, source);
+      md5sum(this.app.vault.adapter, attach).then((md5) => {
+        saveOriginalName(this.settings, setting, attach.extension, {
+          n: original,
+          md5: md5,
         });
+        this.plugin.saveData(this.settings);
       });
+    }
+  }
+
+  async updateSourceReferenceAfterRename(source: TFile, oldPath: string, oldMarkdownLink: string, newPath: string) {
+    const renamedAttach = this.app.vault.getAbstractFileByPath(newPath);
+    if (!(renamedAttach instanceof TFile)) {
+      return;
+    }
+
+    if (isMarkdownFile(source.extension)) {
+      const newMarkdownLink = this.app.fileManager.generateMarkdownLink(renamedAttach, source.path);
+      await this.app.vault.process(source, (data) => {
+        const updated = data.split(oldMarkdownLink).join(newMarkdownLink);
+        if (updated !== data) {
+          debugLog("updateSourceReferenceAfterRename - markdown link updated:", oldMarkdownLink, newMarkdownLink);
+        }
+        return updated;
+      });
+      return;
+    }
+
+    if (isCanvasFile(source.extension)) {
+      await this.app.vault.process(source, (data) => {
+        const updated = data.split(oldPath).join(newPath);
+        if (updated !== data) {
+          debugLog("updateSourceReferenceAfterRename - canvas path updated:", oldPath, newPath);
+        }
+        return updated;
+      });
+    }
   }
 }
