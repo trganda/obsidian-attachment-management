@@ -92,7 +92,9 @@ export default class AttachmentManagementPlugin extends Plugin {
           }
 
           debugLog("on modify event - file:", file.path);
-          this.app.vault.adapter.process(file.path, (data) => {
+          // Use cachedRead instead of adapter.process to avoid writing the file back,
+          // which would cause the editor to refresh and lose cursor position/focus.
+          this.app.vault.cachedRead(file).then((data) => {
             // processing one file at one event loop, other files will be processed in the next event loop
             const f = this.createdQueue.first();
             if (f != undefined) {
@@ -115,7 +117,6 @@ export default class AttachmentManagementPlugin extends Plugin {
                 }
               });
             }
-            return data;
           });
         })
       );

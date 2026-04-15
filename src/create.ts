@@ -1,4 +1,4 @@
-import { App, Plugin, Notice, TFile, TFolder, normalizePath } from "obsidian";
+import { App, Plugin, Notice, TFile, TFolder, normalizePath, MarkdownView } from "obsidian";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
@@ -88,12 +88,22 @@ export class CreateHandler {
     const original = attach.basename;
     const name = attach.name;
 
-    // this api will not update the link in markdown file automatically on `create` event
-    // forgive using to rename, refer: https://github.com/trganda/obsidian-attachment-management/issues/46
-    this.app.fileManager
-      .renameFile(attach, dst)
+    // Generate the old link before renaming, to find and replace it later
+    const oldLink = this.app.fileManager.generateMarkdownLink(attach, source.path);
+
+    // Use vault.rename instead of fileManager.renameFile to avoid automatic link updates
+    // that modify the source file on disk and cause the editor to reload (losing cursor/scroll position).
+    this.app.vault
+      .rename(attach, dst)
       .then(() => {
         new Notice(`Renamed ${name} to ${attachName}.`);
+
+        // Generate the new link after renaming (attach.path is now updated by vault.rename)
+        const newLink = this.app.fileManager.generateMarkdownLink(attach, source.path);
+        debugLog("renameFile - old link:", oldLink, "new link:", newLink);
+
+        // Manually update the link in the source file
+        this.updateLinkInSource(source, oldLink, newLink);
       })
       .finally(() => {
         // save origianl name in setting
@@ -106,5 +116,50 @@ export class CreateHandler {
           this.plugin.saveData(this.settings);
         });
       });
+  }
+
+  /**
+   * Update the old link to new link in the source file.
+   * For markdown files with an active editor, use editor.replaceRange to avoid file reload and cursor jump.
+   * For other cases (canvas, non-active files), fall back to adapter.process.
+   * @param source - the source file containing the link
+   * @param oldLink - the old link text to replace
+   * @param newLink - the new link text
+   */
+  private updateLinkInSource(source: TFile, oldLink: string, newLink: string) {
+    if (oldLink === newLink) {
+      return;
+    }
+
+    // For markdown files, try to use the editor API to avoid reload and cursor jump
+    const mdView = this.app.workspace.getActiveViewOfType(MarkdownView);
+    if (mdView && mdView.file && mdView.file.path === source.path && mdView.editor) {
+      const editor = mdView.editor;
+      const content = editor.getValue();
+      const linkIndex = content.indexOf(oldLink);
+      if (linkIndex !== -1) {
+        // Calculate line/ch positions for replaceRange
+        const before = content.substring(0, linkIndex);
+        const lines = before.split("\n");
+        const fromLine = lines.length - 1;
+        const fromCh = lines[fromLine].length;
+
+        const oldLinkLines = oldLink.split("\n");
+        const toLine = fromLine + oldLinkLines.length - 1;
+        const toCh =
+          oldLinkLines.length > 1 ? oldLinkLines[oldLinkLines.length - 1].length : fromCh + oldLink.length;
+
+        // replaceRange preserves cursor position and does not trigger a file reload
+        editor.replaceRange(newLink, { line: fromLine, ch: fromCh }, { line: toLine, ch: toCh });
+        debugLog("updateLinkInSource - updated via editor API");
+        return;
+      }
+    }
+
+    // Fallback for canvas or non-active files: update via adapter.process
+    debugLog("updateLinkInSource - falling back to adapter.process");
+    this.app.vault.adapter.process(source.path, (data) => {
+      return data.replace(oldLink, newLink);
+    });
   }
 }

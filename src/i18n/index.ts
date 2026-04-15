@@ -1,4 +1,4 @@
-import { getLanguage } from "obsidian";
+import { moment } from "obsidian";
 import { loadAllTranslations } from "./loader";
 
 // 支持的语言类型
@@ -95,8 +95,8 @@ export function t(key: string, params?: Record<string, string | number>): string
  * @returns 检测到的语言代码
  */
 export function detectLanguage(): SupportedLanguage {
-  const language = getLanguage();
-  return (language === "zh" ? "zh" : "en") as SupportedLanguage;
+  const language = moment.locale();
+  return (language.startsWith("zh") ? "zh" : "en") as SupportedLanguage;
 }
 
 /**
