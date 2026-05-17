@@ -1,5 +1,7 @@
 # Obsidian Attachment Management
 
+> **⚠ Breaking change in v0.10.0** — `${originalname}` persistence has been removed. `${originalname}` may now only be used as the **sole value** of *Attachment Format*; combining it with other text or variables is rejected with an inline error. If your previous format was something like `IMG-${originalname}` or `${originalname}-${date}`, update it before reloading the plugin. See the [Original Name](#original-name) section for migration details.
+
 This plugin supports more flexibly setting your attachment location with variables like `${notepath}`, `${notename}`, `${date}` and `${md5}`. An override setting feature can be used to change the global setting of a folder, file or extension.
 
 > Read the [Original Name](#original-name) section before using the `${originalname}` variable.
@@ -35,22 +37,13 @@ If you want to reset the settings of files or folders to the global setting, use
 
 ### Original Name
 
-The `${originalname}` represents the original filename (without extension) of the attachment you added to the vault. Some people want to keep the original filename and/or combine it with other variables like `${date}`. If you want to keep the original filename of an attachment, set the **Attachment Format** with `${originalname}`.
+> **⚠ Breaking change (since v0.10.0):** the `${originalname}` persistence layer (`originalNameStorage` in `data.json`) and the `Clear unused original name storage` command have been **removed**. `${originalname}` can now only be used as the **sole value** of *Attachment Format* — combining it with other text or variables (e.g. `IMG-${originalname}` or `${originalname}-${date}`) is rejected by the settings validator with an inline error.
+>
+> **Migration:** if your previous *Attachment Format* combined `${originalname}` with other parts, change it to either a plain `${originalname}` (to keep the original filename verbatim) or a format that does not reference `${originalname}`. The `originalNameStorage` entries in `data.json` are no longer read and can be deleted manually.
 
-If you want to use `${originalname}` with other variables, like `${originalname}-${date}`. This plugin will persist the original name for future use. Suppose you change the **Attachment Format** from `${originalname}-${date}` to `IMG-${originalname}`, it's work fine.
+The `${originalname}` variable represents the original filename (without extension) of the attachment when it was first added to the vault. To keep that original filename, set the **Attachment Format** to exactly `${originalname}`.
 
-The original name is stored in **data.json**, the configuration file of the plugin. You can find it at `.obsidian/plugins/attachment-management/data.json`.
-
-```json
-  "originalNameStorage": [
-    {
-      "n": "Pasted image 20240113222517",
-      "md5": "9B1546EBA299E1A2A2FC86C664A15073"
-    }
-  ],
-```
-
-As you can see, the original name was saved with a hash, so if you add the same file multiple times, only the last one will be saved. The **originalNameStorage** will not clear automatically, use command `Clear unused original name storage`. This command will keep the entry if the hash of an attachment is matched.
+Because the original name is no longer persisted, on every later create or rearrange event the plugin uses the attachment's current filename as `${originalname}`. Renaming an attachment and then running rearrange will not restore the original name.
 
 ## Roadmap of Features
 
@@ -84,7 +77,7 @@ And you can use the variables below to config:
 - `${originalname}`: The **filename** of the attachment file when it was first created in Obsidian.
 - `${date}`: Date time format by [Moment format options](https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format)
 
-> **Notice** before using `${originalname}`, there is something you should know. This plugin will **not persist** the original name, it only use the filename to generate the attachment name on create event (first time added to obsidian). This means if you have used `${originalname}`, when you rearrange the attachment, there is no new name generated for the attachment, it just used the current name (i.e. change `Attachment format` from `asset-${originalname}` to `asset-1-${originalname}`, and use rearrange command, it's useless).
+> **Notice** before using `${originalname}`: the plugin does **not persist** the original filename. It is captured only at create time (first time the attachment is added to Obsidian). As of v0.10.0 `${originalname}` must be used as the sole value of *Attachment Format* — see the [Original Name](#original-name) section above.
 
 ### Root Path to Save New Attachments
 
