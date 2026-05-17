@@ -3,7 +3,6 @@ import {
   AttachmentManagementPluginSettings,
   AttachmentPathSettings,
   DEFAULT_SETTINGS,
-  OriginalNameStorage,
   SETTINGS_TYPES,
   AttachmentManagementSettingTab,
 } from "./settings/settings";
@@ -13,7 +12,7 @@ import { initI18n, t } from "./i18n/index";
 import { ConfirmModal } from "./model/confirm";
 import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, md5sum } from "./utils";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension } from "./utils";
 import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
@@ -36,7 +35,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
       this.registerEvent(
         this.app.workspace.on("file-menu", async (menu, file) => {
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
+          if (
+            (file.parent && isExcluded(file.parent.path, this.settings)) ||
+            isAttachment(this.app, this.settings, file)
+          ) {
             return;
           }
           menu.addItem((item) => {
@@ -50,7 +52,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                 this.overrideConfiguration(file, fileSetting);
               });
           });
-        })
+        }),
       );
 
       this.registerEvent(
@@ -79,7 +81,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           // add the created file to queue for processing in modify event (obsidian will add link to the file that will trigger modify event)
           this.createdQueue.push(file);
-        })
+        }),
       );
 
       this.registerEvent(
@@ -117,7 +119,7 @@ export default class AttachmentManagementPlugin extends Plugin {
               });
             }
           });
-        })
+        }),
       );
 
       this.registerEvent(
@@ -155,7 +157,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(
               RearrangeType.FILE,
               file,
-              oldPath
+              oldPath,
             );
 
             const oldMetadata = getMetadata(oldPath);
@@ -175,14 +177,17 @@ export default class AttachmentManagementPlugin extends Plugin {
             // ignore rename event of folder
             return;
           }
-        })
+        }),
       );
 
       this.registerEvent(
         this.app.vault.on("delete", async (file: TAbstractFile) => {
           debugLog("on delete event - file path:", file.path);
 
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
+          if (
+            (file.parent && isExcluded(file.parent.path, this.settings)) ||
+            isAttachment(this.app, this.settings, file)
+          ) {
             debugLog("delete - exclude path or the file is an attachment:", file.path);
             return;
           }
@@ -207,7 +212,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             await this.saveSettings();
             new Notice("Removed override setting of " + file.path);
           }
-        })
+        }),
       );
 
       // This adds a settings tab so the user can configure various aspects of the plugin

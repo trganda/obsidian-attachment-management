@@ -108,7 +108,7 @@ export function matchExtension(extension: string, pattern: string): boolean {
 export function isAttachment(
   app: App,
   settings: AttachmentManagementPluginSettings,
-  filePath: string | TAbstractFile
+  filePath: string | TAbstractFile,
 ): boolean {
   let file = null;
   if (filePath instanceof TAbstractFile) {

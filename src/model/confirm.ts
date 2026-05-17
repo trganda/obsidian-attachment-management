@@ -54,7 +54,7 @@ export class ConfirmModal extends Modal {
               .then(() => new Notice(t("notifications.arrangeCompleted")))
               .catch((err) => new Notice(`${t("notices.error.unknownError")}: ${err?.message ?? err}`))
               .finally(() => this.close());
-          })
+          }),
       );
   }
 
