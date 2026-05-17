@@ -35,11 +35,11 @@ export const en: TranslationMap = {
     },
     attachmentPath: {
       name: "Attachment path",
-      desc: "Path of attachment in root folder, available variables {{notepath}}, {{notename}}, {{parent}}"
+      desc: "Path of attachment in root folder, available variables ${notepath}, ${notename}, ${parent}"
     },
     attachmentFormat: {
       name: "Attachment format",
-      desc: "Define how to name the attachment file, available variables {{dates}}, {{notename}}, {{md5}} and {{originalname}}."
+      desc: "Define how to name the attachment file, available variables ${dates}, ${notename}, ${md5} and ${originalname}."
     },
     dateFormat: {
       name: "Date format",

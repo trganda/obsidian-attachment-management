@@ -35,11 +35,11 @@ export const zhCn: TranslationMap = {
     },
     attachmentPath: {
       name: "附件路径",
-      desc: "附件在根文件夹中的路径，可用变量 {{notepath}}、{{notename}}、{{parent}}"
+      desc: "附件在根文件夹中的路径，可用变量 ${notepath}、${notename}、${parent}"
     },
     attachmentFormat: {
       name: "附件格式",
-      desc: "定义如何命名附件文件，可用变量 {{dates}}、{{notename}}、{{md5}} 和 {{originalname}}。"
+      desc: "定义如何命名附件文件，可用变量 ${dates}、${notename}、${md5} 和 ${originalname}。"
     },
     dateFormat: {
       name: "日期格式",
@@ -52,7 +52,7 @@ export const zhCn: TranslationMap = {
     },
     extensionOverride: {
       name: "扩展名覆盖",
-      desc: "如果您想要对特定扩展名的附件进行自动重命名（例如 pdf 或 zip），请使用扩展名覆盖。",
+      desc: "如果您想要对特定扩展名的附件进行自动重命名（例如 pdf 或 zip),请使用扩展名覆盖。",
       addButton: "添加扩展名覆盖",
       extension: {
         name: "扩展名",
