@@ -1,5 +1,5 @@
 import { DataAdapter, TFile, normalizePath } from "obsidian";
-import { AttachmentPathSettings } from "./settings";
+import { AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings";
 import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_MD5,
@@ -75,7 +75,7 @@ class Metadata {
     const dateTime = window.moment().format(dateFormat);
 
     let md5 = "";
-    let attachFormat = "";
+    let attachFormat = DEFAULT_SETTINGS.attachPath.attachFormat;
     if (this.attachmentFile !== undefined) {
       md5 = await md5sum(adapter, this.attachmentFile);
       const { extSetting } = getExtensionOverrideSetting(this.attachmentFile.extension, setting);
@@ -86,18 +86,14 @@ class Metadata {
       }
     }
 
-    if (attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME)) {
+    if (attachFormat.trim() === SETTINGS_VARIABLES_ORIGINALNAME) {
+      return originalName;
       // we have no persistence of original name,  return current linking name
-      if (originalName === "" && linkName != undefined) {
-        return linkName;
-      } else {
-        return attachFormat
-          .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
-          .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-          .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName)
-          .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
-      }
+      // if (originalName === "" && linkName != undefined) {
+      //   return linkName;
+      // }
     }
+
     return attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
       .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)

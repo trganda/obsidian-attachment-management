@@ -10,7 +10,7 @@ import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
-import { containOriginalNameVariable, loadOriginalName } from "./lib/originalStorage";
+import { isOriginalNameVariable } from "./lib/originalStorage";
 
 const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -91,18 +91,19 @@ export class ArrangeHandler {
 
         const metadata = getMetadata(obNote, linkFile);
         const md5 = await md5sum(this.app.vault.adapter, linkFile);
-        const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
-        debugLog("rearrangeAttachment - original name:", originalName);
+        // const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
+        // debugLog("rearrangeAttachment - original name:", originalName);
 
         let attachName = "";
-        if (containOriginalNameVariable(setting, linkFile.extension)) {
-          attachName = await metadata.getAttachFileName(
-            setting,
-            this.settings.dateFormat,
-            originalName?.n ?? "",
-            this.app.vault.adapter,
-            path.basename(link, path.extname(link))
-          );
+        if (isOriginalNameVariable(setting, linkFile.extension)) {
+          continue
+          // attachName = await metadata.getAttachFileName(
+          //   setting,
+          //   this.settings.dateFormat,
+          //   originalName?.n ?? "",
+          //   this.app.vault.adapter,
+          //   path.basename(link, path.extname(link))
+          // );
         } else {
           attachName = await metadata.getAttachFileName(
             setting,
@@ -179,7 +180,7 @@ export class ArrangeHandler {
       if (file) {
         if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
           allFiles = [];
-          new Notice(`${file.path} was excluded, skipped`);
+          // new Notice(`${file.path} was excluded, skipped`);
         } else {
           debugLog("getAttachmentsInVaultByLinks - active:", file.path);
           allFiles = [file];
@@ -192,7 +193,7 @@ export class ArrangeHandler {
     } else if (type == RearrangeType.FILE && file != undefined) {
       if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
         allFiles = [];
-        new Notice(`${file.path} was excluded, skipped`);
+        // new Notice(`${file.path} was excluded, skipped`);
       } else {
         debugLog("getAttachmentsInVaultByLinks - file:", file.path);
         allFiles = [file];

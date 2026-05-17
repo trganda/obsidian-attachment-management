@@ -302,35 +302,35 @@ export default class AttachmentManagementPlugin extends Plugin {
       },
     });
 
-    this.addCommand({
-      id: "attachment-management-clear-unused-originalname-storage",
-      name: t("commands.clearUnusedStorage"),
-      callback: async () => {
-        const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
-          this.settings,
-          RearrangeType.LINKS
-        );
-        const storages: OriginalNameStorage[] = [];
-        for (const attachs of Object.values(attachments)) {
-          for (const attach of attachs) {
-            const link = decodeURI(attach);
-            const linkFile = this.app.vault.getAbstractFileByPath(link);
-            if (linkFile !== null && linkFile instanceof TFile) {
-              md5sum(this.app.vault.adapter, linkFile).then((md5) => {
-                const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
-                if (ret) {
-                  storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
-                  storages.push(ret);
-                }
-              });
-            }
-          }
-        }
-        debugLog("clearUnusedOriginalNameStorage - storage:", storages);
-        this.settings.originalNameStorage = storages;
-        this.saveSettings();
-      },
-    });
+    // this.addCommand({
+    //   id: "attachment-management-clear-unused-originalname-storage",
+    //   name: t("commands.clearUnusedStorage"),
+    //   callback: async () => {
+    //     const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
+    //       this.settings,
+    //       RearrangeType.LINKS
+    //     );
+    //     const storages: OriginalNameStorage[] = [];
+    //     for (const attachs of Object.values(attachments)) {
+    //       for (const attach of attachs) {
+    //         const link = decodeURI(attach);
+    //         const linkFile = this.app.vault.getAbstractFileByPath(link);
+    //         if (linkFile !== null && linkFile instanceof TFile) {
+    //           md5sum(this.app.vault.adapter, linkFile).then((md5) => {
+    //             const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
+    //             if (ret) {
+    //               storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
+    //               storages.push(ret);
+    //             }
+    //           });
+    //         }
+    //       }
+    //     }
+    //     debugLog("clearUnusedOriginalNameStorage - storage:", storages);
+    //     this.settings.originalNameStorage = storages;
+    //     this.saveSettings();
+    //   },
+    // });
   }
 
   async loadSettings() {

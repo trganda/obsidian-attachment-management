@@ -39,7 +39,7 @@ export const en: TranslationMap = {
     },
     attachmentFormat: {
       name: "Attachment format",
-      desc: "Define how to name the attachment file, available variables ${dates}, ${notename}, ${md5} and ${originalname}."
+      desc: "Define how to name the attachment file, available variables ${date}, ${notename}, ${md5} and ${originalname}."
     },
     dateFormat: {
       name: "Date format",
@@ -184,6 +184,10 @@ export const en: TranslationMap = {
     markdownNotSupported: "Markdown is not supported as an extension override.",
     extensionEmpty: "Extension override cannot be empty.",
     duplicateExtension: "Duplicate extension override.",
-    excludedExtension: "Extension override cannot be an excluded extension."
+    excludedExtension: "Extension override cannot be an excluded extension.",
+    attachFormatEmpty: "Attachment format cannot be empty.",
+    attachFormatOriginalnameMixed: "${originalname} must be used alone; it cannot be combined with other text or variables.",
+    attachFormatIllegalChar: "Attachment format contains illegal filename character: {char}",
+    attachFormatUnknownVariable: "Unknown variable in attachment format: {name}"
   }
 };

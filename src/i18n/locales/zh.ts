@@ -39,7 +39,7 @@ export const zhCn: TranslationMap = {
     },
     attachmentFormat: {
       name: "附件格式",
-      desc: "定义如何命名附件文件，可用变量 ${dates}、${notename}、${md5} 和 ${originalname}。"
+      desc: "定义如何命名附件文件，可用变量 ${date}、${notename}、${md5} 和 ${originalname}。"
     },
     dateFormat: {
       name: "日期格式",
@@ -189,6 +189,10 @@ export const zhCn: TranslationMap = {
     markdownNotSupported: "不支持将 Markdown 作为扩展覆盖。",
     extensionEmpty: "扩展覆盖不能为空。",
     duplicateExtension: "重复的扩展覆盖。",
-    excludedExtension: "扩展覆盖不能是被排除的扩展。"
+    excludedExtension: "扩展覆盖不能是被排除的扩展。",
+    attachFormatEmpty: "附件格式不能为空。",
+    attachFormatOriginalnameMixed: "${originalname} 必须单独使用，不能与其他文本或变量组合。",
+    attachFormatIllegalChar: "附件格式包含非法文件名字符：{char}",
+    attachFormatUnknownVariable: "附件格式中存在未知变量：{name}"
   }
 };

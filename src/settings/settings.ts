@@ -9,7 +9,12 @@ import {
   SETTINGS_ROOT_NEXTTONOTE,
 } from "../lib/constant";
 import { OverrideExtensionModal } from "../model/extensionOverride";
-import { validateExtensionEntry, generateErrorExtensionMessage } from "../utils";
+import {
+  validateExtensionEntry,
+  generateErrorExtensionMessage,
+  validateAttachFormat,
+  attachFormatErrorMessage,
+} from "../utils";
 import { debugLog } from "../lib/log";
 import { t } from "../i18n/index";
 
@@ -72,7 +77,7 @@ export interface AttachmentManagementPluginSettings {
   // Exclude subpath also
   excludeSubpaths: boolean;
   // Presistence storage of original name
-  originalNameStorage: OriginalNameStorage[];
+  // originalNameStorage: OriginalNameStorage[];
   // Path of notes that override global configuration
   overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -91,7 +96,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   excludedPaths: "",
   excludePathsArray: [],
   excludeSubpaths: false,
-  originalNameStorage: [],
+  // originalNameStorage: [],
   overridePath: {},
   disableNotification: false,
 };
@@ -187,16 +192,40 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName(t("settings.attachmentFormat.name"))
       .setDesc(t("settings.attachmentFormat.desc"))
-      .addText((text) =>
+      .addText((text) => {
+        const controlEl = text.inputEl.parentElement!;
+        const errEl = controlEl.createDiv({ cls: "setting-item-description" });
+        controlEl.insertBefore(errEl, text.inputEl);
+        errEl.style.color = "var(--color-red)";
+        errEl.style.marginRight = "8px";
+        errEl.style.textAlign = "right";
+        errEl.hide();
+
+        const applyValidation = (value: string): boolean => {
+          const err = validateAttachFormat(value);
+          if (err) {
+            text.inputEl.style.border = "1px solid var(--color-red)";
+            errEl.setText(attachFormatErrorMessage(err));
+            errEl.show();
+            return false;
+          }
+          text.inputEl.style.border = "";
+          errEl.hide();
+          return true;
+        };
+
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.plugin.settings.attachPath.attachFormat)
           .onChange(async (value: string) => {
             debugLog("setting - attachment format:" + value);
+            if (!applyValidation(value)) return;
             this.plugin.settings.attachPath.attachFormat = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+
+        applyValidation(this.plugin.settings.attachPath.attachFormat);
+      });
 
     new Setting(containerEl)
       .setName(t("settings.dateFormat.name"))
