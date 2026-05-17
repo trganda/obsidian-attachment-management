@@ -1,10 +1,6 @@
 import { Modal, TFile, TAbstractFile, Setting, TFolder, Notice } from "obsidian";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, SETTINGS_TYPES } from "../settings/settings";
-import {
-  SETTINGS_ROOT_OBSFOLDER,
-  SETTINGS_ROOT_INFOLDER,
-  SETTINGS_ROOT_NEXTTONOTE,
-} from "../lib/constant";
+import { SETTINGS_ROOT_OBSFOLDER, SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { OverrideExtensionModal } from "./extensionOverride";
 import { debugLog } from "../lib/log";
@@ -54,7 +50,7 @@ export class OverrideModal extends Modal {
           .onChange(async (value) => {
             this.setting.saveAttE = value;
             this.displaySw(contentEl);
-          })
+          }),
       );
 
     new Setting(contentEl)
@@ -67,7 +63,7 @@ export class OverrideModal extends Modal {
           .onChange(async (value) => {
             debugLog("override - attachment root:" + value);
             this.setting.attachmentRoot = value;
-          })
+          }),
       );
 
     new Setting(contentEl)
@@ -80,7 +76,7 @@ export class OverrideModal extends Modal {
           .onChange(async (value) => {
             debugLog("override - attachment path:" + value);
             this.setting.attachmentPath = value;
-          })
+          }),
       );
 
     new Setting(contentEl)
@@ -93,7 +89,7 @@ export class OverrideModal extends Modal {
           .onChange(async (value: string) => {
             debugLog("override - attachment format:" + value);
             this.setting.attachFormat = value;
-          })
+          }),
       );
 
     new Setting(contentEl).addButton((btn) => {
@@ -124,7 +120,7 @@ export class OverrideModal extends Modal {
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
-              })
+              }),
           )
           .addButton((btn) => {
             btn.setIcon("trash").onClick(async () => {
@@ -171,7 +167,7 @@ export class OverrideModal extends Modal {
             debugLog("override - overriding settings:", this.file.path, this.setting);
             new Notice(t("override.notifications.overridden", { path: this.file.path }));
             this.close();
-          })
+          }),
       );
 
     this.displaySw(contentEl);

@@ -9,7 +9,12 @@ import {
   SETTINGS_ROOT_NEXTTONOTE,
 } from "../lib/constant";
 import { OverrideExtensionModal } from "../model/extensionOverride";
-import { validateExtensionEntry, generateErrorExtensionMessage } from "../utils";
+import {
+  validateExtensionEntry,
+  generateErrorExtensionMessage,
+  validateAttachFormat,
+  attachFormatErrorMessage,
+} from "../utils";
 import { debugLog } from "../lib/log";
 import { t } from "../i18n/index";
 
@@ -72,7 +77,7 @@ export interface AttachmentManagementPluginSettings {
   // Exclude subpath also
   excludeSubpaths: boolean;
   // Presistence storage of original name
-  originalNameStorage: OriginalNameStorage[];
+  // originalNameStorage: OriginalNameStorage[];
   // Path of notes that override global configuration
   overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -91,7 +96,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   excludedPaths: "",
   excludePathsArray: [],
   excludeSubpaths: false,
-  originalNameStorage: [],
+  // originalNameStorage: [],
   overridePath: {},
   disableNotification: false,
 };
@@ -152,7 +157,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
             this.plugin.settings.attachPath.saveAttE = value;
             this.displaySw(containerEl);
             await this.plugin.saveSettings();
-          })
+          }),
       );
 
     new Setting(containerEl)
@@ -167,7 +172,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
             debugLog("setting - attachment root:" + value);
             this.plugin.settings.attachPath.attachmentRoot = value;
             await this.plugin.saveSettings();
-          })
+          }),
       );
 
     new Setting(containerEl)
@@ -181,22 +186,46 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
             debugLog("setting - attachment path:" + value);
             this.plugin.settings.attachPath.attachmentPath = value;
             await this.plugin.saveSettings();
-          })
+          }),
       );
 
     new Setting(containerEl)
       .setName(t("settings.attachmentFormat.name"))
       .setDesc(t("settings.attachmentFormat.desc"))
-      .addText((text) =>
+      .addText((text) => {
+        const controlEl = text.inputEl.parentElement!;
+        const errEl = controlEl.createDiv({ cls: "setting-item-description" });
+        controlEl.insertBefore(errEl, text.inputEl);
+        errEl.style.color = "var(--color-red)";
+        errEl.style.marginRight = "8px";
+        errEl.style.textAlign = "right";
+        errEl.hide();
+
+        const applyValidation = (value: string): boolean => {
+          const err = validateAttachFormat(value);
+          if (err) {
+            text.inputEl.style.border = "1px solid var(--color-red)";
+            errEl.setText(attachFormatErrorMessage(err));
+            errEl.show();
+            return false;
+          }
+          text.inputEl.style.border = "";
+          errEl.hide();
+          return true;
+        };
+
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.plugin.settings.attachPath.attachFormat)
           .onChange(async (value: string) => {
             debugLog("setting - attachment format:" + value);
+            if (!applyValidation(value)) return;
             this.plugin.settings.attachPath.attachFormat = value;
             await this.plugin.saveSettings();
-          })
-      );
+          });
+
+        applyValidation(this.plugin.settings.attachPath.attachFormat);
+      });
 
     new Setting(containerEl)
       .setName(t("settings.dateFormat.name"))
@@ -207,7 +236,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
             href: "https://momentjscom.readthedocs.io/en/latest/moment/04-displaying/01-format",
             text: t("settings.dateFormat.linkText"),
           });
-        })
+        }),
       )
       .addMomentFormat((component: MomentFormatComponent) => {
         component
@@ -228,28 +257,28 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
           debugLog("setting - automatically rename attachment folder:" + value);
           this.plugin.settings.autoRenameAttachment = value;
           await this.plugin.saveSettings();
-        })
+        }),
       );
 
     new Setting(containerEl)
       .setName(t("settings.extensionOverride.name"))
       .setDesc(t("settings.extensionOverride.desc"))
       .addButton((btn) => {
-      btn.setButtonText(t("settings.extensionOverride.addButton")).onClick(async () => {
-        if (this.plugin.settings.attachPath.extensionOverride === undefined) {
-          this.plugin.settings.attachPath.extensionOverride = [];
-        }
-        this.plugin.settings.attachPath.extensionOverride.push({
-          extension: "",
-          attachmentRoot: this.plugin.settings.attachPath.attachmentRoot,
-          saveAttE: this.plugin.settings.attachPath.saveAttE,
-          attachmentPath: this.plugin.settings.attachPath.attachmentPath,
-          attachFormat: this.plugin.settings.attachPath.attachFormat,
+        btn.setButtonText(t("settings.extensionOverride.addButton")).onClick(async () => {
+          if (this.plugin.settings.attachPath.extensionOverride === undefined) {
+            this.plugin.settings.attachPath.extensionOverride = [];
+          }
+          this.plugin.settings.attachPath.extensionOverride.push({
+            extension: "",
+            attachmentRoot: this.plugin.settings.attachPath.attachmentRoot,
+            saveAttE: this.plugin.settings.attachPath.saveAttE,
+            attachmentPath: this.plugin.settings.attachPath.attachmentPath,
+            attachFormat: this.plugin.settings.attachPath.attachFormat,
+          });
+          await this.plugin.saveSettings();
+          this.display();
         });
-        await this.plugin.saveSettings();
-        this.display();
       });
-    });
 
     if (this.plugin.settings.attachPath.extensionOverride !== undefined) {
       this.plugin.settings.attachPath.extensionOverride.forEach((ext) => {
@@ -263,7 +292,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
               .setValue(ext.extension)
               .onChange(async (value) => {
                 ext.extension = value;
-              })
+              }),
           )
           .addButton((btn) => {
             btn
@@ -321,7 +350,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
           .onChange(async (value) => {
             this.plugin.settings.excludeExtensionPattern = value;
             await this.plugin.saveSettings();
-          })
+          }),
       );
 
     new Setting(containerEl)
@@ -345,7 +374,7 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
           debugLog("setting - excluded subpaths:" + value);
           this.plugin.settings.excludeSubpaths = value;
           await this.plugin.saveSettings();
-        })
+        }),
       );
 
     this.displaySw(containerEl);

@@ -8,7 +8,7 @@ import { zhCn as zh } from "./locales/zh";
 export function loadAllTranslations() {
   // 注册英文语言包
   registerTranslations("en", en);
-  
+
   // 注册中文语言包
   registerTranslations("zh", zh);
 }
@@ -22,13 +22,13 @@ export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: 
     {
       code: "en",
       name: "English",
-      nativeName: "English"
+      nativeName: "English",
     },
     {
       code: "zh",
       name: "Chinese (Simplified)",
-      nativeName: "简体中文"
-    }
+      nativeName: "简体中文",
+    },
   ];
 }
 
@@ -39,6 +39,6 @@ export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: 
  */
 export function getLanguageName(code: SupportedLanguage): string {
   const languages = getSupportedLanguages();
-  const language = languages.find(lang => lang.code === code);
+  const language = languages.find((lang) => lang.code === code);
   return language ? language.nativeName : code;
 }
