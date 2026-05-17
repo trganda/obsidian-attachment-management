@@ -7,7 +7,7 @@ import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
-import { md5sum, isImage, isPastedImage } from "./utils";
+import { isImage, isPastedImage } from "./utils";
 // import { saveOriginalName } from "./lib/originalStorage";
 
 export class CreateHandler {
@@ -85,7 +85,6 @@ export class CreateHandler {
     const dst = normalizePath(path.join(attachPath, attachName));
     debugLog("renameFile - ", attach.path, " to ", dst);
 
-    const original = attach.basename;
     const name = attach.name;
 
     // Generate the old link before renaming, to find and replace it later
@@ -149,8 +148,7 @@ export class CreateHandler {
 
         const oldLinkLines = oldLink.split("\n");
         const toLine = fromLine + oldLinkLines.length - 1;
-        const toCh =
-          oldLinkLines.length > 1 ? oldLinkLines[oldLinkLines.length - 1].length : fromCh + oldLink.length;
+        const toCh = oldLinkLines.length > 1 ? oldLinkLines[oldLinkLines.length - 1].length : fromCh + oldLink.length;
 
         // replaceRange preserves cursor position and does not trigger a file reload
         editor.replaceRange(newLink, { line: fromLine, ch: fromCh }, { line: toLine, ch: toCh });
