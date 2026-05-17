@@ -20,9 +20,8 @@ import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
 
 export default class AttachmentManagementPlugin extends Plugin {
-  settings: AttachmentManagementPluginSettings;
+  settings!: AttachmentManagementPluginSettings;
   createdQueue: TFile[] = [];
-  originalObsAttachPath: string;
 
   async onload() {
     await this.loadSettings();
