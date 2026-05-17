@@ -1,6 +1,6 @@
 # Obsidian Attachment Management
 
-> **⚠ Breaking change in v0.10.0** — `${originalname}` persistence has been removed. `${originalname}` may now only be used as the **sole value** of *Attachment Format*; combining it with other text or variables is rejected with an inline error. If your previous format was something like `IMG-${originalname}` or `${originalname}-${date}`, update it before reloading the plugin. See the [Original Name](#original-name) section for migration details.
+> **⚠ Breaking change in v0.11.0** — `${originalname}` persistence has been removed. `${originalname}` may now only be used as the **sole value** of *Attachment Format*; combining it with other text or variables is rejected with an inline error. If your previous format was something like `IMG-${originalname}` or `${originalname}-${date}`, update it before reloading the plugin. See the [Original Name](#original-name) section for migration details.
 
 This plugin supports more flexibly setting your attachment location with variables like `${notepath}`, `${notename}`, `${date}` and `${md5}`. An override setting feature can be used to change the global setting of a folder, file or extension.
 
