@@ -138,7 +138,7 @@ export const zhCn: TranslationMap = {
   // 确认对话框
   confirm: {
     title: "提示",
-    message: "此操作不可逆且为实验性功能，请先备份您的库！",
+    message: "此操作不可逆且为实验性功能，请先备份您的库！确定要继续吗？",
     continue: "继续",
     deleteOverride: "您确定要删除此覆盖设置吗？",
     deleteExtensionOverride: "您确定要删除此扩展名覆盖吗？"

@@ -138,8 +138,8 @@ export const en: TranslationMap = {
   // 确认对话框
   confirm: {
     title: "Tips",
-    message: "This operation is irreversible and experimental. Please backup your vault first!",
-    continue: "Continue",
+    message: "This operation is irreversible and experimental. Please backup your vault first! Are you sure you want to continue?",
+    continue: "Yes",
     deleteOverride: "Are you sure you want to delete this override setting?",
     deleteExtensionOverride: "Are you sure you want to delete this extension override?"
   },
