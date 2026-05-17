@@ -37,7 +37,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
       this.registerEvent(
         this.app.workspace.on("file-menu", async (menu, file) => {
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
             return;
           }
           menu.addItem((item) => {
@@ -148,7 +148,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             }
 
             // ignore attachment
-            if (isAttachment(this.settings, file)) {
+            if (isAttachment(this.app, this.settings, file)) {
               debugLog("rename - not processing rename on attachment:", file.path);
               return;
             }
@@ -183,7 +183,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         this.app.vault.on("delete", async (file: TAbstractFile) => {
           debugLog("on delete event - file path:", file.path);
 
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
             debugLog("delete - exclude path or the file is an attachment:", file.path);
             return;
           }
@@ -257,7 +257,7 @@ export default class AttachmentManagementPlugin extends Plugin {
         const file = getActiveFile(this.app);
 
         if (file) {
-          if (isAttachment(this.settings, file)) {
+          if (isAttachment(this.app, this.settings, file)) {
             return true;
           }
 
@@ -282,7 +282,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
-          if (isAttachment(this.settings, file)) {
+          if (isAttachment(this.app, this.settings, file)) {
             return true;
           }
 

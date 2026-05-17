@@ -1,4 +1,4 @@
-import { DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
+import { App, DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { t } from "./i18n/index";
 import {
@@ -105,12 +105,16 @@ export function matchExtension(extension: string, pattern: string): boolean {
  * @param filePath file path
  * @returns true if the file is an attachment, false otherwise
  */
-export function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string | TAbstractFile): boolean {
+export function isAttachment(
+  app: App,
+  settings: AttachmentManagementPluginSettings,
+  filePath: string | TAbstractFile
+): boolean {
   let file = null;
   if (filePath instanceof TAbstractFile) {
     file = filePath;
   } else {
-    file = this.app.vault.getAbstractFileByPath(filePath);
+    file = app.vault.getAbstractFileByPath(filePath);
   }
 
   if (file === null || !(file instanceof TFile)) {

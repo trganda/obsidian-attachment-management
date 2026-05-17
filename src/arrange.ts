@@ -50,7 +50,7 @@ export class ArrangeHandler {
     debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
     for (const obNote of Object.keys(attachments)) {
       const innerFile = this.app.vault.getAbstractFileByPath(obNote);
-      if (!(innerFile instanceof TFile) || isAttachment(this.settings, innerFile)) {
+      if (!(innerFile instanceof TFile) || isAttachment(this.app, this.settings, innerFile)) {
         debugLog(`rearrangeAttachment - ${obNote} not exists or is attachment, skipped`);
         continue;
       }
@@ -178,7 +178,7 @@ export class ArrangeHandler {
     } else if (type == RearrangeType.ACTIVE) {
       const file = getActiveFile(this.app);
       if (file) {
-        if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+        if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
           allFiles = [];
           // new Notice(`${file.path} was excluded, skipped`);
         } else {
@@ -191,7 +191,7 @@ export class ArrangeHandler {
         }
       }
     } else if (type == RearrangeType.FILE && file != undefined) {
-      if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+      if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
         allFiles = [];
         // new Notice(`${file.path} was excluded, skipped`);
       } else {
@@ -217,7 +217,7 @@ export class ArrangeHandler {
         const attachmentsSet: Set<string> = new Set();
         if (links) {
           for (const [filePath] of Object.entries(links)) {
-            if (isAttachment(settings, filePath)) {
+            if (isAttachment(this.app, settings, filePath)) {
               this.addToSet(attachmentsSet, filePath);
             }
           }
@@ -249,7 +249,7 @@ export class ArrangeHandler {
               if (formatMatch && formatMatch[1]) {
                 const fileName = formatMatch[1];
                 const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-                if (file && isAttachment(settings, file.path)) {
+                if (file && isAttachment(this.app, settings, file.path)) {
                   this.addToSet(attachmentsSet, file.path);
                 }
               }
@@ -259,7 +259,7 @@ export class ArrangeHandler {
         // Any Additional Link
         const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app);
         for (const linkMatch of linkMatches) {
-          if (isAttachment(settings, linkMatch.linkText)) {
+          if (isAttachment(this.app, settings, linkMatch.linkText)) {
             this.addToSet(attachmentsSet, linkMatch.linkText);
           }
         }
@@ -281,13 +281,13 @@ export class ArrangeHandler {
           for (const node of canvasData.nodes) {
             // node.type: 'text' | 'file'
             if (node.type === "file") {
-              if (isAttachment(settings, node.file)) {
+              if (isAttachment(this.app, settings, node.file)) {
                 this.addToSet(attachmentsSet, node.file);
               }
             } else if (node.type == "text") {
               const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app, node.text);
               for (const linkMatch of linkMatches) {
-                if (isAttachment(settings, linkMatch.linkText)) {
+                if (isAttachment(this.app, settings, linkMatch.linkText)) {
                   this.addToSet(attachmentsSet, linkMatch.linkText);
                 }
               }
