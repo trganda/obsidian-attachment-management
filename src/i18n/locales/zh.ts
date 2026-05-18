@@ -1,6 +1,6 @@
 import { TranslationMap } from "../index";
 
-export const zhCn: TranslationMap = {
+export const zhCn = {
   common: {
     cancel: "取消",
   },
@@ -147,4 +147,4 @@ export const zhCn: TranslationMap = {
     attachmentPathIllegalChar: "附件路径包含非法文件名字符：{char}",
     attachmentPathUnknownVariable: "附件路径中存在未知变量：{name}",
   },
-};
+} as const satisfies TranslationMap;

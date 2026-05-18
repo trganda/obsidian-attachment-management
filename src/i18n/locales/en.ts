@@ -1,6 +1,6 @@
-import { TranslationMap } from "../index";
+import type { TranslationMap } from "../index";
 
-export const en: TranslationMap = {
+export const en = {
   common: {
     cancel: "Cancel",
   },
@@ -149,4 +149,4 @@ export const en: TranslationMap = {
     attachmentPathIllegalChar: "Attachment path contains illegal filename character: {char}",
     attachmentPathUnknownVariable: "Unknown variable in attachment path: {name}",
   },
-};
+} as const satisfies TranslationMap;
