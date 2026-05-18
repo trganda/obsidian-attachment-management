@@ -127,6 +127,12 @@ export default class AttachmentManagementPlugin extends Plugin {
         this.app.vault.on("rename", async (file: TAbstractFile, oldPath: string) => {
           debugLog("on rename event - new path and old path:", file.path, oldPath);
 
+          // ignore attachment
+          if (isAttachment(this.app, this.settings, file)) {
+            debugLog("rename - not processing rename on attachment:", file.path);
+            return;
+          }
+
           const { setting } = getRenameOverrideSetting(this.settings, file, oldPath);
           // update the override setting
           debugLog("rename - using settings:", setting);
@@ -145,12 +151,6 @@ export default class AttachmentManagementPlugin extends Plugin {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
               debugLog("rename - exclude path:", file.parent.path);
               new Notice(t("notices.fileExcluded", { path: file.path }));
-              return;
-            }
-
-            // ignore attachment
-            if (isAttachment(this.app, this.settings, file)) {
-              debugLog("rename - not processing rename on attachment:", file.path);
               return;
             }
 

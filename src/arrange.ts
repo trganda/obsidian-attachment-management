@@ -2,17 +2,15 @@ import { App, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
-import { isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
-import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
+import { isAttachment } from "./utils";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
-import { isOriginalNameVariable } from "./lib/originalStorage";
 
-const bannerRegex = /!\[\[(.*?)\]\]/i;
+// const bannerRegex = /!\[\[(.*?)\]\]/i;
 
 export enum RearrangeType {
   ACTIVE,
@@ -87,10 +85,6 @@ export class ArrangeHandler {
           continue;
         }
 
-        if (isOriginalNameVariable(setting, linkFile.extension)) {
-          continue;
-        }
-
         const metadata = getMetadata(obNote, linkFile);
         const attachName = await metadata.getAttachFileName(
           setting,
@@ -99,7 +93,7 @@ export class ArrangeHandler {
           this.app.vault.adapter,
         );
 
-        // ignore if the path was equal to the link
+        // ignore if the path was equal to current link
         if (attachPath == path.dirname(link) && attachName === path.basename(link, path.extname(link))) {
           continue;
         }
@@ -215,77 +209,77 @@ export class ArrangeHandler {
       }
     }
     // Loop Files and Check Frontmatter/Canvas
-    for (let i = 0; i < allFiles.length; i++) {
-      const obsFile = allFiles[i];
-      const attachmentsSet: Set<string> = new Set();
+    // for (let i = 0; i < allFiles.length; i++) {
+    //   const obsFile = allFiles[i];
+    //   const attachmentsSet: Set<string> = new Set();
 
-      if (obsFile.parent && isExcluded(obsFile.parent.path, this.settings)) {
-        continue;
-      }
+    //   if (obsFile.parent && isExcluded(obsFile.parent.path, this.settings)) {
+    //     continue;
+    //   }
 
-      // Check Frontmatter for md files and additional links that might be missed in resolved links
-      if (isMarkdownFile(obsFile.extension)) {
-        // Frontmatter
-        const fileCache = this.app.metadataCache.getFileCache(obsFile);
-        if (fileCache === null) {
-          continue;
-        }
-        if (fileCache.frontmatter) {
-          const frontmatter = fileCache.frontmatter;
-          for (const k of Object.keys(frontmatter)) {
-            if (typeof frontmatter[k] === "string") {
-              const formatMatch = frontmatter[k].match(bannerRegex);
-              if (formatMatch && formatMatch[1]) {
-                const fileName = formatMatch[1];
-                const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-                if (file && isAttachment(this.app, settings, file.path)) {
-                  this.addToSet(attachmentsSet, file.path);
-                }
-              }
-            }
-          }
-        }
-        // Any Additional Link
-        const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app);
-        for (const linkMatch of linkMatches) {
-          if (isAttachment(this.app, settings, linkMatch.linkText)) {
-            this.addToSet(attachmentsSet, linkMatch.linkText);
-          }
-        }
-      } else if (isCanvasFile(obsFile.extension)) {
-        // check canvas for links
-        const fileRead = await this.app.vault.cachedRead(obsFile);
-        if (!fileRead || fileRead.length === 0) {
-          continue;
-        }
-        let canvasData;
-        try {
-          canvasData = JSON.parse(fileRead);
-        } catch (e) {
-          debugLog("getAttachmentsInVaultByLinks - parse canvas data error", e);
-          continue;
-        }
-        // debugLog("canvasData", canvasData);
-        if (canvasData.nodes && canvasData.nodes.length > 0) {
-          for (const node of canvasData.nodes) {
-            // node.type: 'text' | 'file'
-            if (node.type === "file") {
-              if (isAttachment(this.app, settings, node.file)) {
-                this.addToSet(attachmentsSet, node.file);
-              }
-            } else if (node.type == "text") {
-              const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app, node.text);
-              for (const linkMatch of linkMatches) {
-                if (isAttachment(this.app, settings, linkMatch.linkText)) {
-                  this.addToSet(attachmentsSet, linkMatch.linkText);
-                }
-              }
-            }
-          }
-        }
-      }
-      this.addToRecord(attachmentsRecord, obsFile.path, attachmentsSet);
-    }
+    //   // Check Frontmatter for md files and additional links that might be missed in resolved links
+    //   if (isMarkdownFile(obsFile.extension)) {
+    //     // Frontmatter
+    //     const fileCache = this.app.metadataCache.getFileCache(obsFile);
+    //     if (fileCache === null) {
+    //       continue;
+    //     }
+    //     if (fileCache.frontmatter) {
+    //       const frontmatter = fileCache.frontmatter;
+    //       for (const k of Object.keys(frontmatter)) {
+    //         if (typeof frontmatter[k] === "string") {
+    //           const formatMatch = frontmatter[k].match(bannerRegex);
+    //           if (formatMatch && formatMatch[1]) {
+    //             const fileName = formatMatch[1];
+    //             const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
+    //             if (file && isAttachment(this.app, settings, file.path)) {
+    //               this.addToSet(attachmentsSet, file.path);
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //     // Any Additional Link
+    //     const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app);
+    //     for (const linkMatch of linkMatches) {
+    //       if (isAttachment(this.app, settings, linkMatch.linkText)) {
+    //         this.addToSet(attachmentsSet, linkMatch.linkText);
+    //       }
+    //     }
+    //   } else if (isCanvasFile(obsFile.extension)) {
+    //     // check canvas for links
+    //     const fileRead = await this.app.vault.cachedRead(obsFile);
+    //     if (!fileRead || fileRead.length === 0) {
+    //       continue;
+    //     }
+    //     let canvasData;
+    //     try {
+    //       canvasData = JSON.parse(fileRead);
+    //     } catch (e) {
+    //       debugLog("getAttachmentsInVaultByLinks - parse canvas data error", e);
+    //       continue;
+    //     }
+    //     // debugLog("canvasData", canvasData);
+    //     if (canvasData.nodes && canvasData.nodes.length > 0) {
+    //       for (const node of canvasData.nodes) {
+    //         // node.type: 'text' | 'file'
+    //         if (node.type === "file") {
+    //           if (isAttachment(this.app, settings, node.file)) {
+    //             this.addToSet(attachmentsSet, node.file);
+    //           }
+    //         } else if (node.type == "text") {
+    //           const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app, node.text);
+    //           for (const linkMatch of linkMatches) {
+    //             if (isAttachment(this.app, settings, linkMatch.linkText)) {
+    //               this.addToSet(attachmentsSet, linkMatch.linkText);
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    //   this.addToRecord(attachmentsRecord, obsFile.path, attachmentsSet);
+    // }
     return attachmentsRecord;
   }
 
