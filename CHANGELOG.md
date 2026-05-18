@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.11.1](https://github.com/trganda/obsidian-attachment-management/compare/0.11.0...0.11.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* :bug: 'this' implicitly has type 'any' ([72e5a4b](https://github.com/trganda/obsidian-attachment-management/commit/72e5a4bce20f0760ac7e4506cb010b730ea322e6))
+* :bug: attach was not move to new folder when using ${originalname} ([a636814](https://github.com/trganda/obsidian-attachment-management/commit/a636814039bba5d51ed2e6c7ba5085f457f60e74))
+
 ## [0.11.0](https://github.com/trganda/obsidian-attachment-management/compare/0.10.0...0.11.0) (2026-05-17)
 
 
