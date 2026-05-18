@@ -4,6 +4,8 @@ import { t } from "./i18n/index";
 import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_NOTEPARENT,
+  SETTINGS_VARIABLES_NOTEPATH,
   SETTINGS_VARIABLES_MD5,
   SETTINGS_VARIABLES_ORIGINALNAME,
 } from "./lib/constant";
@@ -251,5 +253,42 @@ export function attachFormatErrorMessage(err: AttachFormatError): string {
       return t("errors.attachFormatIllegalChar", { char: err.char });
     case "unknownVariable":
       return t("errors.attachFormatUnknownVariable", { name: err.name });
+  }
+}
+
+const ALLOWED_PATH_VARS = [SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPARENT];
+// "/" is allowed because attachmentPath is a path, not a filename.
+const ILLEGAL_PATH_CHARS = /[\\:*?"<>|]/;
+
+export type AttachmentPathError =
+  | { type: "empty" }
+  | { type: "illegalChar"; char: string }
+  | { type: "unknownVariable"; name: string };
+
+export function validateAttachmentPath(value: string): AttachmentPathError | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return { type: "empty" };
+
+  const stripped = trimmed.replace(VAR_TOKEN_RE, "");
+  const bad = stripped.match(ILLEGAL_PATH_CHARS);
+  if (bad) return { type: "illegalChar", char: bad[0] };
+
+  const vars = trimmed.match(VAR_TOKEN_RE) ?? [];
+  for (const v of vars) {
+    if (!ALLOWED_PATH_VARS.includes(v)) {
+      return { type: "unknownVariable", name: v };
+    }
+  }
+  return null;
+}
+
+export function attachmentPathErrorMessage(err: AttachmentPathError): string {
+  switch (err.type) {
+    case "empty":
+      return t("errors.attachmentPathEmpty");
+    case "illegalChar":
+      return t("errors.attachmentPathIllegalChar", { char: err.char });
+    case "unknownVariable":
+      return t("errors.attachmentPathUnknownVariable", { name: err.name });
   }
 }

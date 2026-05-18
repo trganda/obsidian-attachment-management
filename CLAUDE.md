@@ -36,14 +36,14 @@ Obsidian's API does not fire `paste`/`drop` for canvas, and on markdown the file
 - [src/override.ts](src/override.ts) — resolution of per-file → nearest-parent-folder → global setting; `settings.overridePath` is keyed by path and re-keyed on rename.
 - [src/exclude.ts](src/exclude.ts) — path-based exclusion (`excludedPaths`, `excludeSubpaths`).
 - [src/utils.ts](src/utils.ts) — file-type predicates (`isMarkdownFile`, `isCanvasFile`, `isImage`, `isPastedImage`, `isAttachment`), regex extension match, `md5sum`.
-- [src/settings/metadata.ts](src/settings/metadata.ts) — `Metadata` class: turns a note path into `{path, name, basename, extension, parentPath, parentName}` and resolves `getAttachmentPath` / `getAttachFileName` by substituting the `${...}` variables. **Extension overrides are applied here first**, then falls back to per-file/folder/global setting.
+- [src/settings/metadata.ts](src/settings/metadata.ts) — `Metadata` class: turns a note path into `{path, name, basename, extension, parentPath, parentName}` and resolves `getAttachmentPath` / `getAttachFileName` by substituting the `${...}` variables. **Extension overrides are applied here first**, then falls back to per-file/folder/global setting. `${date}` is anchored to the attachment's `stat.ctime` (not `moment()`) so re-arranges and re-renames stay idempotent — `getAttachFileName` takes the source `TFile` for this reason.
 - [src/settings/settings.ts](src/settings/settings.ts) — `AttachmentManagementPluginSettings`, `DEFAULT_SETTINGS`, `SETTINGS_TYPES` enum (`GLOBAL` / `FOLDER` / `FILE`), and the settings tab UI.
 - [src/lib/originalStorage.ts](src/lib/originalStorage.ts) — persists `${originalname}` mappings as `{n, md5}` records in `data.json` so the original filename survives later renames. Cleanup is manual via the `Clear unused original name storage` command (matches by md5 of current vault attachments).
 - [src/lib/path.ts](src/lib/path.ts) — local minimal path helpers (do not import Node `path`; plugin must work on mobile).
 - [src/lib/linkDetector.ts](src/lib/linkDetector.ts) — scans markdown/canvas content for attachment links during rearrange.
 - [src/lib/deduplicate.ts](src/lib/deduplicate.ts) — `deduplicateNewName` for collision handling on create/rename.
 - [src/lib/log.ts](src/lib/log.ts) — `debugLog` gated on `BUILD_ENV !== "production"` (defined by [esbuild.config.mjs](esbuild.config.mjs)).
-- [src/i18n/](src/i18n/) — custom i18n (not Obsidian's). `initI18n()` runs at plugin load, auto-detects via `moment.locale()`, supports `en` and `zh` with English fallback. Use `t("key.path", {param})`.
+- [src/i18n/](src/i18n/) — custom i18n (not Obsidian's). `initI18n()` runs at plugin load, auto-detects via `moment.locale()`, supports `en` and `zh` with English fallback. Use `t("key.path", {param})`. The English locale is typed `as const satisfies TranslationMap` and acts as the source of truth: `t()` is generic over `TKey = TPath<typeof en>`, so unknown keys, missing `{placeholder}` params, and wrong param names are compile errors. `zh` is `as const satisfies LocaleShape<typeof en>` so any missing/extra/typo'd key in `zh` also errors at compile time (literal `${name}` docs inside descriptions are skipped by the placeholder extractor).
 - [src/model/](src/model/) — modals: `OverrideModal`, `ConfirmModal`, `ExtensionOverrideSettings` (`getExtensionOverrideSetting` resolves regex-keyed per-extension overrides inside a setting).
 
 ### Setting resolution precedence
@@ -66,4 +66,5 @@ esbuild ([esbuild.config.mjs](esbuild.config.mjs)) externalizes `obsidian`, `ele
 - Use `app.vault.cachedRead` rather than `adapter.process` when reading a note in event handlers; the latter re-writes and steals editor focus/cursor.
 - Time-gap heuristic in `create` (1000ms) distinguishes user paste/drop from OS-level file copies — don't lower it without thinking about sync.
 - `debugLog` over `console.log` so production builds stay quiet.
-- Existing files mix English and Chinese comments (i18n module); follow the file's local style rather than rewriting.
+- Plain-text `new Notice("...")` calls should go through `t()` — both for translation and so the typed key check catches drift.
+- When adding/changing a translation, edit [src/i18n/locales/en.ts](src/i18n/locales/en.ts) first; the `LocaleShape<typeof en>` constraint on [src/i18n/locales/zh.ts](src/i18n/locales/zh.ts) will then surface the missing zh entries at compile time.

@@ -1,25 +1,12 @@
-import { TranslationMap } from "../index";
+import type { TranslationMap } from "../index";
 
-export const en: TranslationMap = {
-  // 通用
+export const en = {
   common: {
-    save: "Save",
     cancel: "Cancel",
-    delete: "Delete",
-    edit: "Edit",
-    add: "Add",
-    remove: "Remove",
-    confirm: "Confirm",
-    close: "Close",
   },
 
-  // 设置页面
   settings: {
     title: "Attachment Management Settings",
-    language: {
-      name: "Language",
-      desc: "Select the interface language",
-    },
     rootPath: {
       name: "Root path to save attachment",
       desc: "Select root path of attachment",
@@ -64,7 +51,7 @@ export const en: TranslationMap = {
         edit: "Edit extension override",
         save: "Save extension override",
       },
-      saved: "Saved extension override",
+      saveNotice: "Saved extension override",
     },
     excludeExtension: {
       name: "Exclude extension pattern",
@@ -81,7 +68,6 @@ export const en: TranslationMap = {
     },
   },
 
-  // 覆盖设置模态框
   override: {
     title: "Overriding Settings",
     menuTitle: "Overriding attachment setting",
@@ -101,14 +87,8 @@ export const en: TranslationMap = {
     },
   },
 
-  // 扩展覆盖模态框
   extensionOverride: {
     title: "Extension Override Settings",
-    extension: {
-      name: "Extension",
-      desc: "Extension pattern to override (e.g., pdf, docx, jpg)",
-      placeholder: "pdf|docx?",
-    },
     rootPath: {
       name: "Root path to save attachment",
       desc: "Select root path of attachment for this extension",
@@ -128,56 +108,32 @@ export const en: TranslationMap = {
     buttons: {
       save: "Save",
     },
-    notice: {
-      extensionEmpty: "Extension cannot be empty",
-      extensionExists: "Extension already exists",
-      saved: "Extension override saved successfully",
-    },
   },
 
-  // 确认对话框
   confirm: {
     title: "Tips",
     message:
       "This operation is irreversible and experimental. Please backup your vault first! Are you sure you want to continue?",
     continue: "Yes",
-    deleteOverride: "Are you sure you want to delete this override setting?",
-    deleteExtensionOverride: "Are you sure you want to delete this extension override?",
   },
 
-  // 通知消息
   notices: {
-    settingsSaved: "Settings saved successfully",
-    overrideSaved: "Override setting saved successfully",
-    overrideDeleted: "Override setting deleted successfully",
-    extensionOverrideSaved: "Extension override saved successfully",
-    extensionOverrideDeleted: "Extension override deleted successfully",
-    attachmentRenamed: "Attachment renamed successfully",
-    attachmentMoved: "Attachment moved successfully",
-    arrangeCompleted: "Arrange completed",
     fileExcluded: "{path} was excluded",
+    overrideRemoved: "Removed override setting of {path}",
+    fileRenamed: "Renamed {from} to {to}",
+    arrangeCompleted: "Arrange completed",
     resetAttachmentSetting: "Reset attachment setting of {path}",
     error: {
-      invalidPath: "Invalid path specified",
-      fileNotFound: "File not found",
-      permissionDenied: "Permission denied",
       unknownError: "An unknown error occurred",
     },
   },
 
-  // 命令
   commands: {
-    rearrangeActiveFile: "Rearrange attachments for active file",
-    rearrangeAllFiles: "Rearrange attachments for all files",
-    openSettings: "Open Attachment Management settings",
-    overrideAttachmentSetting: "Override attachment setting",
     rearrangeAllLinks: "Rearrange all linked attachments",
     rearrangeActiveLinks: "Rearrange linked attachments",
     resetOverrideSetting: "Reset override setting",
-    clearUnusedStorage: "Clear unused original name storage",
   },
 
-  // 错误消息
   errors: {
     canvasNotSupported: "Canvas is not supported as an extension override.",
     markdownNotSupported: "Markdown is not supported as an extension override.",
@@ -189,5 +145,8 @@ export const en: TranslationMap = {
       "${originalname} must be used alone; it cannot be combined with other text or variables.",
     attachFormatIllegalChar: "Attachment format contains illegal filename character: {char}",
     attachFormatUnknownVariable: "Unknown variable in attachment format: {name}",
+    attachmentPathEmpty: "Attachment path cannot be empty.",
+    attachmentPathIllegalChar: "Attachment path contains illegal filename character: {char}",
+    attachmentPathUnknownVariable: "Unknown variable in attachment path: {name}",
   },
-};
+} as const satisfies TranslationMap;

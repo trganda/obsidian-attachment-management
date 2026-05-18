@@ -1,25 +1,13 @@
-import { TranslationMap } from "../index";
+import type { LocaleShape } from "../index";
+import type { en } from "./en";
 
-export const zhCn: TranslationMap = {
-  // 通用
+export const zhCn = {
   common: {
-    save: "保存",
     cancel: "取消",
-    delete: "删除",
-    edit: "编辑",
-    add: "添加",
-    remove: "移除",
-    confirm: "确认",
-    close: "关闭",
   },
 
-  // 设置页面
   settings: {
     title: "附件管理设置",
-    language: {
-      name: "语言",
-      desc: "选择界面语言",
-    },
     rootPath: {
       name: "附件保存根路径",
       desc: "选择附件的根路径",
@@ -64,7 +52,7 @@ export const zhCn: TranslationMap = {
         edit: "编辑扩展名覆盖",
         save: "保存扩展名覆盖",
       },
-      saved: "已保存扩展名覆盖",
+      saveNotice: "已保存扩展名覆盖",
     },
     excludeExtension: {
       name: "排除扩展名模式",
@@ -81,7 +69,6 @@ export const zhCn: TranslationMap = {
     },
   },
 
-  // 覆盖设置模态框
   override: {
     title: "覆盖设置",
     menuTitle: "覆盖附件设置",
@@ -101,14 +88,8 @@ export const zhCn: TranslationMap = {
     },
   },
 
-  // 扩展覆盖模态框
   extensionOverride: {
     title: "扩展名覆盖设置",
-    extension: {
-      name: "扩展名",
-      desc: "要覆盖的扩展名模式（例如：pdf、docx、jpg）",
-      placeholder: "pdf|docx?",
-    },
     rootPath: {
       name: "附件保存根路径",
       desc: "选择此扩展名的附件根路径",
@@ -128,62 +109,31 @@ export const zhCn: TranslationMap = {
     buttons: {
       save: "保存",
     },
-    notice: {
-      extensionEmpty: "扩展名不能为空",
-      extensionExists: "扩展名已存在",
-      saved: "扩展名覆盖保存成功",
-    },
   },
 
-  // 确认对话框
   confirm: {
     title: "提示",
     message: "此操作不可逆且为实验性功能，请先备份您的库！确定要继续吗？",
     continue: "继续",
-    deleteOverride: "您确定要删除此覆盖设置吗？",
-    deleteExtensionOverride: "您确定要删除此扩展名覆盖吗？",
   },
 
-  // 通知消息
   notices: {
-    settingsSaved: "设置保存成功",
-    overrideSaved: "覆盖设置保存成功",
-    overrideDeleted: "覆盖设置删除成功",
-    extensionOverrideSaved: "扩展名覆盖保存成功",
-    extensionOverrideDeleted: "扩展名覆盖删除成功",
-    attachmentRenamed: "附件重命名成功",
-    attachmentMoved: "附件移动成功",
+    fileExcluded: "{path} 已被排除",
+    overrideRemoved: "已移除 {path} 的覆盖设置",
+    fileRenamed: "已将 {from} 重命名为 {to}",
+    arrangeCompleted: "整理完成",
+    resetAttachmentSetting: "已重置 {path} 的附件设置",
     error: {
-      invalidPath: "指定的路径无效",
-      fileNotFound: "文件未找到",
-      permissionDenied: "权限被拒绝",
       unknownError: "发生未知错误",
     },
   },
 
-  // 命令
   commands: {
-    rearrangeActiveFile: "重新整理当前文件的附件",
-    rearrangeAllFiles: "重新整理所有文件的附件",
-    openSettings: "打开附件管理设置",
-    overrideAttachmentSetting: "覆盖附件设置",
     rearrangeAllLinks: "重新整理所有链接的附件",
     rearrangeActiveLinks: "重新整理链接的附件",
     resetOverrideSetting: "重置覆盖设置",
-    clearUnusedStorage: "清理未使用的原始名称存储",
   },
 
-  // 通知消息
-  notifications: {
-    success: "操作成功完成",
-    error: "发生错误",
-    warning: "警告",
-    arrangeCompleted: "整理完成",
-    fileExcluded: "{path} 已被排除",
-    resetAttachmentSetting: "已重置 {path} 的附件设置",
-  },
-
-  // 错误消息
   errors: {
     canvasNotSupported: "不支持将 Canvas 作为扩展覆盖。",
     markdownNotSupported: "不支持将 Markdown 作为扩展覆盖。",
@@ -194,5 +144,8 @@ export const zhCn: TranslationMap = {
     attachFormatOriginalnameMixed: "${originalname} 必须单独使用，不能与其他文本或变量组合。",
     attachFormatIllegalChar: "附件格式包含非法文件名字符：{char}",
     attachFormatUnknownVariable: "附件格式中存在未知变量：{name}",
+    attachmentPathEmpty: "附件路径不能为空。",
+    attachmentPathIllegalChar: "附件路径包含非法文件名字符：{char}",
+    attachmentPathUnknownVariable: "附件路径中存在未知变量：{name}",
   },
-};
+} as const satisfies LocaleShape<typeof en>;

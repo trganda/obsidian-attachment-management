@@ -157,8 +157,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             await new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.FILE, file, oldPath);
 
             const oldMetadata = getMetadata(oldPath);
-            // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = oldMetadata.getAttachmentPath(setting);
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 // check and remove the old attachment folder if it is empty
@@ -191,7 +190,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             const oldMetadata = getMetadata(file.path);
             const { setting } = getOverrideSetting(this.settings, file);
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = oldMetadata.getAttachmentPath(setting);
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 // check and remove the old attachment folder if it is empty
@@ -206,7 +205,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           if (deleteOverrideSetting(this.settings, file)) {
             await this.saveSettings();
-            new Notice("Removed override setting of " + file.path);
+            new Notice(t("notices.overrideRemoved", { path: file.path }));
           }
         }),
       );
@@ -245,7 +244,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       name: t("commands.rearrangeActiveLinks"),
       callback: async () => {
         new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
-          new Notice(t("notifications.arrangeCompleted"));
+          new Notice(t("notices.arrangeCompleted"));
         });
       },
     });
@@ -263,7 +262,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           if (!checking) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
-              new Notice(`${file.path} was excluded`);
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return true;
             }
             const { setting } = getOverrideSetting(this.settings, file);
@@ -288,12 +287,12 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           if (!checking) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
-              new Notice(`${file.path} was excluded`);
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return true;
             }
             delete this.settings.overridePath[file.path];
             this.saveSettings().finally(() => {
-              new Notice(t("notifications.resetAttachmentSetting", { path: file.path }));
+              new Notice(t("notices.resetAttachmentSetting", { path: file.path }));
             });
           }
           return true;

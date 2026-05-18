@@ -1,86 +1,122 @@
 import { moment } from "obsidian";
 import { loadAllTranslations } from "./loader";
+import type { en } from "./locales/en";
 
-// 支持的语言类型
+// Supported languages
 export type SupportedLanguage = "en" | "zh";
 
-// 翻译键值对接口
+// Translation map interface (loose shape used by non-canonical locales)
 export interface TranslationMap {
   [key: string]: string | TranslationMap;
 }
 
-// 当前语言设置
+// Dotted paths whose value is a string in the English locale
+type TPath<T> = {
+  [K in keyof T & string]: T[K] extends string ? K : T[K] extends object ? `${K}.${TPath<T[K]>}` : never;
+}[keyof T & string];
+
+// Value at a dotted path
+type TPathValue<T, P extends string> = P extends `${infer K}.${infer Rest}`
+  ? K extends keyof T
+    ? TPathValue<T[K], Rest>
+    : never
+  : P extends keyof T
+    ? T[P]
+    : never;
+
+// Names of {placeholder}s in a template string. ${name} (the literal docs
+// notation for plugin variables) is intentionally skipped.
+type TPlaceholders<S extends string> = S extends `${infer Before}{${infer Name}}${infer Rest}`
+  ? Before extends `${string}$`
+    ? TPlaceholders<Rest>
+    : Name | TPlaceholders<Rest>
+  : never;
+
+export type TKey = TPath<typeof en>;
+
+// Shape of the English locale with all string slots widened to `string`.
+// Other locales `satisfies LocaleShape<typeof en>` to enforce same key structure
+// while still allowing their own translated strings.
+export type LocaleShape<T> = T extends string ? string : { [K in keyof T]: LocaleShape<T[K]> };
+
+type TParams<K extends TKey> = TPlaceholders<Extract<TPathValue<typeof en, K>, string>>;
+
+// Require a params object only when the resolved string has placeholders.
+type TArgs<K extends TKey> = [TParams<K>] extends [never] ? [] : [Record<TParams<K>, string | number>];
+
+// Current language
 let currentLanguage: SupportedLanguage = "en";
 
-// 语言包存储
+// Registered translation packs
 const translations: Record<SupportedLanguage, TranslationMap> = {
   en: {},
   zh: {},
 };
 
 /**
- * 设置当前语言
- * @param language 语言代码
+ * Set the current language.
+ * @param language language code
  */
 export function setLanguage(language: SupportedLanguage): void {
   currentLanguage = language;
 }
 
 /**
- * 获取当前语言
- * @returns 当前语言代码
+ * Get the current language.
+ * @returns current language code
  */
 export function getCurrentLanguage(): SupportedLanguage {
   return currentLanguage;
 }
 
 /**
- * 注册语言包
- * @param language 语言代码
- * @param translationMap 翻译映射
+ * Register a translation pack.
+ * @param language language code
+ * @param translationMap translation map
  */
 export function registerTranslations(language: SupportedLanguage, translationMap: TranslationMap): void {
   translations[language] = { ...translations[language], ...translationMap };
 }
 
 /**
- * 获取翻译文本
- * @param key 翻译键，支持点分隔的嵌套键
- * @param params 可选的参数对象，用于字符串插值
- * @returns 翻译后的文本
+ * Resolve a translation string.
+ * @param key dot-separated translation key
+ * @param params optional values for string interpolation
+ * @returns translated text
  */
-export function t(key: string, params?: Record<string, string | number>): string {
+export function t<K extends TKey>(key: K, ...args: TArgs<K>): string {
+  const params = args[0] as Record<string, string | number> | undefined;
   const keys = key.split(".");
   let value: string | TranslationMap = translations[currentLanguage];
 
-  // 遍历嵌套键
+  // Walk the nested keys
   for (const k of keys) {
     if (value && typeof value === "object" && k in value) {
       value = value[k];
     } else {
-      // 如果当前语言没有找到，尝试使用英文作为后备
+      // Fall back to English when the current language has no entry
       if (currentLanguage !== "en") {
         let fallbackValue: string | TranslationMap = translations["en"];
         for (const fk of keys) {
           if (fallbackValue && typeof fallbackValue === "object" && fk in fallbackValue) {
             fallbackValue = fallbackValue[fk];
           } else {
-            fallbackValue = key; // 最终后备：返回键本身
+            fallbackValue = key; // Last-resort fallback: return the key itself
             break;
           }
         }
         value = fallbackValue;
       } else {
-        value = key; // 返回键本身作为后备
+        value = key; // Return the key itself as a last-resort fallback
       }
       break;
     }
   }
 
-  // 确保返回字符串
+  // Make sure the resolved value is a string
   let result = typeof value === "string" ? value : key;
 
-  // 处理参数插值
+  // Interpolate parameters
   if (params) {
     Object.entries(params).forEach(([paramKey, paramValue]) => {
       result = result.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(paramValue));
@@ -91,8 +127,8 @@ export function t(key: string, params?: Record<string, string | number>): string
 }
 
 /**
- * 根据系统语言自动检测语言设置
- * @returns 检测到的语言代码
+ * Detect the language from the system locale.
+ * @returns detected language code
  */
 export function detectLanguage(): SupportedLanguage {
   const language = moment.locale();
@@ -100,8 +136,8 @@ export function detectLanguage(): SupportedLanguage {
 }
 
 /**
- * 初始化i18n系统
- * @param language 可选的初始语言，如果不提供则自动检测
+ * Initialize the i18n system.
+ * @param language optional initial language; auto-detected when omitted
  */
 export function initI18n(language?: SupportedLanguage): void {
   loadAllTranslations();

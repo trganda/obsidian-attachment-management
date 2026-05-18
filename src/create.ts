@@ -8,6 +8,7 @@ import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { isImage, isPastedImage } from "./utils";
+import { t } from "./i18n/index";
 // import { saveOriginalName } from "./lib/originalStorage";
 
 export class CreateHandler {
@@ -48,29 +49,27 @@ export class CreateHandler {
     const metadata = getMetadata(source.path, attach);
     debugLog("processAttach - metadata:", metadata);
 
-    const attachPath = metadata.getAttachmentPath(setting, this.settings.dateFormat);
-    metadata
-      .getAttachFileName(setting, this.settings.dateFormat, attach.basename, this.app.vault.adapter)
-      .then((attachName) => {
-        attachName = attachName + "." + attach.extension;
-        // make sure the attachment path was created
-        this.app.vault.adapter
-          .exists(attachPath, true)
-          .then(async (exists) => {
-            if (!exists) {
-              await this.app.vault.adapter.mkdir(attachPath);
-              debugLog("processAttach - create path:", attachPath);
-            }
-          })
-          .finally(() => {
-            const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
-            // deduplicate the new name if needed
-            deduplicateNewName(attachName, attachPathFolder).then(({ name }) => {
-              debugLog("processAttach - new path of file:", path.join(attachPath, name));
-              this.renameCreateFile(attach, attachPath, name, source);
-            });
+    const attachPath = metadata.getAttachmentPath(setting);
+    metadata.getAttachFileName(setting, this.settings.dateFormat, attach, this.app.vault.adapter).then((attachName) => {
+      attachName = attachName + "." + attach.extension;
+      // make sure the attachment path was created
+      this.app.vault.adapter
+        .exists(attachPath, true)
+        .then(async (exists) => {
+          if (!exists) {
+            await this.app.vault.adapter.mkdir(attachPath);
+            debugLog("processAttach - create path:", attachPath);
+          }
+        })
+        .finally(() => {
+          const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath) as TFolder;
+          // deduplicate the new name if needed
+          deduplicateNewName(attachName, attachPathFolder).then(({ name }) => {
+            debugLog("processAttach - new path of file:", path.join(attachPath, name));
+            this.renameCreateFile(attach, attachPath, name, source);
           });
-      });
+        });
+    });
   }
 
   /**
@@ -96,7 +95,7 @@ export class CreateHandler {
       .rename(attach, dst)
       .then(() => {
         if (name !== attachName) {
-          new Notice(`Renamed ${name} to ${attachName}.`);
+          new Notice(t("notices.fileRenamed", { from: name, to: attachName }));
         }
 
         // Generate the new link after renaming (attach.path is now updated by vault.rename)
