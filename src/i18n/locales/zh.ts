@@ -120,14 +120,11 @@ export const zhCn: TranslationMap = {
     fileExcluded: "{path} 已被排除",
     overrideRemoved: "已移除 {path} 的覆盖设置",
     fileRenamed: "已将 {from} 重命名为 {to}",
+    arrangeCompleted: "整理完成",
+    resetAttachmentSetting: "已重置 {path} 的附件设置",
     error: {
       unknownError: "发生未知错误",
     },
-  },
-
-  notifications: {
-    arrangeCompleted: "整理完成",
-    resetAttachmentSetting: "已重置 {path} 的附件设置",
   },
 
   commands: {

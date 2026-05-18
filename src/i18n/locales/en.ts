@@ -121,14 +121,11 @@ export const en: TranslationMap = {
     fileExcluded: "{path} was excluded",
     overrideRemoved: "Removed override setting of {path}",
     fileRenamed: "Renamed {from} to {to}",
+    arrangeCompleted: "Arrange completed",
+    resetAttachmentSetting: "Reset attachment setting of {path}",
     error: {
       unknownError: "An unknown error occurred",
     },
-  },
-
-  notifications: {
-    arrangeCompleted: "Arrange completed",
-    resetAttachmentSetting: "Reset attachment setting of {path}",
   },
 
   commands: {

@@ -244,7 +244,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       name: t("commands.rearrangeActiveLinks"),
       callback: async () => {
         new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
-          new Notice(t("notifications.arrangeCompleted"));
+          new Notice(t("notices.arrangeCompleted"));
         });
       },
     });
@@ -292,7 +292,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             }
             delete this.settings.overridePath[file.path];
             this.saveSettings().finally(() => {
-              new Notice(t("notifications.resetAttachmentSetting", { path: file.path }));
+              new Notice(t("notices.resetAttachmentSetting", { path: file.path }));
             });
           }
           return true;
