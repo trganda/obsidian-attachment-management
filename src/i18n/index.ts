@@ -34,6 +34,11 @@ type TPlaceholders<S extends string> = S extends `${infer Before}{${infer Name}}
 
 export type TKey = TPath<typeof en>;
 
+// Shape of the English locale with all string slots widened to `string`.
+// Other locales `satisfies LocaleShape<typeof en>` to enforce same key structure
+// while still allowing their own translated strings.
+export type LocaleShape<T> = T extends string ? string : { [K in keyof T]: LocaleShape<T[K]> };
+
 type TParams<K extends TKey> = TPlaceholders<Extract<TPathValue<typeof en, K>, string>>;
 
 // Require a params object only when the resolved string has placeholders.

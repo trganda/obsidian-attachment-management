@@ -1,4 +1,5 @@
-import { TranslationMap } from "../index";
+import type { LocaleShape } from "../index";
+import type { en } from "./en";
 
 export const zhCn = {
   common: {
@@ -147,4 +148,4 @@ export const zhCn = {
     attachmentPathIllegalChar: "附件路径包含非法文件名字符：{char}",
     attachmentPathUnknownVariable: "附件路径中存在未知变量：{name}",
   },
-} as const satisfies TranslationMap;
+} as const satisfies LocaleShape<typeof en>;
