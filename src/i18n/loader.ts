@@ -1,4 +1,5 @@
 import { registerTranslations, SupportedLanguage } from "./index";
+import { ja } from "./locales/ja";
 import { en } from "./locales/en";
 import { zhCn as zh } from "./locales/zh";
 
@@ -11,6 +12,9 @@ export function loadAllTranslations() {
 
   // Register the Chinese pack
   registerTranslations("zh", zh);
+  
+  // Register the Janpanese pack
+  registerTranslations('ja', ja);
 }
 
 /**
@@ -27,8 +31,13 @@ export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: 
     {
       code: "zh",
       name: "Chinese (Simplified)",
-      nativeName: "简体中文",
+      nativeName: "简体中文"
     },
+    {
+      code: "ja",
+      name: "Japanese",
+      nativeName: "日本語"
+    }
   ];
 }
 
