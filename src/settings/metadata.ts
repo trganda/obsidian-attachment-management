@@ -61,16 +61,17 @@ class Metadata {
    *
    * @param {AttachmentPathSettings} setting - attachment path settings object
    * @param {string} dateFormat - format string for date and time
-   * @param {string} originalName - name of the original attachment
+   * @param {TFile} originalAttach - the original attachment file
    * @return {string} the formatted attachment file name
    */
   async getAttachFileName(
     setting: AttachmentPathSettings,
     dateFormat: string,
-    originalName: string,
+    originalAttach: TFile,
     adapter: DataAdapter,
   ): Promise<string> {
-    const dateTime = window.moment().format(dateFormat);
+    // Anchor ${date} to the attachment's ctime
+    const dateTime = window.moment(originalAttach.stat.ctime).format(dateFormat);
 
     let md5 = "";
     let attachFormat = DEFAULT_SETTINGS.attachPath.attachFormat;
@@ -85,11 +86,7 @@ class Metadata {
     }
 
     if (attachFormat.trim() === SETTINGS_VARIABLES_ORIGINALNAME) {
-      return originalName;
-      // we have no persistence of original name,  return current linking name
-      // if (originalName === "" && linkName != undefined) {
-      //   return linkName;
-      // }
+      return originalAttach.basename;
     }
 
     return attachFormat
@@ -104,8 +101,7 @@ class Metadata {
    * @param {AttachmentPathSettings} setting - An object containing the attachment path settings.
    * @return {string} The normalized attachment path.
    */
-  getAttachmentPath(setting: AttachmentPathSettings, dateFormat: string): string {
-    const dateTime = window.moment().format(dateFormat);
+  getAttachmentPath(setting: AttachmentPathSettings): string {
     let root = "";
     let attachPath = "";
 
@@ -119,8 +115,7 @@ class Metadata {
           extSetting.attachmentPath
             .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
             .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-            .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-            .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
+            .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName),
         );
 
         return normalizePath(attachPath);
@@ -134,8 +129,7 @@ class Metadata {
       setting.attachmentPath
         .replace(`${SETTINGS_VARIABLES_NOTEPATH}`, this.parentPath)
         .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName)
-        .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime),
+        .replace(`${SETTINGS_VARIABLES_NOTEPARENT}`, this.parentName),
     );
 
     return normalizePath(attachPath);

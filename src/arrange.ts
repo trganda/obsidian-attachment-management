@@ -58,12 +58,12 @@ export class ArrangeHandler {
 
       // create attachment path if it's not exists
       const md = getMetadata(obNote);
-      const attachPath = md.getAttachmentPath(setting, this.settings.dateFormat);
+      const attachPath = md.getAttachmentPath(setting);
       if (!(await this.app.vault.adapter.exists(attachPath, true))) {
         // process the case where rename the filename to uppercase or lowercase
         if (oldPath != undefined && (await this.app.vault.adapter.exists(attachPath, false))) {
           const mdOld = getMetadata(oldPath);
-          const attachPathOld = mdOld.getAttachmentPath(setting, this.settings.dateFormat);
+          const attachPathOld = mdOld.getAttachmentPath(setting);
           // this will trigger the rename event and cause the path of attachment change
           this.app.vault.adapter.rename(attachPathOld, attachPath);
         } else {
@@ -89,7 +89,7 @@ export class ArrangeHandler {
         const attachName = await metadata.getAttachFileName(
           setting,
           this.settings.dateFormat,
-          path.basename(link, path.extname(link)),
+          linkFile,
           this.app.vault.adapter,
         );
 
@@ -98,12 +98,12 @@ export class ArrangeHandler {
           continue;
         }
 
-        const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath);
-        if (attachPathFile === null || !(attachPathFile instanceof TFolder)) {
+        const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath);
+        if (attachPathFolder === null || !(attachPathFolder instanceof TFolder)) {
           debugLog(`${attachPath} not exists, skipped`);
           continue;
         }
-        const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFile);
+        const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFolder);
         debugLog("rearrangeAttachment - deduplicated name:", name);
 
         await this.app.fileManager.renameFile(linkFile, path.join(attachPath, name));

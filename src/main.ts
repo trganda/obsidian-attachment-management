@@ -157,8 +157,7 @@ export default class AttachmentManagementPlugin extends Plugin {
             await new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.FILE, file, oldPath);
 
             const oldMetadata = getMetadata(oldPath);
-            // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = oldMetadata.getAttachmentPath(setting);
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 // check and remove the old attachment folder if it is empty
@@ -191,7 +190,7 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             const oldMetadata = getMetadata(file.path);
             const { setting } = getOverrideSetting(this.settings, file);
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = oldMetadata.getAttachmentPath(setting);
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 // check and remove the old attachment folder if it is empty
