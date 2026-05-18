@@ -8,11 +8,7 @@
 		"lint": "eslint --fix src",
 		"format": "prettier --log-level warn --write \"src/**/*.ts\"",
 		"build": "tsc -noEmit -skipLibCheck && cross-env BUILD_ENV=production node esbuild.config.mjs",
-		"version": "node version-bump.mjs && git add manifest.json versions.json",
-		"release": "commit-and-tag-version"
-	},
-	"commit-and-tag-version": {
-		"t": ""
+		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [
 		"obsidian",
