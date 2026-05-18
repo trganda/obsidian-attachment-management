@@ -194,5 +194,8 @@ export const zhCn: TranslationMap = {
     attachFormatOriginalnameMixed: "${originalname} 必须单独使用，不能与其他文本或变量组合。",
     attachFormatIllegalChar: "附件格式包含非法文件名字符：{char}",
     attachFormatUnknownVariable: "附件格式中存在未知变量：{name}",
+    attachmentPathEmpty: "附件路径不能为空。",
+    attachmentPathIllegalChar: "附件路径包含非法文件名字符：{char}",
+    attachmentPathUnknownVariable: "附件路径中存在未知变量：{name}",
   },
 };

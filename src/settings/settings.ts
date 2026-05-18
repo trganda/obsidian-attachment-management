@@ -14,6 +14,8 @@ import {
   generateErrorExtensionMessage,
   validateAttachFormat,
   attachFormatErrorMessage,
+  validateAttachmentPath,
+  attachmentPathErrorMessage,
 } from "../utils";
 import { debugLog } from "../lib/log";
 import { t } from "../i18n/index";
@@ -178,16 +180,40 @@ export class AttachmentManagementSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName(t("settings.attachmentPath.name"))
       .setDesc(t("settings.attachmentPath.desc"))
-      .addText((text) =>
+      .addText((text) => {
+        const controlEl = text.inputEl.parentElement!;
+        const errEl = controlEl.createDiv({ cls: "setting-item-description" });
+        controlEl.insertBefore(errEl, text.inputEl);
+        errEl.style.color = "var(--color-red)";
+        errEl.style.marginRight = "8px";
+        errEl.style.textAlign = "right";
+        errEl.hide();
+
+        const applyValidation = (value: string): boolean => {
+          const err = validateAttachmentPath(value);
+          if (err) {
+            text.inputEl.style.border = "1px solid var(--color-red)";
+            errEl.setText(attachmentPathErrorMessage(err));
+            errEl.show();
+            return false;
+          }
+          text.inputEl.style.border = "";
+          errEl.hide();
+          return true;
+        };
+
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
           .setValue(this.plugin.settings.attachPath.attachmentPath)
           .onChange(async (value) => {
             debugLog("setting - attachment path:" + value);
+            if (!applyValidation(value)) return;
             this.plugin.settings.attachPath.attachmentPath = value;
             await this.plugin.saveSettings();
-          }),
-      );
+          });
+
+        applyValidation(this.plugin.settings.attachPath.attachmentPath);
+      });
 
     new Setting(containerEl)
       .setName(t("settings.attachmentFormat.name"))

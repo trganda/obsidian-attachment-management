@@ -189,5 +189,8 @@ export const en: TranslationMap = {
       "${originalname} must be used alone; it cannot be combined with other text or variables.",
     attachFormatIllegalChar: "Attachment format contains illegal filename character: {char}",
     attachFormatUnknownVariable: "Unknown variable in attachment format: {name}",
+    attachmentPathEmpty: "Attachment path cannot be empty.",
+    attachmentPathIllegalChar: "Attachment path contains illegal filename character: {char}",
+    attachmentPathUnknownVariable: "Unknown variable in attachment path: {name}",
   },
 };
