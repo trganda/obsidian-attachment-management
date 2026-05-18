@@ -3,19 +3,19 @@ import { en } from "./locales/en";
 import { zhCn as zh } from "./locales/zh";
 
 /**
- * 加载所有语言包
+ * Load all translation packs.
  */
 export function loadAllTranslations() {
-  // 注册英文语言包
+  // Register the English pack
   registerTranslations("en", en);
 
-  // 注册中文语言包
+  // Register the Chinese pack
   registerTranslations("zh", zh);
 }
 
 /**
- * 获取支持的语言列表
- * @returns 支持的语言列表，包含代码和显示名称
+ * Get the list of supported languages.
+ * @returns supported languages with code and display names
  */
 export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: string; nativeName: string }> {
   return [
@@ -33,9 +33,9 @@ export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: 
 }
 
 /**
- * 根据语言代码获取语言显示名称
- * @param code 语言代码
- * @returns 语言显示名称
+ * Get the display name for a language code.
+ * @param code language code
+ * @returns language display name
  */
 export function getLanguageName(code: SupportedLanguage): string {
   const languages = getSupportedLanguages();

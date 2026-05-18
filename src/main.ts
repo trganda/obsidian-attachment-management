@@ -205,7 +205,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           if (deleteOverrideSetting(this.settings, file)) {
             await this.saveSettings();
-            new Notice("Removed override setting of " + file.path);
+            new Notice(t("notices.overrideRemoved", { path: file.path }));
           }
         }),
       );
@@ -262,7 +262,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           if (!checking) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
-              new Notice(`${file.path} was excluded`);
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return true;
             }
             const { setting } = getOverrideSetting(this.settings, file);
@@ -287,7 +287,7 @@ export default class AttachmentManagementPlugin extends Plugin {
 
           if (!checking) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
-              new Notice(`${file.path} was excluded`);
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return true;
             }
             delete this.settings.overridePath[file.path];

@@ -90,6 +90,7 @@ export class OverrideExtensionModal extends Modal {
     if (this.settings.saveAttE !== "obsFolder") {
       new Setting(contentEl)
         .setName(t("extensionOverride.rootFolder.name"))
+        .setDesc(t("extensionOverride.rootFolder.desc"))
         .setClass("override_root_folder_set")
         .addText((text) =>
           text

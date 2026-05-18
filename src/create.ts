@@ -8,6 +8,7 @@ import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { isImage, isPastedImage } from "./utils";
+import { t } from "./i18n/index";
 // import { saveOriginalName } from "./lib/originalStorage";
 
 export class CreateHandler {
@@ -94,7 +95,7 @@ export class CreateHandler {
       .rename(attach, dst)
       .then(() => {
         if (name !== attachName) {
-          new Notice(`Renamed ${name} to ${attachName}.`);
+          new Notice(t("notices.fileRenamed", { from: name, to: attachName }));
         }
 
         // Generate the new link after renaming (attach.path is now updated by vault.rename)
