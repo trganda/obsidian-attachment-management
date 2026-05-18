@@ -49,7 +49,7 @@ export class ConfirmModal extends Modal {
           .setButtonText(t("confirm.continue"))
           .setWarning()
           .onClick(() => {
-            new ArrangeHandler(this.plugin.settings, this.plugin.app, this.plugin)
+            new ArrangeHandler(this.plugin.settings, this.plugin.app)
               .rearrangeAttachment(RearrangeType.LINKS)
               .then(() => new Notice(t("notifications.arrangeCompleted")))
               .catch((err) => new Notice(`${t("notices.error.unknownError")}: ${err?.message ?? err}`))

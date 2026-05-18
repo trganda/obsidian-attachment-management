@@ -154,11 +154,7 @@ export default class AttachmentManagementPlugin extends Plugin {
               return;
             }
 
-            await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(
-              RearrangeType.FILE,
-              file,
-              oldPath,
-            );
+            await new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.FILE, file, oldPath);
 
             const oldMetadata = getMetadata(oldPath);
             // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
@@ -248,7 +244,7 @@ export default class AttachmentManagementPlugin extends Plugin {
       id: "attachment-management-rearrange-active-links",
       name: t("commands.rearrangeActiveLinks"),
       callback: async () => {
-        new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
+        new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
           new Notice(t("notifications.arrangeCompleted"));
         });
       },

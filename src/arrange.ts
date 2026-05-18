@@ -1,4 +1,4 @@
-import { App, TFile, TFolder, Plugin } from "obsidian";
+import { App, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
@@ -23,12 +23,10 @@ export enum RearrangeType {
 export class ArrangeHandler {
   settings: AttachmentManagementPluginSettings;
   app: App;
-  plugin: Plugin;
 
-  constructor(settings: AttachmentManagementPluginSettings, app: App, plugin: Plugin) {
+  constructor(settings: AttachmentManagementPluginSettings, app: App) {
     this.settings = settings;
     this.app = app;
-    this.plugin = plugin;
   }
 
   /**
