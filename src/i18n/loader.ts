@@ -12,9 +12,9 @@ export function loadAllTranslations() {
 
   // Register the Chinese pack
   registerTranslations("zh", zh);
-  
-  // Register the Janpanese pack
-  registerTranslations('ja', ja);
+
+  // Register the Japanese pack
+  registerTranslations("ja", ja);
 }
 
 /**
@@ -31,13 +31,13 @@ export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: 
     {
       code: "zh",
       name: "Chinese (Simplified)",
-      nativeName: "简体中文"
+      nativeName: "简体中文",
     },
     {
       code: "ja",
       name: "Japanese",
-      nativeName: "日本語"
-    }
+      nativeName: "日本語",
+    },
   ];
 }
 

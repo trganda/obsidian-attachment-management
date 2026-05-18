@@ -3,7 +3,7 @@ import { loadAllTranslations } from "./loader";
 import type { en } from "./locales/en";
 
 // Supported languages
-export type SupportedLanguage = "en" | "zh" | 'ja';
+export type SupportedLanguage = "en" | "zh" | "ja";
 
 // Translation map interface (loose shape used by non-canonical locales)
 export interface TranslationMap {
@@ -51,7 +51,7 @@ let currentLanguage: SupportedLanguage = "en";
 const translations: Record<SupportedLanguage, TranslationMap> = {
   en: {},
   zh: {},
-  'ja': {}
+  ja: {},
 };
 
 /**
@@ -133,15 +133,15 @@ export function t<K extends TKey>(key: K, ...args: TArgs<K>): string {
  */
 export function detectLanguage(): SupportedLanguage {
   const locale = moment.locale();
-  
-  if (locale.startsWith('zh')) {
+
+  if (locale.startsWith("zh")) {
     return "zh";
   }
 
-  if (locale.startsWith('ja')) {
+  if (locale.startsWith("ja")) {
     return "ja";
   }
-  
+
   return "en";
 }
 

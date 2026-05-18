@@ -55,6 +55,7 @@ export class OverrideModal extends Modal {
 
     new Setting(contentEl)
       .setName(t("settings.rootFolder.name"))
+      .setDesc(t("settings.rootFolder.desc"))
       .setClass("override_root_folder_set")
       .addText((text) =>
         text
