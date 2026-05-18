@@ -1,6 +1,14 @@
-import { DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
+import { App, DataAdapter, Notice, TAbstractFile, TFile } from "obsidian";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { t } from "./i18n/index";
+import {
+  SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_NOTEPARENT,
+  SETTINGS_VARIABLES_NOTEPATH,
+  SETTINGS_VARIABLES_MD5,
+  SETTINGS_VARIABLES_ORIGINALNAME,
+} from "./lib/constant";
 
 import { Md5 } from "ts-md5";
 
@@ -99,12 +107,16 @@ export function matchExtension(extension: string, pattern: string): boolean {
  * @param filePath file path
  * @returns true if the file is an attachment, false otherwise
  */
-export function isAttachment(settings: AttachmentManagementPluginSettings, filePath: string | TAbstractFile): boolean {
+export function isAttachment(
+  app: App,
+  settings: AttachmentManagementPluginSettings,
+  filePath: string | TAbstractFile,
+): boolean {
   let file = null;
   if (filePath instanceof TAbstractFile) {
     file = filePath;
   } else {
-    file = this.app.vault.getAbstractFileByPath(filePath);
+    file = app.vault.getAbstractFileByPath(filePath);
   }
 
   if (file === null || !(file instanceof TFile)) {
@@ -183,14 +195,100 @@ export function validateExtensionEntry(setting: AttachmentPathSettings, plugin: 
 
 export function generateErrorExtensionMessage(type: "md" | "canvas" | "empty" | "duplicate" | "excluded") {
   if (type === "canvas") {
-    new Notice(t('errors.canvasNotSupported'));
+    new Notice(t("errors.canvasNotSupported"));
   } else if (type === "md") {
-    new Notice(t('errors.markdownNotSupported'));
+    new Notice(t("errors.markdownNotSupported"));
   } else if (type === "empty") {
-    new Notice(t('errors.extensionEmpty'));
+    new Notice(t("errors.extensionEmpty"));
   } else if (type === "duplicate") {
-    new Notice(t('errors.duplicateExtension'));
+    new Notice(t("errors.duplicateExtension"));
   } else if (type === "excluded") {
-    new Notice(t('errors.excludedExtension'));
+    new Notice(t("errors.excludedExtension"));
+  }
+}
+
+const ALLOWED_FORMAT_VARS = [
+  SETTINGS_VARIABLES_DATES,
+  SETTINGS_VARIABLES_NOTENAME,
+  SETTINGS_VARIABLES_MD5,
+  SETTINGS_VARIABLES_ORIGINALNAME,
+];
+const ILLEGAL_FILENAME_CHARS = /[\\/:*?"<>|]/;
+const VAR_TOKEN_RE = /\$\{[^}]+\}/g;
+
+export type AttachFormatError =
+  | { type: "empty" }
+  | { type: "originalnameMixed" }
+  | { type: "illegalChar"; char: string }
+  | { type: "unknownVariable"; name: string };
+
+export function validateAttachFormat(value: string): AttachFormatError | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return { type: "empty" };
+
+  if (trimmed.includes(SETTINGS_VARIABLES_ORIGINALNAME) && trimmed !== SETTINGS_VARIABLES_ORIGINALNAME) {
+    return { type: "originalnameMixed" };
+  }
+
+  const stripped = trimmed.replace(VAR_TOKEN_RE, "");
+  const bad = stripped.match(ILLEGAL_FILENAME_CHARS);
+  if (bad) return { type: "illegalChar", char: bad[0] };
+
+  const vars = trimmed.match(VAR_TOKEN_RE) ?? [];
+  for (const v of vars) {
+    if (!ALLOWED_FORMAT_VARS.includes(v)) {
+      return { type: "unknownVariable", name: v };
+    }
+  }
+  return null;
+}
+
+export function attachFormatErrorMessage(err: AttachFormatError): string {
+  switch (err.type) {
+    case "empty":
+      return t("errors.attachFormatEmpty");
+    case "originalnameMixed":
+      return t("errors.attachFormatOriginalnameMixed");
+    case "illegalChar":
+      return t("errors.attachFormatIllegalChar", { char: err.char });
+    case "unknownVariable":
+      return t("errors.attachFormatUnknownVariable", { name: err.name });
+  }
+}
+
+const ALLOWED_PATH_VARS = [SETTINGS_VARIABLES_NOTEPATH, SETTINGS_VARIABLES_NOTENAME, SETTINGS_VARIABLES_NOTEPARENT];
+// "/" is allowed because attachmentPath is a path, not a filename.
+const ILLEGAL_PATH_CHARS = /[\\:*?"<>|]/;
+
+export type AttachmentPathError =
+  | { type: "empty" }
+  | { type: "illegalChar"; char: string }
+  | { type: "unknownVariable"; name: string };
+
+export function validateAttachmentPath(value: string): AttachmentPathError | null {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return { type: "empty" };
+
+  const stripped = trimmed.replace(VAR_TOKEN_RE, "");
+  const bad = stripped.match(ILLEGAL_PATH_CHARS);
+  if (bad) return { type: "illegalChar", char: bad[0] };
+
+  const vars = trimmed.match(VAR_TOKEN_RE) ?? [];
+  for (const v of vars) {
+    if (!ALLOWED_PATH_VARS.includes(v)) {
+      return { type: "unknownVariable", name: v };
+    }
+  }
+  return null;
+}
+
+export function attachmentPathErrorMessage(err: AttachmentPathError): string {
+  switch (err.type) {
+    case "empty":
+      return t("errors.attachmentPathEmpty");
+    case "illegalChar":
+      return t("errors.attachmentPathIllegalChar", { char: err.char });
+    case "unknownVariable":
+      return t("errors.attachmentPathUnknownVariable", { name: err.name });
   }
 }

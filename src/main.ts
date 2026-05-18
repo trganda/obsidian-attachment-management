@@ -3,35 +3,29 @@ import {
   AttachmentManagementPluginSettings,
   AttachmentPathSettings,
   DEFAULT_SETTINGS,
-  OriginalNameStorage,
   SETTINGS_TYPES,
   AttachmentManagementSettingTab,
 } from "./settings/settings";
 import { debugLog } from "./lib/log";
 import { OverrideModal } from "./model/override";
-import { initI18n, setLanguage, detectLanguage, t, SupportedLanguage } from "./i18n/index";
-import { loadAllTranslations } from "./i18n/loader";
+import { initI18n, t } from "./i18n/index";
 import { ConfirmModal } from "./model/confirm";
 import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, md5sum } from "./utils";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension } from "./utils";
 import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
 
 export default class AttachmentManagementPlugin extends Plugin {
-  settings: AttachmentManagementPluginSettings;
+  settings!: AttachmentManagementPluginSettings;
   createdQueue: TFile[] = [];
-  originalObsAttachPath: string;
 
   async onload() {
     await this.loadSettings();
 
-    // 初始化国际化系统
-    loadAllTranslations();
-    const savedLanguage = this.settings.language as SupportedLanguage || detectLanguage();
-    setLanguage(savedLanguage);
+    // Initilize i18n
     initI18n();
 
     console.log(`Plugin loading: ${this.manifest.name} v.${this.manifest.version}`);
@@ -41,12 +35,15 @@ export default class AttachmentManagementPlugin extends Plugin {
 
       this.registerEvent(
         this.app.workspace.on("file-menu", async (menu, file) => {
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          if (
+            (file.parent && isExcluded(file.parent.path, this.settings)) ||
+            isAttachment(this.app, this.settings, file)
+          ) {
             return;
           }
           menu.addItem((item) => {
             item
-              .setTitle(t('override.menuTitle'))
+              .setTitle(t("override.menuTitle"))
               .setIcon("image-plus")
               .onClick(async () => {
                 const { setting } = getOverrideSetting(this.settings, file);
@@ -55,7 +52,7 @@ export default class AttachmentManagementPlugin extends Plugin {
                 this.overrideConfiguration(file, fileSetting);
               });
           });
-        })
+        }),
       );
 
       this.registerEvent(
@@ -66,8 +63,8 @@ export default class AttachmentManagementPlugin extends Plugin {
             return;
           }
 
-          // if the file is modified/create more than 1 second ago, the event is most likely be fired by copy file to
-          // vault folder without using obsidian or sync file from remote (e.g. file manager of op system), we should ignore it.
+          // if the file was modified/create more than 1 second ago, the event is most likely be fired by copy file to
+          // vault folder without using obsidian or sync file from remote (e.g. file manager of os), we should ignore it.
           const curentTime = new Date().getTime();
           const timeGapMs = curentTime - file.stat.mtime;
           const timeGapCs = curentTime - file.stat.ctime;
@@ -76,24 +73,29 @@ export default class AttachmentManagementPlugin extends Plugin {
             return;
           }
 
+          // ignore excluded extension
           if (matchExtension(file.extension, this.settings.excludeExtensionPattern)) {
             debugLog("create - excluded file by extension", file);
             return;
           }
 
+          // add the created file to queue for processing in modify event (obsidian will add link to the file that will trigger modify event)
           this.createdQueue.push(file);
-        })
+        }),
       );
 
       this.registerEvent(
         this.app.vault.on("modify", (file: TAbstractFile) => {
           debugLog("on modify event - create queue:", this.createdQueue);
+          // ignore if no file in the created queue
           if (this.createdQueue.length < 1 || !(file instanceof TFile)) {
             return;
           }
 
           debugLog("on modify event - file:", file.path);
-          this.app.vault.adapter.process(file.path, (pdata) => {
+          // Use cachedRead instead of adapter.process to avoid writing the file back,
+          // which would cause the editor to refresh and lose cursor position/focus.
+          this.app.vault.cachedRead(file).then((data) => {
             // processing one file at one event loop, other files will be processed in the next event loop
             const f = this.createdQueue.first();
             if (f != undefined) {
@@ -102,11 +104,12 @@ export default class AttachmentManagementPlugin extends Plugin {
                   const processor = new CreateHandler(this, this.settings);
                   const link = this.app.fileManager.generateMarkdownLink(f, file.path);
                   if (
-                    (file.extension == "md" && pdata.indexOf(link) != -1) ||
-                    (file.extension == "canvas" && pdata.indexOf(f.path) != -1)
+                    (file.extension == "md" && data.indexOf(link) != -1) ||
+                    (file.extension == "canvas" && data.indexOf(f.path) != -1)
                   ) {
-                    this.createdQueue.remove(f);
+                    // rename the attachment file `f`
                     processor.processAttach(f, file);
+                    this.createdQueue.remove(f);
                   }
                 } else {
                   // remove not exists file
@@ -115,15 +118,20 @@ export default class AttachmentManagementPlugin extends Plugin {
                 }
               });
             }
-            return pdata;
           });
-        })
+        }),
       );
 
       this.registerEvent(
         // when trigger a rename event on folder, for each file/folder in this renamed folder (include itself) will trigger this event
         this.app.vault.on("rename", async (file: TAbstractFile, oldPath: string) => {
           debugLog("on rename event - new path and old path:", file.path, oldPath);
+
+          // ignore attachment
+          if (isAttachment(this.app, this.settings, file)) {
+            debugLog("rename - not processing rename on attachment:", file.path);
+            return;
+          }
 
           const { setting } = getRenameOverrideSetting(this.settings, file, oldPath);
           // update the override setting
@@ -142,27 +150,17 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (file instanceof TFile) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
               debugLog("rename - exclude path:", file.parent.path);
-              new Notice(t('notifications.fileExcluded', { path: file.path }));
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return;
             }
 
-            // ignore attachment
-            if (isAttachment(this.settings, file)) {
-              debugLog("rename - not processing rename on attachment:", file.path);
-              return;
-            }
-
-            await new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(
-              RearrangeType.FILE,
-              file,
-              oldPath
-            );
+            await new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.FILE, file, oldPath);
 
             const oldMetadata = getMetadata(oldPath);
-            // if the user have used the ${date} in `Attachment path` this could be not working, since the date will be change.
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = oldMetadata.getAttachmentPath(setting);
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
+                // check and remove the old attachment folder if it is empty
                 checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
                   if (empty) {
                     this.app.vault.adapter.rmdir(oldAttachPath, true);
@@ -174,29 +172,28 @@ export default class AttachmentManagementPlugin extends Plugin {
             // ignore rename event of folder
             return;
           }
-        })
+        }),
       );
 
       this.registerEvent(
         this.app.vault.on("delete", async (file: TAbstractFile) => {
           debugLog("on delete event - file path:", file.path);
 
-          if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+          if (
+            (file.parent && isExcluded(file.parent.path, this.settings)) ||
+            isAttachment(this.app, this.settings, file)
+          ) {
             debugLog("delete - exclude path or the file is an attachment:", file.path);
             return;
-          }
-
-          if (deleteOverrideSetting(this.settings, file)) {
-            await this.saveSettings();
-            new Notice("Removed override setting of " + file.path);
           }
 
           if (file instanceof TFile) {
             const oldMetadata = getMetadata(file.path);
             const { setting } = getOverrideSetting(this.settings, file);
-            const oldAttachPath = oldMetadata.getAttachmentPath(setting, this.settings.dateFormat);
+            const oldAttachPath = oldMetadata.getAttachmentPath(setting);
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
+                // check and remove the old attachment folder if it is empty
                 checkEmptyFolder(this.app.vault.adapter, oldAttachPath).then((empty) => {
                   if (empty) {
                     this.app.vault.adapter.rmdir(oldAttachPath, true);
@@ -205,7 +202,12 @@ export default class AttachmentManagementPlugin extends Plugin {
               }
             });
           }
-        })
+
+          if (deleteOverrideSetting(this.settings, file)) {
+            await this.saveSettings();
+            new Notice(t("notices.overrideRemoved", { path: file.path }));
+          }
+        }),
       );
 
       // This adds a settings tab so the user can configure various aspects of the plugin
@@ -231,7 +233,7 @@ export default class AttachmentManagementPlugin extends Plugin {
   initCommands() {
     this.addCommand({
       id: "attachment-management-rearrange-all-links",
-      name: t('commands.rearrangeAllLinks'),
+      name: t("commands.rearrangeAllLinks"),
       callback: async () => {
         new ConfirmModal(this).open();
       },
@@ -239,10 +241,10 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-rearrange-active-links",
-      name: t('commands.rearrangeActiveLinks'),
+      name: t("commands.rearrangeActiveLinks"),
       callback: async () => {
-        new ArrangeHandler(this.settings, this.app, this).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
-          new Notice(t('notifications.arrangeCompleted'));
+        new ArrangeHandler(this.settings, this.app).rearrangeAttachment(RearrangeType.ACTIVE).finally(() => {
+          new Notice(t("notices.arrangeCompleted"));
         });
       },
     });
@@ -254,13 +256,13 @@ export default class AttachmentManagementPlugin extends Plugin {
         const file = getActiveFile(this.app);
 
         if (file) {
-          if (isAttachment(this.settings, file)) {
+          if (isAttachment(this.app, this.settings, file)) {
             return true;
           }
 
           if (!checking) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
-              new Notice(`${file.path} was excluded`);
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return true;
             }
             const { setting } = getOverrideSetting(this.settings, file);
@@ -275,22 +277,22 @@ export default class AttachmentManagementPlugin extends Plugin {
 
     this.addCommand({
       id: "attachment-management-reset-override-setting",
-      name: t('commands.resetOverrideSetting'),
+      name: t("commands.resetOverrideSetting"),
       checkCallback: (checking: boolean) => {
         const file = getActiveFile(this.app);
         if (file) {
-          if (isAttachment(this.settings, file)) {
+          if (isAttachment(this.app, this.settings, file)) {
             return true;
           }
 
           if (!checking) {
             if (file.parent && isExcluded(file.parent.path, this.settings)) {
-              new Notice(`${file.path} was excluded`);
+              new Notice(t("notices.fileExcluded", { path: file.path }));
               return true;
             }
             delete this.settings.overridePath[file.path];
             this.saveSettings().finally(() => {
-              new Notice(t('notifications.resetAttachmentSetting', { path: file.path }));
+              new Notice(t("notices.resetAttachmentSetting", { path: file.path }));
             });
           }
           return true;
@@ -299,35 +301,35 @@ export default class AttachmentManagementPlugin extends Plugin {
       },
     });
 
-    this.addCommand({
-      id: "attachment-management-clear-unused-originalname-storage",
-      name: t('commands.clearUnusedStorage'),
-      callback: async () => {
-        const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
-          this.settings,
-          RearrangeType.LINKS
-        );
-        const storages: OriginalNameStorage[] = [];
-        for (const attachs of Object.values(attachments)) {
-          for (const attach of attachs) {
-            const link = decodeURI(attach);
-            const linkFile = this.app.vault.getAbstractFileByPath(link);
-            if (linkFile !== null && linkFile instanceof TFile) {
-              md5sum(this.app.vault.adapter, linkFile).then((md5) => {
-                const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
-                if (ret) {
-                  storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
-                  storages.push(ret);
-                }
-              });
-            }
-          }
-        }
-        debugLog("clearUnusedOriginalNameStorage - storage:", storages);
-        this.settings.originalNameStorage = storages;
-        this.saveSettings();
-      },
-    });
+    // this.addCommand({
+    //   id: "attachment-management-clear-unused-originalname-storage",
+    //   name: t("commands.clearUnusedStorage"),
+    //   callback: async () => {
+    //     const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
+    //       this.settings,
+    //       RearrangeType.LINKS
+    //     );
+    //     const storages: OriginalNameStorage[] = [];
+    //     for (const attachs of Object.values(attachments)) {
+    //       for (const attach of attachs) {
+    //         const link = decodeURI(attach);
+    //         const linkFile = this.app.vault.getAbstractFileByPath(link);
+    //         if (linkFile !== null && linkFile instanceof TFile) {
+    //           md5sum(this.app.vault.adapter, linkFile).then((md5) => {
+    //             const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
+    //             if (ret) {
+    //               storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
+    //               storages.push(ret);
+    //             }
+    //           });
+    //         }
+    //       }
+    //     }
+    //     debugLog("clearUnusedOriginalNameStorage - storage:", storages);
+    //     this.settings.originalNameStorage = storages;
+    //     this.saveSettings();
+    //   },
+    // });
   }
 
   async loadSettings() {

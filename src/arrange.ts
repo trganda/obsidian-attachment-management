@@ -1,18 +1,16 @@
-import { App, Notice, TFile, TFolder, Plugin } from "obsidian";
+import { App, TFile, TFolder } from "obsidian";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
 import { getOverrideSetting } from "./override";
-import { md5sum, isAttachment, isCanvasFile, isMarkdownFile } from "./utils";
-import { LinkMatch, getAllLinkMatchesInFile } from "./lib/linkDetector";
+import { isAttachment } from "./utils";
 import { AttachmentManagementPluginSettings, AttachmentPathSettings } from "./settings/settings";
 import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/constant";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
 import { isExcluded } from "./exclude";
-import { containOriginalNameVariable, loadOriginalName } from "./lib/originalStorage";
 
-const bannerRegex = /!\[\[(.*?)\]\]/i;
+// const bannerRegex = /!\[\[(.*?)\]\]/i;
 
 export enum RearrangeType {
   ACTIVE,
@@ -23,12 +21,10 @@ export enum RearrangeType {
 export class ArrangeHandler {
   settings: AttachmentManagementPluginSettings;
   app: App;
-  plugin: Plugin;
 
-  constructor(settings: AttachmentManagementPluginSettings, app: App, plugin: Plugin) {
+  constructor(settings: AttachmentManagementPluginSettings, app: App) {
     this.settings = settings;
     this.app = app;
-    this.plugin = plugin;
   }
 
   /**
@@ -50,7 +46,7 @@ export class ArrangeHandler {
     debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
     for (const obNote of Object.keys(attachments)) {
       const innerFile = this.app.vault.getAbstractFileByPath(obNote);
-      if (!(innerFile instanceof TFile) || isAttachment(this.settings, innerFile)) {
+      if (!(innerFile instanceof TFile) || isAttachment(this.app, this.settings, innerFile)) {
         debugLog(`rearrangeAttachment - ${obNote} not exists or is attachment, skipped`);
         continue;
       }
@@ -62,12 +58,12 @@ export class ArrangeHandler {
 
       // create attachment path if it's not exists
       const md = getMetadata(obNote);
-      const attachPath = md.getAttachmentPath(setting, this.settings.dateFormat);
+      const attachPath = md.getAttachmentPath(setting);
       if (!(await this.app.vault.adapter.exists(attachPath, true))) {
         // process the case where rename the filename to uppercase or lowercase
         if (oldPath != undefined && (await this.app.vault.adapter.exists(attachPath, false))) {
           const mdOld = getMetadata(oldPath);
-          const attachPathOld = mdOld.getAttachmentPath(setting, this.settings.dateFormat);
+          const attachPathOld = mdOld.getAttachmentPath(setting);
           // this will trigger the rename event and cause the path of attachment change
           this.app.vault.adapter.rename(attachPathOld, attachPath);
         } else {
@@ -90,39 +86,24 @@ export class ArrangeHandler {
         }
 
         const metadata = getMetadata(obNote, linkFile);
-        const md5 = await md5sum(this.app.vault.adapter, linkFile);
-        const originalName = loadOriginalName(this.settings, setting, linkFile.extension, md5);
-        debugLog("rearrangeAttachment - original name:", originalName);
+        const attachName = await metadata.getAttachFileName(
+          setting,
+          this.settings.dateFormat,
+          linkFile,
+          this.app.vault.adapter,
+        );
 
-        let attachName = "";
-        if (containOriginalNameVariable(setting, linkFile.extension)) {
-          attachName = await metadata.getAttachFileName(
-            setting,
-            this.settings.dateFormat,
-            originalName?.n ?? "",
-            this.app.vault.adapter,
-            path.basename(link, path.extname(link))
-          );
-        } else {
-          attachName = await metadata.getAttachFileName(
-            setting,
-            this.settings.dateFormat,
-            path.basename(link, path.extname(link)),
-            this.app.vault.adapter
-          );
-        }
-
-        // ignore if the path was equal to the link
+        // ignore if the path was equal to current link
         if (attachPath == path.dirname(link) && attachName === path.basename(link, path.extname(link))) {
           continue;
         }
 
-        const attachPathFile = this.app.vault.getAbstractFileByPath(attachPath);
-        if (attachPathFile === null || !(attachPathFile instanceof TFolder)) {
+        const attachPathFolder = this.app.vault.getAbstractFileByPath(attachPath);
+        if (attachPathFolder === null || !(attachPathFolder instanceof TFolder)) {
           debugLog(`${attachPath} not exists, skipped`);
           continue;
         }
-        const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFile);
+        const { name } = await deduplicateNewName(attachName + "." + path.extname(link), attachPathFolder);
         debugLog("rearrangeAttachment - deduplicated name:", name);
 
         await this.app.fileManager.renameFile(linkFile, path.join(attachPath, name));
@@ -143,7 +124,7 @@ export class ArrangeHandler {
     settings: AttachmentManagementPluginSettings,
     type: RearrangeType,
     file?: TFile,
-    oldPath?: string
+    oldPath?: string,
   ): Promise<Record<string, Set<string>>> {
     let attachmentsRecord: Record<string, Set<string>> = {};
 
@@ -165,7 +146,7 @@ export class ArrangeHandler {
     settings: AttachmentManagementPluginSettings,
     type: RearrangeType,
     file?: TFile,
-    oldPath?: string
+    oldPath?: string,
   ): Promise<Record<string, Set<string>>> {
     const attachmentsRecord: Record<string, Set<string>> = {};
     let resolvedLinks: Record<string, Record<string, number>> = {};
@@ -177,9 +158,12 @@ export class ArrangeHandler {
     } else if (type == RearrangeType.ACTIVE) {
       const file = getActiveFile(this.app);
       if (file) {
-        if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+        if (
+          (file.parent && isExcluded(file.parent.path, this.settings)) ||
+          isAttachment(this.app, this.settings, file)
+        ) {
           allFiles = [];
-          new Notice(`${file.path} was excluded, skipped`);
+          // new Notice(`${file.path} was excluded, skipped`);
         } else {
           debugLog("getAttachmentsInVaultByLinks - active:", file.path);
           allFiles = [file];
@@ -190,9 +174,9 @@ export class ArrangeHandler {
         }
       }
     } else if (type == RearrangeType.FILE && file != undefined) {
-      if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.settings, file)) {
+      if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
         allFiles = [];
-        new Notice(`${file.path} was excluded, skipped`);
+        // new Notice(`${file.path} was excluded, skipped`);
       } else {
         debugLog("getAttachmentsInVaultByLinks - file:", file.path);
         allFiles = [file];
@@ -216,7 +200,7 @@ export class ArrangeHandler {
         const attachmentsSet: Set<string> = new Set();
         if (links) {
           for (const [filePath] of Object.entries(links)) {
-            if (isAttachment(settings, filePath)) {
+            if (isAttachment(this.app, settings, filePath)) {
               this.addToSet(attachmentsSet, filePath);
             }
           }
@@ -225,77 +209,77 @@ export class ArrangeHandler {
       }
     }
     // Loop Files and Check Frontmatter/Canvas
-    for (let i = 0; i < allFiles.length; i++) {
-      const obsFile = allFiles[i];
-      const attachmentsSet: Set<string> = new Set();
+    // for (let i = 0; i < allFiles.length; i++) {
+    //   const obsFile = allFiles[i];
+    //   const attachmentsSet: Set<string> = new Set();
 
-      if (obsFile.parent && isExcluded(obsFile.parent.path, this.settings)) {
-        continue;
-      }
+    //   if (obsFile.parent && isExcluded(obsFile.parent.path, this.settings)) {
+    //     continue;
+    //   }
 
-      // Check Frontmatter for md files and additional links that might be missed in resolved links
-      if (isMarkdownFile(obsFile.extension)) {
-        // Frontmatter
-        const fileCache = this.app.metadataCache.getFileCache(obsFile);
-        if (fileCache === null) {
-          continue;
-        }
-        if (fileCache.frontmatter) {
-          const frontmatter = fileCache.frontmatter;
-          for (const k of Object.keys(frontmatter)) {
-            if (typeof frontmatter[k] === "string") {
-              const formatMatch = frontmatter[k].match(bannerRegex);
-              if (formatMatch && formatMatch[1]) {
-                const fileName = formatMatch[1];
-                const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
-                if (file && isAttachment(settings, file.path)) {
-                  this.addToSet(attachmentsSet, file.path);
-                }
-              }
-            }
-          }
-        }
-        // Any Additional Link
-        const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app);
-        for (const linkMatch of linkMatches) {
-          if (isAttachment(settings, linkMatch.linkText)) {
-            this.addToSet(attachmentsSet, linkMatch.linkText);
-          }
-        }
-      } else if (isCanvasFile(obsFile.extension)) {
-        // check canvas for links
-        const fileRead = await this.app.vault.cachedRead(obsFile);
-        if (!fileRead || fileRead.length === 0) {
-          continue;
-        }
-        let canvasData;
-        try {
-          canvasData = JSON.parse(fileRead);
-        } catch (e) {
-          debugLog("getAttachmentsInVaultByLinks - parse canvas data error", e);
-          continue;
-        }
-        // debugLog("canvasData", canvasData);
-        if (canvasData.nodes && canvasData.nodes.length > 0) {
-          for (const node of canvasData.nodes) {
-            // node.type: 'text' | 'file'
-            if (node.type === "file") {
-              if (isAttachment(settings, node.file)) {
-                this.addToSet(attachmentsSet, node.file);
-              }
-            } else if (node.type == "text") {
-              const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, app, node.text);
-              for (const linkMatch of linkMatches) {
-                if (isAttachment(settings, linkMatch.linkText)) {
-                  this.addToSet(attachmentsSet, linkMatch.linkText);
-                }
-              }
-            }
-          }
-        }
-      }
-      this.addToRecord(attachmentsRecord, obsFile.path, attachmentsSet);
-    }
+    //   // Check Frontmatter for md files and additional links that might be missed in resolved links
+    //   if (isMarkdownFile(obsFile.extension)) {
+    //     // Frontmatter
+    //     const fileCache = this.app.metadataCache.getFileCache(obsFile);
+    //     if (fileCache === null) {
+    //       continue;
+    //     }
+    //     if (fileCache.frontmatter) {
+    //       const frontmatter = fileCache.frontmatter;
+    //       for (const k of Object.keys(frontmatter)) {
+    //         if (typeof frontmatter[k] === "string") {
+    //           const formatMatch = frontmatter[k].match(bannerRegex);
+    //           if (formatMatch && formatMatch[1]) {
+    //             const fileName = formatMatch[1];
+    //             const file = this.app.metadataCache.getFirstLinkpathDest(fileName, obsFile.path);
+    //             if (file && isAttachment(this.app, settings, file.path)) {
+    //               this.addToSet(attachmentsSet, file.path);
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //     // Any Additional Link
+    //     const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app);
+    //     for (const linkMatch of linkMatches) {
+    //       if (isAttachment(this.app, settings, linkMatch.linkText)) {
+    //         this.addToSet(attachmentsSet, linkMatch.linkText);
+    //       }
+    //     }
+    //   } else if (isCanvasFile(obsFile.extension)) {
+    //     // check canvas for links
+    //     const fileRead = await this.app.vault.cachedRead(obsFile);
+    //     if (!fileRead || fileRead.length === 0) {
+    //       continue;
+    //     }
+    //     let canvasData;
+    //     try {
+    //       canvasData = JSON.parse(fileRead);
+    //     } catch (e) {
+    //       debugLog("getAttachmentsInVaultByLinks - parse canvas data error", e);
+    //       continue;
+    //     }
+    //     // debugLog("canvasData", canvasData);
+    //     if (canvasData.nodes && canvasData.nodes.length > 0) {
+    //       for (const node of canvasData.nodes) {
+    //         // node.type: 'text' | 'file'
+    //         if (node.type === "file") {
+    //           if (isAttachment(this.app, settings, node.file)) {
+    //             this.addToSet(attachmentsSet, node.file);
+    //           }
+    //         } else if (node.type == "text") {
+    //           const linkMatches: LinkMatch[] = await getAllLinkMatchesInFile(obsFile, this.app, node.text);
+    //           for (const linkMatch of linkMatches) {
+    //             if (isAttachment(this.app, settings, linkMatch.linkText)) {
+    //               this.addToSet(attachmentsSet, linkMatch.linkText);
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //   }
+    //   this.addToRecord(attachmentsRecord, obsFile.path, attachmentsSet);
+    // }
     return attachmentsRecord;
   }
 
@@ -324,7 +308,7 @@ export class ArrangeHandler {
     attachPath: string,
     attachName: string,
     noteName: string,
-    link: string
+    link: string,
   ): boolean {
     const linkPath = path.dirname(link);
     const linkName = path.basename(link, path.extname(link));

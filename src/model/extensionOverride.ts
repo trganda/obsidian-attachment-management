@@ -1,20 +1,10 @@
 import { Modal, Setting } from "obsidian";
 
-import {
-  SETTINGS_ROOT_INFOLDER,
-  SETTINGS_ROOT_NEXTTONOTE,
-  SETTINGS_ROOT_OBSFOLDER,
-  SETTINGS_VARIABLES_DATES,
-  SETTINGS_VARIABLES_MD5,
-  SETTINGS_VARIABLES_NOTENAME,
-  SETTINGS_VARIABLES_NOTEPARENT,
-  SETTINGS_VARIABLES_NOTEPATH,
-  SETTINGS_VARIABLES_ORIGINALNAME,
-} from "../lib/constant";
+import { SETTINGS_ROOT_INFOLDER, SETTINGS_ROOT_NEXTTONOTE, SETTINGS_ROOT_OBSFOLDER } from "../lib/constant";
 import AttachmentManagementPlugin from "../main";
 import { AttachmentPathSettings, DEFAULT_SETTINGS, ExtensionOverrideSettings } from "../settings/settings";
-import { matchExtension } from "src/utils";
-import { debugLog } from "src/lib/log";
+import { matchExtension } from "../utils";
+import { debugLog } from "../lib/log";
 import { t } from "../i18n/index";
 
 /**
@@ -26,7 +16,7 @@ import { t } from "../i18n/index";
  */
 export function getExtensionOverrideSetting(
   extension: string,
-  settings: AttachmentPathSettings
+  settings: AttachmentPathSettings,
 ): { extSetting: ExtensionOverrideSettings | undefined } {
   if (settings.extensionOverride === undefined || settings.extensionOverride.length === 0) {
     return { extSetting: undefined };
@@ -37,7 +27,7 @@ export function getExtensionOverrideSetting(
       debugLog(
         "getExtensionOverrideSetting - ",
         settings.extensionOverride[i].extension,
-        settings.extensionOverride[i]
+        settings.extensionOverride[i],
       );
       return { extSetting: settings.extensionOverride[i] };
     }
@@ -54,7 +44,7 @@ export class OverrideExtensionModal extends Modal {
   constructor(
     plugin: AttachmentManagementPlugin,
     settings: ExtensionOverrideSettings,
-    onSubmit: (result: ExtensionOverrideSettings) => void
+    onSubmit: (result: ExtensionOverrideSettings) => void,
   ) {
     super(plugin.app);
     this.plugin = plugin;
@@ -79,27 +69,28 @@ export class OverrideExtensionModal extends Modal {
     contentEl.empty();
 
     contentEl.createEl("h3", {
-      text: t('extensionOverride.title'),
+      text: t("extensionOverride.title"),
     });
 
     new Setting(contentEl)
-      .setName(t('extensionOverride.rootPath.name'))
-      .setDesc(t('extensionOverride.rootPath.desc'))
+      .setName(t("extensionOverride.rootPath.name"))
+      .setDesc(t("extensionOverride.rootPath.desc"))
       .addDropdown((text) =>
         text
-          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t('settings.rootPath.options.obsidian'))
-          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t('settings.rootPath.options.inFolder'))
-          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t('settings.rootPath.options.nextToNote'))
+          .addOption(`${SETTINGS_ROOT_OBSFOLDER}`, t("settings.rootPath.options.obsidian"))
+          .addOption(`${SETTINGS_ROOT_INFOLDER}`, t("settings.rootPath.options.inFolder"))
+          .addOption(`${SETTINGS_ROOT_NEXTTONOTE}`, t("settings.rootPath.options.nextToNote"))
           .setValue(this.settings.saveAttE)
           .onChange(async (value) => {
             this.settings.saveAttE = value;
             this.displaySw(contentEl);
             this.onOpen();
-          })
+          }),
       );
     if (this.settings.saveAttE !== "obsFolder") {
       new Setting(contentEl)
-        .setName(t('extensionOverride.rootFolder.name'))
+        .setName(t("extensionOverride.rootFolder.name"))
+        .setDesc(t("extensionOverride.rootFolder.desc"))
         .setClass("override_root_folder_set")
         .addText((text) =>
           text
@@ -107,38 +98,38 @@ export class OverrideExtensionModal extends Modal {
             .setValue(this.settings.attachmentRoot)
             .onChange(async (value) => {
               this.settings.attachmentRoot = value;
-            })
+            }),
         );
     }
     new Setting(contentEl)
-      .setName(t('extensionOverride.attachmentPath.name'))
-      .setDesc(t('extensionOverride.attachmentPath.desc'))
+      .setName(t("extensionOverride.attachmentPath.name"))
+      .setDesc(t("extensionOverride.attachmentPath.desc"))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachmentPath)
           .setValue(this.settings.attachmentPath)
           .onChange(async (value) => {
             this.settings.attachmentPath = value;
-          })
+          }),
       );
 
     new Setting(contentEl)
-      .setName(t('extensionOverride.attachmentFormat.name'))
-      .setDesc(t('extensionOverride.attachmentFormat.desc'))
+      .setName(t("extensionOverride.attachmentFormat.name"))
+      .setDesc(t("extensionOverride.attachmentFormat.desc"))
       .addText((text) =>
         text
           .setPlaceholder(DEFAULT_SETTINGS.attachPath.attachFormat)
           .setValue(this.settings.attachFormat)
           .onChange(async (value: string) => {
             this.settings.attachFormat = value;
-          })
+          }),
       );
 
     new Setting(contentEl).addButton((button) =>
-      button.setButtonText(t('extensionOverride.buttons.save')).onClick(async () => {
+      button.setButtonText(t("extensionOverride.buttons.save")).onClick(async () => {
         this.onSubmit(this.settings);
         this.close();
-      })
+      }),
     );
   }
 

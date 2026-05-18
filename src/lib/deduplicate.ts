@@ -16,7 +16,7 @@ function escapeRegExp(s: string) {
 export async function deduplicateNewName(newName: string, file: TFolder): Promise<NameObj> {
   // list files in dir
   const dir = file.path;
-  const listed = await this.app.vault.adapter.list(dir);
+  const listed = await file.vault.adapter.list(dir);
   debugLog("deduplicateNewName - sibling files", listed);
 
   // parse newName
@@ -27,7 +27,7 @@ export async function deduplicateNewName(newName: string, file: TFolder): Promis
     delimiterEscaped = escapeRegExp(delimiter);
 
   const dupNameRegex = new RegExp(
-    `^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d{1,3})\\.${newNameExt}$`
+    `^(?<name>${newNameStemEscaped})${delimiterEscaped}(?<number>\\d{1,3})\\.${newNameExt}$`,
   );
 
   debugLog("dupNameRegex", dupNameRegex);

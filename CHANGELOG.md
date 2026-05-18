@@ -1,6 +1,31 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
+
+## [0.11.1](https://github.com/trganda/obsidian-attachment-management/compare/0.11.0...0.11.1) (2026-05-18)
+
+
+### Bug Fixes
+
+* :bug: 'this' implicitly has type 'any' ([72e5a4b](https://github.com/trganda/obsidian-attachment-management/commit/72e5a4bce20f0760ac7e4506cb010b730ea322e6))
+* :bug: attach was not move to new folder when using ${originalname} ([a636814](https://github.com/trganda/obsidian-attachment-management/commit/a636814039bba5d51ed2e6c7ba5085f457f60e74))
+
+## [0.11.0](https://github.com/trganda/obsidian-attachment-management/compare/0.10.0...0.11.0) (2026-05-17)
+
+
+### Features
+
+* :art: reformat the code and update build config ([26de34d](https://github.com/trganda/obsidian-attachment-management/commit/26de34decafd3869e6a8038e8e171b41fe18f1c9))
+* :art: rm support of original storage and add validator for foramt ([0475563](https://github.com/trganda/obsidian-attachment-management/commit/0475563058e13bbb8a94bcfb66c5ac6f3db4f7f6))
+* update package version ([f6a6d3f](https://github.com/trganda/obsidian-attachment-management/commit/f6a6d3fdd9e4baff4c364785618668b191d670b1))
+
+
+### Bug Fixes
+
+* :pencil2: typo in setting description ([1a3a9cd](https://github.com/trganda/obsidian-attachment-management/commit/1a3a9cdb1b793bdfae95be29c64e526c14c3b483))
+* pass app explicitly to isAttachment ([0b57a9b](https://github.com/trganda/obsidian-attachment-management/commit/0b57a9ba33c1d49fed3b652fae88100f7e172316))
+* prevent cursor jumping to top after pasting image ([ff49d09](https://github.com/trganda/obsidian-attachment-management/commit/ff49d09136d1ef98e929d907720f73f16ef66b53))
+* resolve uninitialized class property errors ([9f6e679](https://github.com/trganda/obsidian-attachment-management/commit/9f6e679a107daadd7c78cdb724df8db23fc98d3f))
 
 ### [0.9.16](https://github.com/trganda/obsidian-attachment-management/compare/0.9.15...0.9.16) (2024-10-10)
 

@@ -1,53 +1,53 @@
-import { registerTranslations, SupportedLanguage } from './index';
-import { en } from './locales/en';
-import { ja } from './locales/ja';
-import { zhCn } from './locales/zh-cn';
+import { registerTranslations, SupportedLanguage } from "./index";
+import { ja } from "./locales/ja";
+import { en } from "./locales/en";
+import { zhCn as zh } from "./locales/zh";
 
 /**
- * 加载所有语言包
+ * Load all translation packs.
  */
-export function loadAllTranslations(): void {
-  // 注册英文语言包
-  registerTranslations('en', en);
-  
-  // 注册中文语言包
-  registerTranslations('zh-cn', zhCn);
+export function loadAllTranslations() {
+  // Register the English pack
+  registerTranslations("en", en);
 
-  // 注册日文语言包
+  // Register the Chinese pack
+  registerTranslations("zh", zh);
+  
+  // Register the Janpanese pack
   registerTranslations('ja', ja);
 }
 
 /**
- * 获取支持的语言列表
- * @returns 支持的语言列表，包含代码和显示名称
+ * Get the list of supported languages.
+ * @returns supported languages with code and display names
  */
 export function getSupportedLanguages(): Array<{ code: SupportedLanguage; name: string; nativeName: string }> {
   return [
     {
-      code: 'en',
-      name: 'English',
-      nativeName: 'English'
+      code: "en",
+      name: "English",
+      nativeName: "English",
     },
     {
-      code: 'zh-cn',
-      name: 'Chinese (Simplified)',
-      nativeName: '简体中文'
+      code: "zh",
+      name: "Chinese (Simplified)",
+      nativeName: "简体中文"
     },
     {
-      code: 'ja',
-      name: 'Japanese',
-      nativeName: '日本語'
+      code: "ja",
+      name: "Japanese",
+      nativeName: "日本語"
     }
   ];
 }
 
 /**
- * 根据语言代码获取语言显示名称
- * @param code 语言代码
- * @returns 语言显示名称
+ * Get the display name for a language code.
+ * @param code language code
+ * @returns language display name
  */
 export function getLanguageName(code: SupportedLanguage): string {
   const languages = getSupportedLanguages();
-  const language = languages.find(lang => lang.code === code);
+  const language = languages.find((lang) => lang.code === code);
   return language ? language.nativeName : code;
 }
