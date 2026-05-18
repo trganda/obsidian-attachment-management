@@ -4,7 +4,7 @@
 
 This plugin supports more flexibly setting your attachment location with variables like `${notepath}`, `${notename}`, `${date}` and `${md5}`. An override setting feature can be used to change the global setting of a folder, file or extension.
 
-> Read the [Original Name](#original-name) section before using the `${originalname}` variable.
+> Read the [Original Name](#original-name) section before using the `${originalname}` variable. Read the [FAQ](#faq) section if you have any questions about how to use this plugin.
 
 ## Installation
 
@@ -155,10 +155,14 @@ By default, the "Exclude paths" will only work on the folder you added, and that
 
 ## FAQ
 
-Q: What if I add '/' to Exclude Paths?
+Q1: What if I add '/' to Exclude Paths?
 
-A: It will exclude the whole vault folder.
+A1: It will exclude the whole vault folder.
 
-Q: Is this plugin support auto rename pdf file?
+Q2: Is this plugin support auto rename pdf file?
 
-A: By default, this plugin will only rename the image file. For other file types, you can use the extension override setting.
+A2: By default, this plugin will only rename the image file. For other file types, you can use the extension override setting.
+
+Q3: The link of the attachment in markdown file is not updated after I directly rename the attachment file, why?
+
+A3: Make sure you have enabled the "Automatically Rename Attachment" option in the plugin setting, and **"Files and links -> Automatically update internal links"** in Obsidian setting.
