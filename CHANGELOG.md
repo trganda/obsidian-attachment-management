@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.12.1](https://github.com/trganda/obsidian-attachment-management/compare/0.12.0...0.12.1) (2026-05-26)
+
+
+### Features
+
+* :sparkles: restore mixed ${originalname} usage and storage persistence ([56b400e](https://github.com/trganda/obsidian-attachment-management/commit/56b400ee09ba9e7870dc5db22957a4f565c60ed2))
+
 ## 0.12.0 (2026-05-18)
 
 
