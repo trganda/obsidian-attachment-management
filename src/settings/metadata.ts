@@ -1,5 +1,5 @@
 import { DataAdapter, TFile, normalizePath } from "obsidian";
-import { AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, DEFAULT_SETTINGS } from "./settings";
 import {
   SETTINGS_VARIABLES_DATES,
   SETTINGS_VARIABLES_MD5,
@@ -12,6 +12,7 @@ import { getRootPath } from "../commons";
 import { path } from "../lib/path";
 import { md5sum } from "../utils";
 import { getExtensionOverrideSetting } from "../model/extensionOverride";
+import { loadOriginalName } from "../lib/originalStorage";
 import { debugLog } from "../lib/log";
 
 /**
@@ -62,6 +63,10 @@ class Metadata {
    * @param {AttachmentPathSettings} setting - attachment path settings object
    * @param {string} dateFormat - format string for date and time
    * @param {TFile} originalAttach - the original attachment file
+   * @param {DataAdapter} adapter - vault adapter (used for md5 hashing)
+   * @param {AttachmentManagementPluginSettings} [pluginSettings] - plugin settings; when provided
+   *   enables ${originalname} lookup from the persisted storage so the original
+   *   name survives subsequent renames (e.g. rearrange).
    * @return {string} the formatted attachment file name
    */
   async getAttachFileName(
@@ -69,6 +74,7 @@ class Metadata {
     dateFormat: string,
     originalAttach: TFile,
     adapter: DataAdapter,
+    pluginSettings?: AttachmentManagementPluginSettings,
   ): Promise<string> {
     // Anchor ${date} to the attachment's ctime
     const dateTime = window.moment(originalAttach.stat.ctime).format(dateFormat);
@@ -85,14 +91,21 @@ class Metadata {
       }
     }
 
-    if (attachFormat.trim() === SETTINGS_VARIABLES_ORIGINALNAME) {
-      return originalAttach.basename;
+    // Prefer the stored original name (keyed by md5) so the truly-original
+    // basename survives later renames. Fall back to the file's current basename.
+    let originalName = originalAttach.basename;
+    if (pluginSettings !== undefined && this.attachmentFile !== undefined) {
+      const stored = loadOriginalName(pluginSettings, setting, this.attachmentFile.extension, md5);
+      if (stored !== undefined) {
+        originalName = stored.n;
+      }
     }
 
     return attachFormat
       .replace(`${SETTINGS_VARIABLES_DATES}`, dateTime)
       .replace(`${SETTINGS_VARIABLES_NOTENAME}`, this.basename)
-      .replace(`${SETTINGS_VARIABLES_MD5}`, md5);
+      .replace(`${SETTINGS_VARIABLES_MD5}`, md5)
+      .replace(`${SETTINGS_VARIABLES_ORIGINALNAME}`, originalName);
   }
 
   /**

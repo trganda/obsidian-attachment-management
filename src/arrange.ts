@@ -19,11 +19,11 @@ export enum RearrangeType {
 }
 
 export class ArrangeHandler {
-  settings: AttachmentManagementPluginSettings;
+  pluginSettings: AttachmentManagementPluginSettings;
   app: App;
 
   constructor(settings: AttachmentManagementPluginSettings, app: App) {
-    this.settings = settings;
+    this.pluginSettings = settings;
     this.app = app;
   }
 
@@ -36,21 +36,21 @@ export class ArrangeHandler {
    * @param {string} oldPath - The old path of the file (optional), used for rename event.
    */
   async rearrangeAttachment(type: RearrangeType, file?: TFile, oldPath?: string) {
-    if (!this.settings.autoRenameAttachment) {
+    if (!this.pluginSettings.autoRenameAttachment) {
       debugLog("rearrangeAttachment - autoRenameAttachment not enable");
       return;
     }
 
     // only rearrange attachment that linked by markdown or canvas
-    const attachments = await this.getAttachmentsInVault(this.settings, type, file, oldPath);
+    const attachments = await this.getAttachmentsInVault(this.pluginSettings, type, file, oldPath);
     debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
     for (const obNote of Object.keys(attachments)) {
       const innerFile = this.app.vault.getAbstractFileByPath(obNote);
-      if (!(innerFile instanceof TFile) || isAttachment(this.app, this.settings, innerFile)) {
+      if (!(innerFile instanceof TFile) || isAttachment(this.app, this.pluginSettings, innerFile)) {
         debugLog(`rearrangeAttachment - ${obNote} not exists or is attachment, skipped`);
         continue;
       }
-      const { setting } = getOverrideSetting(this.settings, innerFile);
+      const { setting } = getOverrideSetting(this.pluginSettings, innerFile);
 
       if (attachments[obNote].size == 0) {
         continue;
@@ -88,9 +88,10 @@ export class ArrangeHandler {
         const metadata = getMetadata(obNote, linkFile);
         const attachName = await metadata.getAttachFileName(
           setting,
-          this.settings.dateFormat,
+          this.pluginSettings.dateFormat,
           linkFile,
           this.app.vault.adapter,
+          this.pluginSettings,
         );
 
         // ignore if the path was equal to current link
@@ -159,8 +160,8 @@ export class ArrangeHandler {
       const file = getActiveFile(this.app);
       if (file) {
         if (
-          (file.parent && isExcluded(file.parent.path, this.settings)) ||
-          isAttachment(this.app, this.settings, file)
+          (file.parent && isExcluded(file.parent.path, this.pluginSettings)) ||
+          isAttachment(this.app, this.pluginSettings, file)
         ) {
           allFiles = [];
           // new Notice(`${file.path} was excluded, skipped`);
@@ -174,7 +175,10 @@ export class ArrangeHandler {
         }
       }
     } else if (type == RearrangeType.FILE && file != undefined) {
-      if ((file.parent && isExcluded(file.parent.path, this.settings)) || isAttachment(this.app, this.settings, file)) {
+      if (
+        (file.parent && isExcluded(file.parent.path, this.pluginSettings)) ||
+        isAttachment(this.app, this.pluginSettings, file)
+      ) {
         allFiles = [];
         // new Notice(`${file.path} was excluded, skipped`);
       } else {

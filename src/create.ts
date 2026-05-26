@@ -1,4 +1,4 @@
-import { App, Plugin, Notice, TFile, TFolder, normalizePath, MarkdownView } from "obsidian";
+import { App, Plugin, Notice, TFile, TFolder, debounce, normalizePath, MarkdownView } from "obsidian";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
@@ -7,9 +7,36 @@ import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
-import { isImage, isPastedImage } from "./utils";
+import { isImage, isPastedImage, md5sum } from "./utils";
+import { saveOriginalName } from "./lib/originalStorage";
 import { t } from "./i18n/index";
-// import { saveOriginalName } from "./lib/originalStorage";
+
+// Batch rename notices so rapid renames (e.g. paste bursts, rearrange-driven
+// rename cascades) collapse into a single Notice instead of flooding the UI.
+type RenameRecord = { from: string; to: string };
+const pendingRenameNotices: RenameRecord[] = [];
+
+const flushRenameNotices = debounce(
+  () => {
+    if (pendingRenameNotices.length === 0) {
+      return;
+    }
+    if (pendingRenameNotices.length === 1) {
+      const { from, to } = pendingRenameNotices[0];
+      new Notice(t("notices.fileRenamed", { from, to }));
+    } else {
+      new Notice(t("notices.filesRenamedBatch", { count: pendingRenameNotices.length }));
+    }
+    pendingRenameNotices.length = 0;
+  },
+  500,
+  true,
+);
+
+function queueRenameNotice(from: string, to: string) {
+  pendingRenameNotices.push({ from, to });
+  flushRenameNotices();
+}
 
 export class CreateHandler {
   readonly plugin: Plugin;
@@ -85,6 +112,9 @@ export class CreateHandler {
     debugLog("renameFile - ", attach.path, " to ", dst);
 
     const name = attach.name;
+    // Capture the pre-rename basename so ${originalname} resolves to it on
+    // future runs (rearrange, etc.), even after this file has been renamed.
+    const originalBasename = attach.basename;
 
     // Generate the old link before renaming, to find and replace it later
     const oldLink = this.app.fileManager.generateMarkdownLink(attach, source.path);
@@ -95,7 +125,7 @@ export class CreateHandler {
       .rename(attach, dst)
       .then(() => {
         if (name !== attachName) {
-          new Notice(t("notices.fileRenamed", { from: name, to: attachName }));
+          queueRenameNotice(name, attachName);
         }
 
         // Generate the new link after renaming (attach.path is now updated by vault.rename)
@@ -106,16 +136,14 @@ export class CreateHandler {
         this.updateLinkInSource(source, oldLink, newLink);
       })
       .finally(() => {
-        // save origianl name in setting
-        // const { setting } = getOverrideSetting(this.settings, source);
-        // md5sum(this.app.vault.adapter, attach).then((md5) => {
-        //   saveOriginalName(this.settings, setting, attach.extension, {
-        //     n: original,
-        //     md5: md5,
-        //   });
-
-        // });
-        this.plugin.saveData(this.settings);
+        const { setting } = getOverrideSetting(this.settings, source);
+        md5sum(this.app.vault.adapter, attach).then((md5) => {
+          saveOriginalName(this.settings, setting, attach.extension, {
+            n: originalBasename,
+            md5: md5,
+          });
+          this.plugin.saveData(this.settings);
+        });
       });
   }
 

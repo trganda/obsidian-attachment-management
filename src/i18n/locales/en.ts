@@ -121,6 +121,7 @@ export const en = {
     fileExcluded: "{path} was excluded",
     overrideRemoved: "Removed override setting of {path}",
     fileRenamed: "Renamed {from} to {to}",
+    filesRenamedBatch: "Renamed {count} attachments",
     arrangeCompleted: "Arrange completed",
     resetAttachmentSetting: "Reset attachment setting of {path}",
     error: {
@@ -132,6 +133,7 @@ export const en = {
     rearrangeAllLinks: "Rearrange all linked attachments",
     rearrangeActiveLinks: "Rearrange linked attachments",
     resetOverrideSetting: "Reset override setting",
+    clearUnusedStorage: "Clear unused original name storage",
   },
 
   errors: {
@@ -141,8 +143,6 @@ export const en = {
     duplicateExtension: "Duplicate extension override.",
     excludedExtension: "Extension override cannot be an excluded extension.",
     attachFormatEmpty: "Attachment format cannot be empty.",
-    attachFormatOriginalnameMixed:
-      "${originalname} must be used alone; it cannot be combined with other text or variables.",
     attachFormatIllegalChar: "Attachment format contains illegal filename character: {char}",
     attachFormatUnknownVariable: "Unknown variable in attachment format: {name}",
     attachmentPathEmpty: "Attachment path cannot be empty.",

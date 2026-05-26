@@ -218,17 +218,12 @@ const VAR_TOKEN_RE = /\$\{[^}]+\}/g;
 
 export type AttachFormatError =
   | { type: "empty" }
-  | { type: "originalnameMixed" }
   | { type: "illegalChar"; char: string }
   | { type: "unknownVariable"; name: string };
 
 export function validateAttachFormat(value: string): AttachFormatError | null {
   const trimmed = value.trim();
   if (trimmed.length === 0) return { type: "empty" };
-
-  if (trimmed.includes(SETTINGS_VARIABLES_ORIGINALNAME) && trimmed !== SETTINGS_VARIABLES_ORIGINALNAME) {
-    return { type: "originalnameMixed" };
-  }
 
   const stripped = trimmed.replace(VAR_TOKEN_RE, "");
   const bad = stripped.match(ILLEGAL_FILENAME_CHARS);
@@ -247,8 +242,6 @@ export function attachFormatErrorMessage(err: AttachFormatError): string {
   switch (err.type) {
     case "empty":
       return t("errors.attachFormatEmpty");
-    case "originalnameMixed":
-      return t("errors.attachFormatOriginalnameMixed");
     case "illegalChar":
       return t("errors.attachFormatIllegalChar", { char: err.char });
     case "unknownVariable":

@@ -1,63 +1,45 @@
 import { getExtensionOverrideSetting } from "../model/extensionOverride";
-import { AttachmentPathSettings } from "../settings/settings";
+import { AttachmentManagementPluginSettings, AttachmentPathSettings, OriginalNameStorage } from "../settings/settings";
 import { SETTINGS_VARIABLES_ORIGINALNAME } from "./constant";
 
-export function isOriginalNameVariable(setting: AttachmentPathSettings, ext: string): boolean {
+export function containsOriginalNameVariable(setting: AttachmentPathSettings, ext: string): boolean {
   const { extSetting } = getExtensionOverrideSetting(ext, setting);
-  if (
-    (extSetting !== undefined && extSetting.attachFormat.trim() === SETTINGS_VARIABLES_ORIGINALNAME) ||
-    setting.attachFormat.trim() === SETTINGS_VARIABLES_ORIGINALNAME
-  ) {
-    return true;
+  if (extSetting !== undefined) {
+    return extSetting.attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME);
   }
-  return false;
+  return setting.attachFormat.includes(SETTINGS_VARIABLES_ORIGINALNAME);
 }
 
-// export function saveOriginalName(
-//   settings: AttachmentManagementPluginSettings,
-//   setting: AttachmentPathSettings,
-//   ext: string,
-//   data: OriginalNameStorage
-// ) {
-//   if (settings.originalNameStorage === undefined) {
-//     settings.originalNameStorage = [];
-//   }
+export function saveOriginalName(
+  settings: AttachmentManagementPluginSettings,
+  setting: AttachmentPathSettings,
+  ext: string,
+  data: OriginalNameStorage,
+) {
+  if (settings.originalNameStorage === undefined) {
+    settings.originalNameStorage = [];
+  }
+  if (!containsOriginalNameVariable(setting, ext)) {
+    return;
+  }
+  settings.originalNameStorage.filter((n) => n.md5 === data.md5).forEach((n) => settings.originalNameStorage.remove(n));
+  settings.originalNameStorage.push(data);
+}
 
-//   if (containOriginalNameVariable(setting, ext)) {
-//     settings.originalNameStorage
-//       .filter((n) => n.md5 == data.md5)
-//       .forEach((n) => settings.originalNameStorage.remove(n));
-//     settings.originalNameStorage.push(data);
-//   }
-// }
+export function loadOriginalName(
+  settings: AttachmentManagementPluginSettings,
+  setting: AttachmentPathSettings,
+  ext: string,
+  md5: string,
+): OriginalNameStorage | undefined {
+  if (!containsOriginalNameVariable(setting, ext)) {
+    return undefined;
+  }
+  return settings.originalNameStorage.find((data) => data.md5 === md5);
+}
 
-// export function loadOriginalName(
-//   settings: AttachmentManagementPluginSettings,
-//   setting: AttachmentPathSettings,
-//   ext: string,
-//   md5: string
-// ): OriginalNameStorage | undefined {
-//   if (containOriginalNameVariable(setting, ext)) {
-//     const first = settings.originalNameStorage.find((data) => data.md5 === md5);
-//     const last = settings.originalNameStorage.reverse().find((data) => data.md5 === md5);
-
-//     if (first === undefined || last == undefined) {
-//       return undefined;
-//     }
-//     if (first.md5 === last.md5 && first.n === last.n) {
-//       return last;
-//     } else if (first.md5 === last.md5 && first.n !== last.n) {
-//       // remove duplicated item, choice the oldder one
-//       settings.originalNameStorage.remove(first);
-//       return last;
-//     }
-//   }
-//   return undefined;
-// }
-
-// export function rmOriginalName(settings: AttachmentManagementPluginSettings, md5: string) {
-//   const prepares = settings.originalNameStorage.filter((data) => (data.md5 = md5));
-//   prepares.forEach((p) => {
-//     settings.originalNameStorage.remove(p);
-//   });
-// }
+export function rmOriginalName(settings: AttachmentManagementPluginSettings, md5: string) {
+  settings.originalNameStorage
+    .filter((data) => data.md5 === md5)
+    .forEach((p) => settings.originalNameStorage.remove(p));
+}
