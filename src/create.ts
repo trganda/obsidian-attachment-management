@@ -1,4 +1,4 @@
-import { App, Plugin, Notice, TFile, TFolder, normalizePath, MarkdownView } from "obsidian";
+import { App, Plugin, Notice, TFile, TFolder, debounce, normalizePath, MarkdownView } from "obsidian";
 import { deduplicateNewName } from "./lib/deduplicate";
 import { path } from "./lib/path";
 import { debugLog } from "./lib/log";
@@ -10,6 +10,33 @@ import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { isImage, isPastedImage } from "./utils";
 import { t } from "./i18n/index";
 // import { saveOriginalName } from "./lib/originalStorage";
+
+// Batch rename notices so rapid renames (e.g. paste bursts, rearrange-driven
+// rename cascades) collapse into a single Notice instead of flooding the UI.
+type RenameRecord = { from: string; to: string };
+const pendingRenameNotices: RenameRecord[] = [];
+
+const flushRenameNotices = debounce(
+  () => {
+    if (pendingRenameNotices.length === 0) {
+      return;
+    }
+    if (pendingRenameNotices.length === 1) {
+      const { from, to } = pendingRenameNotices[0];
+      new Notice(t("notices.fileRenamed", { from, to }));
+    } else {
+      new Notice(t("notices.filesRenamedBatch", { count: pendingRenameNotices.length }));
+    }
+    pendingRenameNotices.length = 0;
+  },
+  500,
+  true,
+);
+
+function queueRenameNotice(from: string, to: string) {
+  pendingRenameNotices.push({ from, to });
+  flushRenameNotices();
+}
 
 export class CreateHandler {
   readonly plugin: Plugin;
@@ -95,7 +122,7 @@ export class CreateHandler {
       .rename(attach, dst)
       .then(() => {
         if (name !== attachName) {
-          new Notice(t("notices.fileRenamed", { from: name, to: attachName }));
+          queueRenameNotice(name, attachName);
         }
 
         // Generate the new link after renaming (attach.path is now updated by vault.rename)

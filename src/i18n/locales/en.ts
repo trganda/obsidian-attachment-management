@@ -121,6 +121,7 @@ export const en = {
     fileExcluded: "{path} was excluded",
     overrideRemoved: "Removed override setting of {path}",
     fileRenamed: "Renamed {from} to {to}",
+    filesRenamedBatch: "Renamed {count} attachments",
     arrangeCompleted: "Arrange completed",
     resetAttachmentSetting: "Reset attachment setting of {path}",
     error: {

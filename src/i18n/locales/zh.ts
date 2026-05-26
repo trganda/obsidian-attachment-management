@@ -121,6 +121,7 @@ export const zhCn = {
     fileExcluded: "{path} 已被排除",
     overrideRemoved: "已移除 {path} 的覆盖设置",
     fileRenamed: "已将 {from} 重命名为 {to}",
+    filesRenamedBatch: "已重命名 {count} 个附件",
     arrangeCompleted: "整理完成",
     resetAttachmentSetting: "已重置 {path} 的附件设置",
     error: {

@@ -121,6 +121,7 @@ export const ja = {
     fileExcluded: "{path} は除外されました",
     overrideRemoved: "{path} の上書き設定を削除しました",
     fileRenamed: "{from} から {to} にリネームしました",
+    filesRenamedBatch: "{count} 件の添付ファイルをリネームしました",
     arrangeCompleted: "整理が完了しました",
     resetAttachmentSetting: "{path} の添付ファイル設定をリセットしました",
     error: {
