@@ -133,6 +133,7 @@ export const ja = {
     rearrangeAllLinks: "リンクされているすべての添付ファイルを再整理",
     rearrangeActiveLinks: "リンクされている添付ファイルを再整理",
     resetOverrideSetting: "上書き設定をリセット",
+    clearUnusedStorage: "未使用の元のファイル名ストレージをクリア",
   },
 
   errors: {
@@ -142,8 +143,6 @@ export const ja = {
     duplicateExtension: "重複した拡張子ごとの上書き設定。",
     excludedExtension: "拡張子ごとの上書き設定は、除外された拡張子にできません。",
     attachFormatEmpty: "添付ファイルのフォーマットを空にできません。",
-    attachFormatOriginalnameMixed:
-      "${originalname} は単独で使用する必要があります。他のテキストや変数と組み合わせることはできません。",
     attachFormatIllegalChar: "添付ファイルのフォーマットに不正なファイル名文字が含まれています：{char}",
     attachFormatUnknownVariable: "添付ファイルのフォーマット内の未知の変数：{name}",
     attachmentPathEmpty: "添付ファイルのパスを空にできません。",

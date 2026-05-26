@@ -7,9 +7,9 @@ import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
 import { isExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
-import { isImage, isPastedImage } from "./utils";
+import { isImage, isPastedImage, md5sum } from "./utils";
+import { saveOriginalName } from "./lib/originalStorage";
 import { t } from "./i18n/index";
-// import { saveOriginalName } from "./lib/originalStorage";
 
 // Batch rename notices so rapid renames (e.g. paste bursts, rearrange-driven
 // rename cascades) collapse into a single Notice instead of flooding the UI.
@@ -112,6 +112,9 @@ export class CreateHandler {
     debugLog("renameFile - ", attach.path, " to ", dst);
 
     const name = attach.name;
+    // Capture the pre-rename basename so ${originalname} resolves to it on
+    // future runs (rearrange, etc.), even after this file has been renamed.
+    const originalBasename = attach.basename;
 
     // Generate the old link before renaming, to find and replace it later
     const oldLink = this.app.fileManager.generateMarkdownLink(attach, source.path);
@@ -133,16 +136,14 @@ export class CreateHandler {
         this.updateLinkInSource(source, oldLink, newLink);
       })
       .finally(() => {
-        // save origianl name in setting
-        // const { setting } = getOverrideSetting(this.settings, source);
-        // md5sum(this.app.vault.adapter, attach).then((md5) => {
-        //   saveOriginalName(this.settings, setting, attach.extension, {
-        //     n: original,
-        //     md5: md5,
-        //   });
-
-        // });
-        this.plugin.saveData(this.settings);
+        const { setting } = getOverrideSetting(this.settings, source);
+        md5sum(this.app.vault.adapter, attach).then((md5) => {
+          saveOriginalName(this.settings, setting, attach.extension, {
+            n: originalBasename,
+            md5: md5,
+          });
+          this.plugin.saveData(this.settings);
+        });
       });
   }
 

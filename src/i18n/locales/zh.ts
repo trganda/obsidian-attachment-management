@@ -133,6 +133,7 @@ export const zhCn = {
     rearrangeAllLinks: "重新整理所有链接的附件",
     rearrangeActiveLinks: "重新整理链接的附件",
     resetOverrideSetting: "重置覆盖设置",
+    clearUnusedStorage: "清理未使用的原始文件名存储",
   },
 
   errors: {
@@ -142,7 +143,6 @@ export const zhCn = {
     duplicateExtension: "重复的扩展覆盖。",
     excludedExtension: "扩展覆盖不能是被排除的扩展。",
     attachFormatEmpty: "附件格式不能为空。",
-    attachFormatOriginalnameMixed: "${originalname} 必须单独使用，不能与其他文本或变量组合。",
     attachFormatIllegalChar: "附件格式包含非法文件名字符：{char}",
     attachFormatUnknownVariable: "附件格式中存在未知变量：{name}",
     attachmentPathEmpty: "附件路径不能为空。",

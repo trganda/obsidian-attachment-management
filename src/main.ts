@@ -12,7 +12,7 @@ import { initI18n, t } from "./i18n/index";
 import { ConfirmModal } from "./model/confirm";
 import { checkEmptyFolder, getActiveFile } from "./commons";
 import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, updateOverrideSetting } from "./override";
-import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension } from "./utils";
+import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, md5sum } from "./utils";
 import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
 import { isExcluded } from "./exclude";
@@ -301,35 +301,29 @@ export default class AttachmentManagementPlugin extends Plugin {
       },
     });
 
-    // this.addCommand({
-    //   id: "attachment-management-clear-unused-originalname-storage",
-    //   name: t("commands.clearUnusedStorage"),
-    //   callback: async () => {
-    //     const attachments = await new ArrangeHandler(this.settings, this.app, this).getAttachmentsInVault(
-    //       this.settings,
-    //       RearrangeType.LINKS
-    //     );
-    //     const storages: OriginalNameStorage[] = [];
-    //     for (const attachs of Object.values(attachments)) {
-    //       for (const attach of attachs) {
-    //         const link = decodeURI(attach);
-    //         const linkFile = this.app.vault.getAbstractFileByPath(link);
-    //         if (linkFile !== null && linkFile instanceof TFile) {
-    //           md5sum(this.app.vault.adapter, linkFile).then((md5) => {
-    //             const ret = this.settings.originalNameStorage.find((data) => data.md5 === md5);
-    //             if (ret) {
-    //               storages.filter((n) => n.md5 == md5).forEach((n) => storages.remove(n));
-    //               storages.push(ret);
-    //             }
-    //           });
-    //         }
-    //       }
-    //     }
-    //     debugLog("clearUnusedOriginalNameStorage - storage:", storages);
-    //     this.settings.originalNameStorage = storages;
-    //     this.saveSettings();
-    //   },
-    // });
+    this.addCommand({
+      id: "attachment-management-clear-unused-originalname-storage",
+      name: t("commands.clearUnusedStorage"),
+      callback: async () => {
+        const attachments = await new ArrangeHandler(this.settings, this.app).getAttachmentsInVault(
+          this.settings,
+          RearrangeType.LINKS,
+        );
+        const validMd5s = new Set<string>();
+        for (const attachs of Object.values(attachments)) {
+          for (const attach of attachs) {
+            const link = decodeURI(attach);
+            const linkFile = this.app.vault.getAbstractFileByPath(link);
+            if (linkFile instanceof TFile) {
+              validMd5s.add(await md5sum(this.app.vault.adapter, linkFile));
+            }
+          }
+        }
+        this.settings.originalNameStorage = this.settings.originalNameStorage.filter((s) => validMd5s.has(s.md5));
+        debugLog("clearUnusedOriginalNameStorage - storage:", this.settings.originalNameStorage);
+        await this.saveSettings();
+      },
+    });
   }
 
   async loadSettings() {

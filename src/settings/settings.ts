@@ -79,7 +79,7 @@ export interface AttachmentManagementPluginSettings {
   // Exclude subpath also
   excludeSubpaths: boolean;
   // Presistence storage of original name
-  // originalNameStorage: OriginalNameStorage[];
+  originalNameStorage: OriginalNameStorage[];
   // Path of notes that override global configuration
   overridePath: Record<string, AttachmentPathSettings>;
 }
@@ -98,7 +98,7 @@ export const DEFAULT_SETTINGS: AttachmentManagementPluginSettings = {
   excludedPaths: "",
   excludePathsArray: [],
   excludeSubpaths: false,
-  // originalNameStorage: [],
+  originalNameStorage: [],
   overridePath: {},
   disableNotification: false,
 };
