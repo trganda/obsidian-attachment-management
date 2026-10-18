@@ -135,7 +135,7 @@ This feature allows you to specify the setting for a serials extension. You can 
 If you want some paths to be skipped by this plugin, add them to the text area.
 If you have multiple paths, split them with a semicolon ';'.
 
-By default, the "Exclude paths" will only work on the folder you added, and that folder contains at least one markdown file; you can toggle "Exclude subpaths" to exclude subpaths also.
+Excluded paths apply to source notes, linked attachments, and attachment destination folders, including the vault-wide rearrange command. Attachments in an excluded folder are also skipped when referenced by a note outside that folder. By default, exclusions only apply to the specified folder; enable "Exclude subpaths" to include its subfolders.
 
 > **The path is case-sensitive and should not have a leading slash '/' at the beginning.**
 

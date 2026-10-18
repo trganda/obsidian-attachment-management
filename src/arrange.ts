@@ -8,7 +8,7 @@ import { SETTINGS_VARIABLES_DATES, SETTINGS_VARIABLES_NOTENAME } from "./lib/con
 import { deduplicateNewName } from "./lib/deduplicate";
 import { getMetadata } from "./settings/metadata";
 import { getActiveFile } from "./commons";
-import { isExcluded } from "./exclude";
+import { isExcluded, isFileExcluded } from "./exclude";
 
 // const bannerRegex = /!\[\[(.*?)\]\]/i;
 
@@ -45,6 +45,12 @@ export class ArrangeHandler {
     const attachments = await this.getAttachmentsInVault(this.pluginSettings, type, file, oldPath);
     debugLog("rearrangeAttachment - attachments:", Object.keys(attachments).length, Object.entries(attachments));
     for (const obNote of Object.keys(attachments)) {
+      if (
+        isFileExcluded(obNote, this.pluginSettings) ||
+        (oldPath !== undefined && isFileExcluded(oldPath, this.pluginSettings))
+      ) {
+        continue;
+      }
       const innerFile = this.app.vault.getAbstractFileByPath(obNote);
       if (!(innerFile instanceof TFile) || isAttachment(this.app, this.pluginSettings, innerFile)) {
         debugLog(`rearrangeAttachment - ${obNote} not exists or is attachment, skipped`);
@@ -59,11 +65,17 @@ export class ArrangeHandler {
       // create attachment path if it's not exists
       const md = getMetadata(obNote);
       const attachPath = md.getAttachmentPath(setting);
+      if (isExcluded(attachPath, this.pluginSettings)) {
+        continue;
+      }
       if (!(await this.app.vault.adapter.exists(attachPath, true))) {
         // process the case where rename the filename to uppercase or lowercase
         if (oldPath != undefined && (await this.app.vault.adapter.exists(attachPath, false))) {
           const mdOld = getMetadata(oldPath);
           const attachPathOld = mdOld.getAttachmentPath(setting);
+          if (isExcluded(attachPathOld, this.pluginSettings)) {
+            continue;
+          }
           // this will trigger the rename event and cause the path of attachment change
           this.app.vault.adapter.rename(attachPathOld, attachPath);
         } else {
@@ -76,6 +88,9 @@ export class ArrangeHandler {
           link = decodeURI(link);
         } catch (err) {
           console.log(`Invalid link: ${link}, err: ${err}`);
+          continue;
+        }
+        if (isFileExcluded(link, this.pluginSettings)) {
           continue;
         }
         debugLog(`rearrangeAttachment - article: ${obNote} links: ${link}`);
@@ -201,9 +216,15 @@ export class ArrangeHandler {
 
     if (resolvedLinks) {
       for (const [mdFile, links] of Object.entries(resolvedLinks)) {
+        if (isFileExcluded(mdFile, settings)) {
+          continue;
+        }
         const attachmentsSet: Set<string> = new Set();
         if (links) {
           for (const [filePath] of Object.entries(links)) {
+            if (isFileExcluded(filePath, settings)) {
+              continue;
+            }
             if (isAttachment(this.app, settings, filePath)) {
               this.addToSet(attachmentsSet, filePath);
             }

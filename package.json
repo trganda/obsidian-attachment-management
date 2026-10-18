@@ -4,6 +4,7 @@
 	"description": "Customize your attachment path of notes independently with variables and auto rename it on change.",
 	"main": "main.js",
 	"scripts": {
+		"test": "node --test tests/*.test.mjs",
 		"dev": "node esbuild.config.mjs",
 		"lint": "eslint --fix src",
 		"format": "prettier --log-level warn --write \"src/**/*.ts\"",

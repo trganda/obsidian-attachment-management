@@ -15,7 +15,7 @@ import { deleteOverrideSetting, getOverrideSetting, getRenameOverrideSetting, up
 import { isAttachment, isMarkdownFile, isCanvasFile, matchExtension, md5sum } from "./utils";
 import { ArrangeHandler, RearrangeType } from "./arrange";
 import { CreateHandler } from "./create";
-import { isExcluded } from "./exclude";
+import { isExcluded, isFileExcluded } from "./exclude";
 import { getMetadata } from "./settings/metadata";
 
 export default class AttachmentManagementPlugin extends Plugin {
@@ -62,6 +62,9 @@ export default class AttachmentManagementPlugin extends Plugin {
           if (!(file instanceof TFile)) {
             return;
           }
+          if (isFileExcluded(file.path, this.settings)) {
+            return;
+          }
 
           // if the file was modified/create more than 1 second ago, the event is most likely be fired by copy file to
           // vault folder without using obsidian or sync file from remote (e.g. file manager of os), we should ignore it.
@@ -89,6 +92,9 @@ export default class AttachmentManagementPlugin extends Plugin {
           debugLog("on modify event - create queue:", this.createdQueue);
           // ignore if no file in the created queue
           if (this.createdQueue.length < 1 || !(file instanceof TFile)) {
+            return;
+          }
+          if (isFileExcluded(file.path, this.settings)) {
             return;
           }
 
@@ -125,6 +131,12 @@ export default class AttachmentManagementPlugin extends Plugin {
       this.registerEvent(
         // when trigger a rename event on folder, for each file/folder in this renamed folder (include itself) will trigger this event
         this.app.vault.on("rename", async (file: TAbstractFile, oldPath: string) => {
+          if (
+            file instanceof TFile &&
+            (isFileExcluded(file.path, this.settings) || isFileExcluded(oldPath, this.settings))
+          ) {
+            return;
+          }
           debugLog("on rename event - new path and old path:", file.path, oldPath);
 
           // ignore attachment
@@ -158,6 +170,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 
             const oldMetadata = getMetadata(oldPath);
             const oldAttachPath = oldMetadata.getAttachmentPath(setting);
+            if (isExcluded(oldAttachPath, this.settings)) {
+              return;
+            }
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 // check and remove the old attachment folder if it is empty
@@ -177,6 +192,9 @@ export default class AttachmentManagementPlugin extends Plugin {
 
       this.registerEvent(
         this.app.vault.on("delete", async (file: TAbstractFile) => {
+          if (file instanceof TFile && isFileExcluded(file.path, this.settings)) {
+            return;
+          }
           debugLog("on delete event - file path:", file.path);
 
           if (
@@ -191,6 +209,9 @@ export default class AttachmentManagementPlugin extends Plugin {
             const oldMetadata = getMetadata(file.path);
             const { setting } = getOverrideSetting(this.settings, file);
             const oldAttachPath = oldMetadata.getAttachmentPath(setting);
+            if (isExcluded(oldAttachPath, this.settings)) {
+              return;
+            }
             this.app.vault.adapter.exists(oldAttachPath, true).then((exists) => {
               if (exists) {
                 // check and remove the old attachment folder if it is empty

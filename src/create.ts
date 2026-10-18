@@ -5,7 +5,7 @@ import { debugLog } from "./lib/log";
 import { AttachmentManagementPluginSettings } from "./settings/settings";
 import { getOverrideSetting } from "./override";
 import { getMetadata } from "./settings/metadata";
-import { isExcluded } from "./exclude";
+import { isExcluded, isFileExcluded } from "./exclude";
 import { getExtensionOverrideSetting } from "./model/extensionOverride";
 import { isImage, isPastedImage, md5sum } from "./utils";
 import { saveOriginalName } from "./lib/originalStorage";
@@ -57,7 +57,7 @@ export class CreateHandler {
    */
   processAttach(attach: TFile, source: TFile) {
     // ignore if the path of notes file has been excluded.
-    if (source.parent && isExcluded(source.parent.path, this.settings)) {
+    if (isFileExcluded(source.path, this.settings) || isFileExcluded(attach.path, this.settings)) {
       debugLog("processAttach - not a file or exclude path:", source.path);
       // new Notice(`${source.path} was excluded from attachment management.`);
       return;
@@ -77,6 +77,9 @@ export class CreateHandler {
     debugLog("processAttach - metadata:", metadata);
 
     const attachPath = metadata.getAttachmentPath(setting);
+    if (isExcluded(attachPath, this.settings)) {
+      return;
+    }
     metadata.getAttachFileName(setting, this.settings.dateFormat, attach, this.app.vault.adapter).then((attachName) => {
       attachName = attachName + "." + attach.extension;
       // make sure the attachment path was created
@@ -109,6 +112,13 @@ export class CreateHandler {
    */
   renameCreateFile(attach: TFile, attachPath: string, attachName: string, source: TFile) {
     const dst = normalizePath(path.join(attachPath, attachName));
+    if (
+      isFileExcluded(source.path, this.settings) ||
+      isFileExcluded(attach.path, this.settings) ||
+      isFileExcluded(dst, this.settings)
+    ) {
+      return;
+    }
     debugLog("renameFile - ", attach.path, " to ", dst);
 
     const name = attach.name;
@@ -156,6 +166,9 @@ export class CreateHandler {
    * @param newLink - the new link text
    */
   private updateLinkInSource(source: TFile, oldLink: string, newLink: string) {
+    if (isFileExcluded(source.path, this.settings)) {
+      return;
+    }
     if (oldLink === newLink) {
       return;
     }
